@@ -7,7 +7,6 @@
 *.dll
 *.so
 *.dylib
-
 # Test binary, built with `go test -c`
 *.test
 
@@ -20,6 +19,7 @@
 # Go workspace file
 go.work
 
+<<<<<<< HEAD
 # Local .terraform directories
 **/.terraform/*
 
@@ -28,8 +28,8 @@ go.work
 *.tfstate.*
 
 # Exclude all .tfvars files, which are likely to contain sensitive data, such as
-# password, private keys, and other secrets. These should not be part of version 
-# control as they are data points which are potentially sensitive and subject 
+# password, private keys, and other secrets. These should not be part of version
+# control as they are data points which are potentially sensitive and subject
 # to change depending on the environment.
 *.tfvars
 *.tfvars.json
@@ -50,3 +50,15 @@ override.tf.json
 # Ignore CLI configuration files
 .terraformrc
 terraform.rc
+
+# Terraform
+.terraform/
+
+# tfstates and locks
+*.tfstate
+*.tfstate.backup
+*.tfplan
+*.tflock
+*.tfstate.backup.*
+*.tfstate.*
+*.lock.hcl
