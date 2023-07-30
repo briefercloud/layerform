@@ -1,0 +1,3 @@
+module "eks" {
+  source = "./eks"
+}
