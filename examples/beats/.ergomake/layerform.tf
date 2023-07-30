@@ -10,7 +10,7 @@ terraform {
 provider "layerform" {}
 
 resource "layerform_layer" "eks" {
-  name   = "eks"
+  name = "eks"
   path = "./eks"
 }
 
@@ -23,7 +23,7 @@ resource "layerform_layer" "kibana" {
 }
 
 resource "layerform_layer" "metric" {
-  name   = "metric"
+  name = "metric"
   path = "./metric"
   dependencies = [
     layerform_layer.kibana.id
@@ -31,7 +31,7 @@ resource "layerform_layer" "metric" {
 }
 
 resource "layerform_layer" "filebeat" {
-  name   = "filebeat"
+  name = "filebeat"
   path = "./filebeat"
   dependencies = [
     layerform_layer.kibana.id

@@ -18,7 +18,7 @@ terraform {
 provider "layerform" {}
 
 provider "aws" {
-  region  = local.region
+  region = local.region
 }
 
 data "layerform_layer" "kibana" {
@@ -30,12 +30,12 @@ locals {
 }
 
 provider "aws" {
-  region  = data.layerform_layer.kibana.output.aws_region
+  region = data.layerform_layer.kibana.output.aws_region
 }
 
 resource "aws_s3_object" "metricbeat" {
-  bucket = data.layerform_layer.kibana.output.bucket.bucket
-  key    = ${kibana_folder}/metricbeat-${random_string.suffix}/.keep"
+  bucket  = data.layerform_layer.kibana.output.bucket.bucket
+  key     = "${kibana_folder}/metricbeat-${random_string.suffix}/.keep"
   content = "metricbeat"
 }
 

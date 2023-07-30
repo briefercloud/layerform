@@ -18,13 +18,13 @@ terraform {
 provider "layerform" {}
 
 provider "aws" {
-  region  = local.region
+  region = local.region
 }
 
 provider "random" {}
 
 locals {
-  region = data.layerform_layer.eks.output.aws_region
+  region        = data.layerform_layer.eks.output.aws_region
   kibana_folder = "kibana-${random_string.suffix.id}"
 }
 
@@ -39,8 +39,8 @@ resource "random_string" "suffix" {
 }
 
 resource "aws_s3_object" "kibana" {
-  bucket = data.layerform_layer.eks.output.bucket.bucket
-  key    = "${local.s3_path}/.keep"
+  bucket  = data.layerform_layer.eks.output.bucket.bucket
+  key     = "${local.s3_path}/.keep"
   content = "kibana"
 }
 

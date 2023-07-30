@@ -16,7 +16,7 @@ locals {
 }
 
 provider "aws" {
-  region  = local.aws_region
+  region = local.aws_region
 }
 
 provider "random" {}
@@ -32,11 +32,11 @@ resource "random_string" "bucket_suffix" {
 }
 
 output "aws_region" {
-  value = local.aws_region
+  value       = local.aws_region
   description = "AWS Region"
 }
 
 output "bucket" {
-  value = aws_s3_bucket.eks_bucket
+  value       = aws_s3_bucket.eks_bucket
   description = "AWS Region"
 }
