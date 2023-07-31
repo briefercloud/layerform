@@ -54,7 +54,7 @@ terraform/
 
 Then, engineers can create infrastructure by stacking each of those layers. Layerform's magic is that layers can share the same base layer, allowing for easy reuse.
 
-Reusing layers is useful for easily creating production-like environments without necessarily having to recreate the whole infrastructure every time. With layers, users can spin-up only the parts of infrastructure they need.
+Reusing layers is useful for easily creating production-like environments without necessarily having to recreate the whole infrastructure every time. With layers, users can spin up only the parts of the infrastructure they need.
 
 <p align="center">
   <img width="600px" src="./assets/img/all-layers.png" />
@@ -166,15 +166,15 @@ That way, Layerform can recursively traverse layers' resources to collect cost m
 
 A layer can only mutate itself or the layers above. For example, if you have a `base_layer` and a `backend_layer`, the `backend_layer` Terraform files will _not_ be able to mutate any infrastructure in a `base_layer` instance. Still, the `base_layer` can mutate all instances of all the layers above it.
 
-The way we prevent undesirable mutations is by analysing each `terraform plan` and detecting whether any mutation's target belongs to an underlying layer.
+The way Layerforms prevents undesirable mutations is by analyzing each `terraform plan` and detecting whether any mutation's target belongs to an underlying layer.
 
-The reason we prevent a layer from mutating its underlying layer is to avoid breaking sibling pieces of infrastructure.
+The reason Layerform prevents a layer from mutating its underlying layer is to avoid breaking sibling pieces of infrastructure.
 
 This design allows for platform teams to rebase layer instances on top of theirs. For example, assume you have multiple application layers on top of a Kubernetes cluster belonging to a `base_layer`. In that case, if the platform team wants to update the Kubernetes version and needs to patch existing application's manifests, they can do so from their own layer by using data sources.
 
 ## How Layerform works
 
-Layerform has three major components. The `layerform-provider`, and the Layerform Back-end, and Layerform CLI.
+Layerform has three major components. The `layerform-provider`, the Layerform Back-end, and Layerform CLI.
 
 <p align="center">
   <img width="700px" src="./assets/img/all-components.png" />
@@ -192,11 +192,11 @@ The way the Layerform CLI creates new layers on top of the correct existing laye
 
 ## Layerform design philosophy
 
-Our main goal with Layerform was to make it as easy as possible for engineers to create and share different parts of their infrastructure. That way, we'd empower teams to create their own environments without burdening their organization with unnecessary cost or complex configuration files.
+Our main goal with Layerform was to make it as easy as possible for engineers to create and share different parts of their infrastructure. That way, we'd empower teams to create their own environments without burdening their organization with unnecessary costs or complex configuration files.
 
-When developing Layerform we also determined it should support virtually _any_ type of infrastructure, including infrastructure for serverless applications. That's why we decided to create a wrapper on top of Terraform, which supports Kubernetes/Helm, and already has established providers for all major public clouds.
+When developing Layerform, we also determined it should support virtually _any_ type of infrastructure, including infrastructure for serverless applications. That's why we decided to create a wrapper on top of Terraform, which supports Kubernetes/Helm, and already has established providers for all major public clouds.
 
-Third, we decided Layerform should be simple and intuitive. Engineers shouldn't have to learn new proprietary languages or configuration formats to use Layerform. Whenever possible we should allow them to reuse their existing configurations. Layerform concepts are the only thing engineers will need to learn about. Everything else should be "just Terraform".
+Third, we decided Layerform should be simple and intuitive. Engineers shouldn't have to learn new proprietary languages or configuration formats to use Layerform. Whenever possible, we should allow them to reuse their existing configurations. Layerform concepts are the only thing engineers will need to learn about. Everything else should be "just Terraform".
 
 Finally, we decided Layerform needs to be open and free. It's for that reason we're using a GPL license, and that's why you don't necessarily need to pay for anything before you can extract value from Layerform. Sure, Ergomake Cloud can make things easier and provide a bunch of interesting Governance and Management features, but those are not necessary.
 
@@ -204,7 +204,7 @@ Finally, we decided Layerform needs to be open and free. It's for that reason we
 
 You can find Layerform's users and maintainers in [GitHub Discussions](https://github.com/ergomake/layerform/discussions). There you can ask how to set up Layerform, ask us about the roadmap, and discuss any other related topics.
 
-You can also reach us directly (and more quickly) in our [Discord server](https://discord.gg/daGzchUGDt).
+You can also reach us directly (and more quickly) on our [Discord server](https://discord.gg/daGzchUGDt).
 
 ## Other channels
 
