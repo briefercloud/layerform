@@ -74,7 +74,7 @@ The first step to use layerform is to use the `layerform-provider` to define whi
 terraform {
   required_providers {
     layerform = {
-      source  = "layerform/layerform"
+      source  = "ergomake/layerform"
       version = "~> 0.1"
     }
   }
@@ -198,13 +198,13 @@ Finally, we decided Layerform needs to be open and free. It's for that reason we
 
 ## Issues & Support
 
-You can find Layerform's users and maintainers in [GitHub Discussions](https://github.com/layerform/layerform/discussions). There you can ask how to set up Layerform, ask us about the roadmap, and discuss any other related topics.
+You can find Layerform's users and maintainers in [GitHub Discussions](https://github.com/ergomake/layerform/discussions). There you can ask how to set up Layerform, ask us about the roadmap, and discuss any other related topics.
 
 You can also reach us directly (and more quickly) in our [Discord server](https://discord.gg/daGzchUGDt).
 
 ## Other channels
 
--   [Issue Tracker](https://github.com/layerform/layerform/issues)
+-   [Issue Tracker](https://github.com/ergomake/layerform/issues)
 -   [Twitter](https://twitter.com/GetErgomake)
 -   [LinkedIn](https://www.linkedin.com/company/layerform)
 -   [Ergomake Engineering Blog](https://ergomake.dev/blog)
