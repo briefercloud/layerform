@@ -13,6 +13,10 @@
   <a href="https://layerform.dev">Website</a>
 </h4>
 
+<h4 align="center">
+  <p>🚧 This repository is a work-in-progress.</p>
+</h4>
+
 <p align="center">
   Terraform wrapper for provisioning reusable layers of infrastructure.
 </p>
@@ -124,7 +128,7 @@ Then, to create the `backend_layer` layer on top of the `default` base layer, ru
   <img width="350px" src="./assets/img/default-backend-layer.png" />
 </p>
 
-Finally, to apply the the `frontend_layer` on top of the underlying `default` layers, use `layerform apply frontend_layer`.
+Finally, to apply the `frontend_layer` on top of the underlying `default` layers, use `layerform apply frontend_layer`.
 
 <p align="center">
   <img width="350px" src="./assets/img/default-frontend-layer.png" />
