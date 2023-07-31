@@ -1,9 +1,9 @@
 <p align="center">
   <a href="https://layerform.dev">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://github.com/ergomake/layerform/blob/main/assets/img/layerform-dark.png">
-    <source media="(prefers-color-scheme: light)" srcset="https://github.com/ergomake/layerform/blob/main/assets/img/layerform-light.png">
-    <img alt="layerform logo" src="https://github.com/ergomake/layerform/blob/main/assets/img/layerform-light.png">
+    <source width="500px" media="(prefers-color-scheme: dark)" srcset="https://github.com/ergomake/layerform/blob/main/assets/img/layerform-dark.png">
+    <source width="500px" media="(prefers-color-scheme: light)" srcset="https://github.com/ergomake/layerform/blob/main/assets/img/layerform-light.png">
+    <img width="500px" alt="layerform logo" src="https://github.com/ergomake/layerform/blob/main/assets/img/layerform-light.png">
     </picture>
   </a>
 </p>
