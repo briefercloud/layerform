@@ -11,7 +11,6 @@ provider "layerform" {}
 
 resource "layerform_layer" "eks" {
   name = "eks"
-  path = "./eks"
   files = [
     "layers/eks.tf",
     "layers/eks/main.tf",
