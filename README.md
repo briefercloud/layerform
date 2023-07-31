@@ -52,13 +52,17 @@ Then, engineers can create infrastructure by stacking each of those layers. Laye
 
 Reusing layers is useful for easily creating production-like environments without necessarily having to recreate the whole infrastructure every time. With layers, users can spin-up only the parts of infrastructure they need.
 
-![](./assets/img/all-layers.png)
+<p align="center">
+  <img width="600px" src="./assets/img/all-layers.png" />
+</p>
 
 Reusing infrastructure helps teams save money by eliminating unnecessary duplication of infrastructure. Additionally, layers allow teams to provision environments more quickly because engineers can apply only the additional layers they need.
 
 Another advantage of breaking infrastructure into layers is that organizations can define clearer boundaries between teams. Consequently, it will be easier for these organizations to [mirror their team's structure into their system's structure](https://martinfowler.com/bliki/ConwaysLaw.html).
 
-![](./assets/img/layers-vs-org.png)
+<p align="center">
+  <img width="600px" src="./assets/img/layers-vs-org.png" />
+</p>
 
 ## Getting started
 
@@ -108,17 +112,23 @@ Once each of these layer definitions has been saved, you can use `layerform appl
 
 For example, to create infrastructure for the `base` layer you can run `layerform apply base_layer`. That command will cause `layerform` to create infrastructure corresponding to the `base_layer` layer and group them under the `name` "`default`".
 
-![](./assets/img/default-base-layer.png)
+<p align="center">
+  <img width="350px" src="./assets/img/default-base-layer.png" />
+</p>
 
 Then, to create the `backend_layer` layer on top of the `default` base layer, run `layerform apply backend_layer`.
 
 > Note that whenever a `--name` is not passed, the string "`default`" is used as the name for the layer instance.
 
-![](./assets/img/default-backend-layer.png)
+<p align="center">
+  <img width="350px" src="./assets/img/default-backend-layer.png" />
+</p>
 
 Finally, to apply the the `frontend_layer` on top of the underlying `default` layers, use `layerform apply frontend_layer`.
 
-![](./assets/img/default-frontend-layer.png)
+<p align="center">
+  <img width="350px" src="./assets/img/default-frontend-layer.png" />
+</p>
 
 Alternatively, you could use `layerform apply frotend_layer` straightaway, which would cause `layerform` to recursively create _all_ the underlying layers and name them "`default`".
 
@@ -128,11 +138,15 @@ Now, let's assume you wanted to create a whole separate environment for engineer
 
 For that, you can use `layerform apply base_layer --name=development`. This command will cause `layerform` to create brand new resources corresponding to the `base_layer`, and group them under the name `development`.
 
-![](./assets/img/dev-single-layers.png)
+<p align="center">
+  <img width="450px" src="./assets/img/dev-single-layers.png" />
+</p>
 
 After that, multiple back-end engineers can spin-up their application's infrastructure on top of this layer's resources. An engineer called Alice could then use `layerform apply backend_layer --x-base_layer=development --name=alice-dev` to create their infrastructure, while an engineer called Bob could use `layerform apply backend_layer --x-base_layer=development --name=bob-dev`.
 
-![](./assets/img/dev-multi-layers.png)
+<p align="center">
+  <img width="600px" src="./assets/img/dev-multi-layers.png" />
+</p>
 
 ## Automatic cost attribution
 
@@ -158,7 +172,9 @@ This design allows for platform teams to rebase layer instances on top of theirs
 
 Layerform has three major components. The `layerform-provider`, and the Layerform Back-end, and Layerform CLI.
 
-![](./assets/img/all-components.png)
+<p align="center">
+  <img width="700px" src="./assets/img/all-components.png" />
+</p>
 
 The `layerform-provider` is used by Terraform to provision the Layerform Back-end with all the metadata for each layer, like its name and dependencies, and all the Terraform files associated with that layer.
 
