@@ -72,18 +72,30 @@ func (_c *Client_Apply_Call) RunAndReturn(run func(string, []byte) ([]byte, erro
 	return _c
 }
 
-// Destroy provides a mock function with given fields: dir
-func (_m *Client) Destroy(dir string) error {
-	ret := _m.Called(dir)
+// Destroy provides a mock function with given fields: dir, state
+func (_m *Client) Destroy(dir string, state []byte) ([]byte, error) {
+	ret := _m.Called(dir, state)
 
-	var r0 error
-	if rf, ok := ret.Get(0).(func(string) error); ok {
-		r0 = rf(dir)
+	var r0 []byte
+	var r1 error
+	if rf, ok := ret.Get(0).(func(string, []byte) ([]byte, error)); ok {
+		return rf(dir, state)
+	}
+	if rf, ok := ret.Get(0).(func(string, []byte) []byte); ok {
+		r0 = rf(dir, state)
 	} else {
-		r0 = ret.Error(0)
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]byte)
+		}
 	}
 
-	return r0
+	if rf, ok := ret.Get(1).(func(string, []byte) error); ok {
+		r1 = rf(dir, state)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
 // Client_Destroy_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Destroy'
@@ -93,23 +105,24 @@ type Client_Destroy_Call struct {
 
 // Destroy is a helper method to define mock.On call
 //   - dir string
-func (_e *Client_Expecter) Destroy(dir interface{}) *Client_Destroy_Call {
-	return &Client_Destroy_Call{Call: _e.mock.On("Destroy", dir)}
+//   - state []byte
+func (_e *Client_Expecter) Destroy(dir interface{}, state interface{}) *Client_Destroy_Call {
+	return &Client_Destroy_Call{Call: _e.mock.On("Destroy", dir, state)}
 }
 
-func (_c *Client_Destroy_Call) Run(run func(dir string)) *Client_Destroy_Call {
+func (_c *Client_Destroy_Call) Run(run func(dir string, state []byte)) *Client_Destroy_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string))
+		run(args[0].(string), args[1].([]byte))
 	})
 	return _c
 }
 
-func (_c *Client_Destroy_Call) Return(_a0 error) *Client_Destroy_Call {
-	_c.Call.Return(_a0)
+func (_c *Client_Destroy_Call) Return(_a0 []byte, _a1 error) *Client_Destroy_Call {
+	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *Client_Destroy_Call) RunAndReturn(run func(string) error) *Client_Destroy_Call {
+func (_c *Client_Destroy_Call) RunAndReturn(run func(string, []byte) ([]byte, error)) *Client_Destroy_Call {
 	_c.Call.Return(run)
 	return _c
 }
