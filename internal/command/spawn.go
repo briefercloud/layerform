@@ -3,27 +3,28 @@ package command
 import (
 	"fmt"
 	"os"
-	"os/exec"
 	"path"
 	"path/filepath"
 
+	"github.com/lithammer/shortuuid/v3"
 	"github.com/mitchellh/cli"
 	"github.com/pkg/errors"
-  "github.com/lithammer/shortuuid/v3"
 
 	"github.com/ergomake/layerform/client"
 	"github.com/ergomake/layerform/internal/data/model"
 	"github.com/ergomake/layerform/internal/pathutils"
+	"github.com/ergomake/layerform/internal/terraform"
 )
 
 type spawnCommand struct {
 	layerformClient client.Client
+	terraformClient terraform.Client
 }
 
 var _ cli.Command = &spawnCommand{}
 
-func NewSpawn(layerformClient client.Client) *spawnCommand {
-	return &spawnCommand{layerformClient}
+func NewSpawn(layerformClient client.Client, terraformClient terraform.Client) *spawnCommand {
+	return &spawnCommand{layerformClient, terraformClient}
 }
 
 func (c *spawnCommand) Help() string {
@@ -41,8 +42,8 @@ func (c *spawnCommand) Run(args []string) int {
 	if len(args) > 1 {
 		instance = args[1]
 	} else {
-    instance = shortuuid.New()
-  }
+		instance = shortuuid.New()
+	}
 
 	layer, err := c.layerformClient.GetLayer(layerName)
 	if err != nil {
@@ -61,7 +62,7 @@ func (c *spawnCommand) Run(args []string) int {
 		return 1
 	}
 
-	tmpDir, layerDir, err := materializeLayerToDisk(layer, state)
+	tmpDir, layerDir, err := materializeLayerToDisk(layer)
 	if err != nil {
 		fmt.Printf("%v\n", errors.Wrapf(err, "fail to materialize layer %s to disk", layerName))
 		return 1
@@ -69,49 +70,28 @@ func (c *spawnCommand) Run(args []string) int {
 
 	fmt.Println(tmpDir, layerDir)
 
-	cmd := exec.Command("terraform", "init")
-	cmd.Dir = layerDir
-	cmd.Stdin = os.Stdin
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	err = cmd.Run()
+	err = c.terraformClient.Init(layerDir)
 	if err != nil {
-		fmt.Printf("%v\n", err)
-		return cmd.ProcessState.ExitCode()
+		fmt.Printf("%v\n", errors.Wrap(err, "fail to terraform init"))
+		return 1
 	}
 
-	cmd = exec.Command("terraform", "apply")
-	cmd.Dir = layerDir
-	cmd.Stdin = os.Stdin
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	err = cmd.Run()
-
+	state, err = c.terraformClient.Apply(layerDir, state)
 	if err != nil {
-		fmt.Printf("%v\n", err)
-		return cmd.ProcessState.ExitCode()
+		fmt.Printf("%v\n", errors.Wrap(err, "fail to terraform apply"))
+		return 1
 	}
 
-  if cmd.ProcessState.ExitCode() != 0 {
-    return cmd.ProcessState.ExitCode()
-  }
-
-  state, err = os.ReadFile(path.Join(layerDir, "terraform.tfstate"))
-  if err != nil {
+	err = c.layerformClient.SaveLayerState(layer, instance, state)
+	if err != nil {
 		fmt.Printf("%v\n", err)
-    return 1
-  }
-
-  err = c.layerformClient.SaveLayerState(layer, instance, state)
-  if err != nil {
-		fmt.Printf("%v\n", err)
-    return 1
-  }
+		return 1
+	}
 
 	return 0
 }
 
-func materializeLayerToDisk(layer *model.Layer, state []byte) (string, string, error) {
+func materializeLayerToDisk(layer *model.Layer) (string, string, error) {
 	tmpDir, err := os.MkdirTemp("", fmt.Sprintf("layerform_%s", layer.Name))
 	if err != nil {
 		return "", "", err
@@ -147,14 +127,6 @@ func materializeLayerToDisk(layer *model.Layer, state []byte) (string, string, e
 
 		commonParent := pathutils.FindCommonParentPath(layerFilePaths)
 		layerDir = path.Join(layerDir, commonParent)
-	}
-
-	if state != nil {
-		err := os.WriteFile(path.Join(layerDir, "terraform.tfstate"), state, 0644)
-		if err != nil {
-			os.RemoveAll(tmpDir)
-			return "", "", err
-		}
 	}
 
 	return tmpDir, layerDir, nil

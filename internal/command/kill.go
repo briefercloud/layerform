@@ -2,25 +2,24 @@ package command
 
 import (
 	"fmt"
-	"os"
-	"os/exec"
-	"path"
 
 	"github.com/lithammer/shortuuid/v3"
 	"github.com/mitchellh/cli"
 	"github.com/pkg/errors"
 
 	"github.com/ergomake/layerform/client"
+	"github.com/ergomake/layerform/internal/terraform"
 )
 
 type killCommand struct {
 	layerformClient client.Client
+	terraformClient terraform.Client
 }
 
 var _ cli.Command = &killCommand{}
 
-func NewKill(layerformClient client.Client) *killCommand {
-	return &killCommand{layerformClient}
+func NewKill(layerformClient client.Client, terraformClient terraform.Client) *killCommand {
+	return &killCommand{layerformClient, terraformClient}
 }
 
 func (c *killCommand) Help() string {
@@ -38,8 +37,8 @@ func (c *killCommand) Run(args []string) int {
 	if len(args) > 1 {
 		instance = args[1]
 	} else {
-    instance = shortuuid.New()
-  }
+		instance = shortuuid.New()
+	}
 
 	layer, err := c.layerformClient.GetLayer(layerName)
 	if err != nil {
@@ -58,12 +57,12 @@ func (c *killCommand) Run(args []string) int {
 		return 1
 	}
 
-  if state == nil {
+	if state == nil {
 		fmt.Printf("Instance %s of layer %s not found", instance, layer.Name)
 		return 1
-  }
+	}
 
-	tmpDir, layerDir, err := materializeLayerToDisk(layer, state)
+	tmpDir, layerDir, err := materializeLayerToDisk(layer)
 	if err != nil {
 		fmt.Printf("%v\n", errors.Wrapf(err, "fail to materialize layer %s to disk", layerName))
 		return 1
@@ -71,45 +70,23 @@ func (c *killCommand) Run(args []string) int {
 
 	fmt.Println(tmpDir, layerDir)
 
-	cmd := exec.Command("terraform", "init")
-	cmd.Dir = layerDir
-	cmd.Stdin = os.Stdin
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	err = cmd.Run()
+	err = c.terraformClient.Init(layerDir)
 	if err != nil {
-		fmt.Printf("%v\n", err)
-		return cmd.ProcessState.ExitCode()
+		fmt.Printf("%v\n", errors.Wrap(err, "fail to terraform init"))
+		return 1
 	}
 
-	cmd = exec.Command("terraform", "destroy")
-	cmd.Dir = layerDir
-	cmd.Stdin = os.Stdin
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	err = cmd.Run()
-
+	state, err = c.terraformClient.Destroy(layerDir, state)
 	if err != nil {
-		fmt.Printf("%v\n", err)
-		return cmd.ProcessState.ExitCode()
+		fmt.Printf("%v\n", errors.Wrap(err, "fail to terraform init"))
+		return 1
 	}
 
-  if cmd.ProcessState.ExitCode() != 0 {
-    return cmd.ProcessState.ExitCode()
-  }
-
-  state, err = os.ReadFile(path.Join(layerDir, "terraform.tfstate"))
-  if err != nil {
+	err = c.layerformClient.SaveLayerState(layer, instance, state)
+	if err != nil {
 		fmt.Printf("%v\n", err)
-    return 1
-  }
-
-  err = c.layerformClient.SaveLayerState(layer, instance, state)
-  if err != nil {
-		fmt.Printf("%v\n", err)
-    return 1
-  }
+		return 1
+	}
 
 	return 0
 }
-

@@ -128,7 +128,7 @@ func TestFile_GetLayerState(t *testing.T) {
 
 	testData := fileContent{
 		Layers: map[string]*model.Layer{
-			"test_layer": {Name: "test_layer"},
+			"test_layer":    {Name: "test_layer"},
 			"another_layer": {Name: "another_layer"},
 		},
 		State: map[string]map[string][]byte{
@@ -164,7 +164,7 @@ func TestFile_SaveLayerState(t *testing.T) {
 
 	testData := fileContent{
 		Layers: map[string]*model.Layer{
-			"test_layer": {Name: "test_layer"},
+			"test_layer":    {Name: "test_layer"},
 			"another_layer": {Name: "another_layer"},
 		},
 		State: map[string]map[string][]byte{

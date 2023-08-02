@@ -9,8 +9,8 @@ import (
 var ErrLayerAlreadyExists = errors.New("layer already exists")
 
 type Client interface {
-  CreateLayer(*model.Layer) (*model.Layer, error)
+	CreateLayer(*model.Layer) (*model.Layer, error)
 	GetLayer(name string) (*model.Layer, error)
-  GetLayerState(layer *model.Layer, instance string) ([]byte, error)
-  SaveLayerState(layer *model.Layer, instance string, state []byte) error
+	GetLayerState(layer *model.Layer, instance string) ([]byte, error)
+	SaveLayerState(layer *model.Layer, instance string, state []byte) error
 }

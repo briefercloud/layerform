@@ -7,9 +7,10 @@ import (
 	"os"
 	"path"
 
+	"github.com/mitchellh/cli"
+
 	"github.com/ergomake/layerform/client"
 	"github.com/ergomake/layerform/internal/data/model"
-	"github.com/mitchellh/cli"
 )
 
 type layerItem struct {

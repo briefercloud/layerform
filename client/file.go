@@ -78,9 +78,9 @@ func (c *fileClient) CreateLayer(layer *model.Layer) (*model.Layer, error) {
 
 	c.content.Layers[layer.Name] = layer
 
-  err := c.commit()
+	err := c.commit()
 
-  return layer, err
+	return layer, err
 }
 
 // GetLayerState fetches a layer state for a instance, return nil when instance has no state
