@@ -67,8 +67,7 @@ func (c *spawnCommand) Run(args []string) int {
 		fmt.Printf("%v\n", errors.Wrapf(err, "fail to materialize layer %s to disk", layerName))
 		return 1
 	}
-
-	fmt.Println(tmpDir, layerDir)
+	defer os.RemoveAll(tmpDir)
 
 	err = c.terraformClient.Init(layerDir)
 	if err != nil {
