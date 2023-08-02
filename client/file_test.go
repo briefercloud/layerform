@@ -3,6 +3,7 @@ package client
 import (
 	"encoding/json"
 	"os"
+	"path"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -14,10 +15,8 @@ import (
 func TestFile_NewFileClient(t *testing.T) {
 	// Test the case when the file does not exist
 	t.Run("when the file does not exists", func(t *testing.T) {
-		filePath := "test_file_not_exist.json"
-		t.Cleanup(func() {
-			os.Remove(filePath)
-		})
+		tmpDir := t.TempDir()
+		filePath := path.Join(tmpDir, "test_file_not_exist.json")
 
 		client, err := NewFileClient(filePath)
 		assert.FileExists(t, filePath)
@@ -28,10 +27,8 @@ func TestFile_NewFileClient(t *testing.T) {
 	})
 
 	t.Run("when the file exists with valid JSON data", func(t *testing.T) {
-		existingFilePath := "test_existing_file.json"
-		t.Cleanup(func() {
-			os.Remove(existingFilePath)
-		})
+		tmpDir := t.TempDir()
+		existingFilePath := path.Join(tmpDir, "test_existing_file.json")
 
 		existingData := &fileContent{
 			Layers: map[string]*model.Layer{
@@ -50,10 +47,8 @@ func TestFile_NewFileClient(t *testing.T) {
 	})
 
 	t.Run("errors when file exists with invalid data", func(t *testing.T) {
-		existingFilePath := "test_existing_file.json"
-		t.Cleanup(func() {
-			os.Remove(existingFilePath)
-		})
+		tmpDir := t.TempDir()
+		existingFilePath := path.Join(tmpDir, "test_existing_file.json")
 
 		err := os.WriteFile(existingFilePath, []byte("invalid data"), 0644)
 		assert.NoError(t, err)
@@ -65,8 +60,8 @@ func TestFile_NewFileClient(t *testing.T) {
 
 func TestFile_ReadLayer(t *testing.T) {
 	// Create a fileClient with some test data
-	filePath := "test_read_layer.json"
-	defer os.Remove(filePath)
+	tmpDir := t.TempDir()
+	filePath := path.Join(tmpDir, "test_read_layer.json")
 
 	testData := fileContent{
 		Layers: map[string]*model.Layer{
@@ -93,9 +88,8 @@ func TestFile_ReadLayer(t *testing.T) {
 }
 
 func TestFile_CreateLayer(t *testing.T) {
-	// Create a fileClient
-	filePath := "test_create_layer.json"
-	defer os.Remove(filePath)
+	tmpDir := t.TempDir()
+	filePath := path.Join(tmpDir, "test_create_layer.json")
 
 	client, err := NewFileClient(filePath)
 	require.NoError(t, err)
@@ -122,9 +116,8 @@ func TestFile_CreateLayer(t *testing.T) {
 }
 
 func TestFile_GetLayerState(t *testing.T) {
-	// Create a fileClient with some test data
-	filePath := "test_get_layer_state.json"
-	defer os.Remove(filePath)
+	tmpDir := t.TempDir()
+	filePath := path.Join(tmpDir, "test_get_layer_state.json")
 
 	testData := fileContent{
 		Layers: map[string]*model.Layer{
@@ -158,9 +151,8 @@ func TestFile_GetLayerState(t *testing.T) {
 }
 
 func TestFile_SaveLayerState(t *testing.T) {
-	// Create a fileClient with some test data
-	filePath := "test_save_layer_state.json"
-	defer os.Remove(filePath)
+	tmpDir := t.TempDir()
+	filePath := path.Join(tmpDir, "test_save_layer_state.json")
 
 	testData := fileContent{
 		Layers: map[string]*model.Layer{
