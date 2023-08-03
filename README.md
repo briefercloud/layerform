@@ -14,7 +14,7 @@
 </h4>
 
 <h4 align="center">
-  <p>⚠️ This repository only contains a specification.</p>
+  <p>⚠️ This repo only showcases our spec for Layerform.</p>
 </h4>
 
 <p align="center">
