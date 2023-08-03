@@ -3,17 +3,15 @@ package terraform
 import (
 	"os"
 	"path"
-
-	"github.com/ergomake/layerform/internal/commandexecutor"
 )
 
 type terraformCLI struct {
-	exec commandexecutor.CommandExecutor
+	exec CommandExecutor
 }
 
 var _ Client = &terraformCLI{}
 
-func NewCLI(exec commandexecutor.CommandExecutor) *terraformCLI {
+func NewCLI(exec CommandExecutor) *terraformCLI {
 	return &terraformCLI{exec}
 }
 

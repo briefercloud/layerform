@@ -8,7 +8,6 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/ergomake/layerform/internal/command"
-	"github.com/ergomake/layerform/internal/commandexecutor"
 	"github.com/ergomake/layerform/internal/layerfile"
 	"github.com/ergomake/layerform/internal/layers"
 	"github.com/ergomake/layerform/internal/state"
@@ -33,12 +32,11 @@ func main() {
 
 	layersBackend := layers.NewInMemoryBackend(layerslist)
 
-	cmdExecutor := &commandexecutor.OSCommandExecutor{
+	terraformClient := terraform.NewCLI(&terraform.OSCommandExecutor{
 		Stdin:  os.Stdin,
 		Stdout: os.Stdout,
 		Stderr: os.Stderr,
-	}
-	terraformClient := terraform.NewCLI(cmdExecutor)
+	})
 
 	// TODO: fix hardcoded version
 	c := cli.NewCLI("layerform", "0.0.1")

@@ -1,4 +1,4 @@
-package commandexecutor
+package terraform
 
 import (
 	"bytes"
