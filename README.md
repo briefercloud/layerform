@@ -14,7 +14,7 @@
 </h4>
 
 <h4 align="center">
-  <p>🚧 This repository is a work-in-progress.</p>
+  <p>⚠️ This repository only contains a specification.</p>
 </h4>
 
 <p align="center">
