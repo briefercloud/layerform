@@ -7,6 +7,7 @@ import (
 	"github.com/mitchellh/cli"
 	"github.com/pkg/errors"
 
+	"github.com/ergomake/layerform/internal/cmdexec"
 	"github.com/ergomake/layerform/internal/command"
 	"github.com/ergomake/layerform/internal/layerfile"
 	"github.com/ergomake/layerform/internal/layers"
@@ -32,7 +33,7 @@ func main() {
 
 	layersBackend := layers.NewInMemoryBackend(layerslist)
 
-	terraformClient := terraform.NewCLI(&terraform.OSCommandExecutor{
+	terraformClient := terraform.NewCLI(&cmdexec.OSCommandExecutor{
 		Stdin:  os.Stdin,
 		Stdout: os.Stdout,
 		Stderr: os.Stderr,

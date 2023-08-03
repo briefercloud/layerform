@@ -4,6 +4,7 @@ package mocks
 
 import (
 	model "github.com/ergomake/layerform/internal/data/model"
+	state "github.com/ergomake/layerform/internal/state"
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -21,19 +22,19 @@ func (_m *Backend) EXPECT() *Backend_Expecter {
 }
 
 // GetLayerState provides a mock function with given fields: layer, instance
-func (_m *Backend) GetLayerState(layer *model.Layer, instance string) ([]byte, error) {
+func (_m *Backend) GetLayerState(layer *model.Layer, instance string) (*state.State, error) {
 	ret := _m.Called(layer, instance)
 
-	var r0 []byte
+	var r0 *state.State
 	var r1 error
-	if rf, ok := ret.Get(0).(func(*model.Layer, string) ([]byte, error)); ok {
+	if rf, ok := ret.Get(0).(func(*model.Layer, string) (*state.State, error)); ok {
 		return rf(layer, instance)
 	}
-	if rf, ok := ret.Get(0).(func(*model.Layer, string) []byte); ok {
+	if rf, ok := ret.Get(0).(func(*model.Layer, string) *state.State); ok {
 		r0 = rf(layer, instance)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]byte)
+			r0 = ret.Get(0).(*state.State)
 		}
 	}
 
@@ -65,22 +66,65 @@ func (_c *Backend_GetLayerState_Call) Run(run func(layer *model.Layer, instance 
 	return _c
 }
 
-func (_c *Backend_GetLayerState_Call) Return(_a0 []byte, _a1 error) *Backend_GetLayerState_Call {
+func (_c *Backend_GetLayerState_Call) Return(_a0 *state.State, _a1 error) *Backend_GetLayerState_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *Backend_GetLayerState_Call) RunAndReturn(run func(*model.Layer, string) ([]byte, error)) *Backend_GetLayerState_Call {
+func (_c *Backend_GetLayerState_Call) RunAndReturn(run func(*model.Layer, string) (*state.State, error)) *Backend_GetLayerState_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// RemoveLayerState provides a mock function with given fields: layer, instance
+func (_m *Backend) RemoveLayerState(layer *model.Layer, instance string) error {
+	ret := _m.Called(layer, instance)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(*model.Layer, string) error); ok {
+		r0 = rf(layer, instance)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// Backend_RemoveLayerState_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'RemoveLayerState'
+type Backend_RemoveLayerState_Call struct {
+	*mock.Call
+}
+
+// RemoveLayerState is a helper method to define mock.On call
+//   - layer *model.Layer
+//   - instance string
+func (_e *Backend_Expecter) RemoveLayerState(layer interface{}, instance interface{}) *Backend_RemoveLayerState_Call {
+	return &Backend_RemoveLayerState_Call{Call: _e.mock.On("RemoveLayerState", layer, instance)}
+}
+
+func (_c *Backend_RemoveLayerState_Call) Run(run func(layer *model.Layer, instance string)) *Backend_RemoveLayerState_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(*model.Layer), args[1].(string))
+	})
+	return _c
+}
+
+func (_c *Backend_RemoveLayerState_Call) Return(_a0 error) *Backend_RemoveLayerState_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *Backend_RemoveLayerState_Call) RunAndReturn(run func(*model.Layer, string) error) *Backend_RemoveLayerState_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
 // SaveLayerState provides a mock function with given fields: layer, instance, _a2
-func (_m *Backend) SaveLayerState(layer *model.Layer, instance string, _a2 []byte) error {
+func (_m *Backend) SaveLayerState(layer *model.Layer, instance string, _a2 *state.State) error {
 	ret := _m.Called(layer, instance, _a2)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(*model.Layer, string, []byte) error); ok {
+	if rf, ok := ret.Get(0).(func(*model.Layer, string, *state.State) error); ok {
 		r0 = rf(layer, instance, _a2)
 	} else {
 		r0 = ret.Error(0)
@@ -97,14 +141,14 @@ type Backend_SaveLayerState_Call struct {
 // SaveLayerState is a helper method to define mock.On call
 //   - layer *model.Layer
 //   - instance string
-//   - _a2 []byte
+//   - _a2 *state.State
 func (_e *Backend_Expecter) SaveLayerState(layer interface{}, instance interface{}, _a2 interface{}) *Backend_SaveLayerState_Call {
 	return &Backend_SaveLayerState_Call{Call: _e.mock.On("SaveLayerState", layer, instance, _a2)}
 }
 
-func (_c *Backend_SaveLayerState_Call) Run(run func(layer *model.Layer, instance string, _a2 []byte)) *Backend_SaveLayerState_Call {
+func (_c *Backend_SaveLayerState_Call) Run(run func(layer *model.Layer, instance string, _a2 *state.State)) *Backend_SaveLayerState_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(*model.Layer), args[1].(string), args[2].([]byte))
+		run(args[0].(*model.Layer), args[1].(string), args[2].(*state.State))
 	})
 	return _c
 }
@@ -114,7 +158,7 @@ func (_c *Backend_SaveLayerState_Call) Return(_a0 error) *Backend_SaveLayerState
 	return _c
 }
 
-func (_c *Backend_SaveLayerState_Call) RunAndReturn(run func(*model.Layer, string, []byte) error) *Backend_SaveLayerState_Call {
+func (_c *Backend_SaveLayerState_Call) RunAndReturn(run func(*model.Layer, string, *state.State) error) *Backend_SaveLayerState_Call {
 	_c.Call.Return(run)
 	return _c
 }

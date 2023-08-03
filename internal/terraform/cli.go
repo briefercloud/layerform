@@ -3,15 +3,19 @@ package terraform
 import (
 	"os"
 	"path"
+
+	"github.com/pkg/errors"
+
+	"github.com/ergomake/layerform/internal/cmdexec"
 )
 
 type terraformCLI struct {
-	exec CommandExecutor
+	exec cmdexec.CommandExecutor
 }
 
 var _ Client = &terraformCLI{}
 
-func NewCLI(exec CommandExecutor) *terraformCLI {
+func NewCLI(exec cmdexec.CommandExecutor) *terraformCLI {
 	return &terraformCLI{exec}
 }
 
@@ -21,9 +25,9 @@ func (t *terraformCLI) Init(dir string) error {
 	return err
 }
 
-func (t *terraformCLI) Apply(dir string, state []byte) ([]byte, error) {
+func (t *terraformCLI) Apply(dir string, state *State) (*State, error) {
 	if state != nil {
-		err := os.WriteFile(path.Join(dir, "terraform.tfstate"), state, 0644)
+		err := os.WriteFile(path.Join(dir, "terraform.tfstate"), state.Bytes, 0644)
 		if err != nil {
 			return nil, err
 		}
@@ -35,32 +39,33 @@ func (t *terraformCLI) Apply(dir string, state []byte) ([]byte, error) {
 		return nil, err
 	}
 
-	state, err = os.ReadFile(path.Join(dir, "terraform.tfstate"))
-	if err != nil {
-		return nil, err
-	}
+	nextState, err := TFStateFromFile(path.Join(dir, "terraform.tfstate"))
 
-	return state, err
+	return nextState, errors.Wrap(err, "fail to parse state out of teraform.tfstate")
 }
 
-func (t *terraformCLI) Destroy(dir string, state []byte) ([]byte, error) {
+func (t *terraformCLI) Destroy(dir string, state *State, target ...string) (*State, error) {
 	if state != nil {
-		err := os.WriteFile(path.Join(dir, "terraform.tfstate"), state, 0644)
+		err := os.WriteFile(path.Join(dir, "terraform.tfstate"), state.Bytes, 0644)
 		if err != nil {
 			return nil, err
 		}
 	}
 
 	t.exec.SetDir(dir)
-	_, err := t.exec.Run("terraform", "destroy")
+	args := []string{"destroy"}
+	if len(target) > 0 {
+		for _, t := range target {
+			args = append(args, "-target", t)
+		}
+	}
+
+	_, err := t.exec.Run("terraform", args...)
 	if err != nil {
 		return nil, err
 	}
 
-	state, err = os.ReadFile(path.Join(dir, "terraform.tfstate"))
-	if err != nil {
-		return nil, err
-	}
+	nextState, err := TFStateFromFile(path.Join(dir, "terraform.tfstate"))
 
-	return state, err
+	return nextState, errors.Wrap(err, "fail to parse state out of teraform.tfstate")
 }

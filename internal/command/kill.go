@@ -2,11 +2,13 @@ package command
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/lithammer/shortuuid/v3"
 	"github.com/mitchellh/cli"
 	"github.com/pkg/errors"
 
+	"github.com/ergomake/layerform/internal/data/model"
 	"github.com/ergomake/layerform/internal/layers"
 	"github.com/ergomake/layerform/internal/state"
 	"github.com/ergomake/layerform/internal/terraform"
@@ -57,42 +59,94 @@ func (c *killCommand) Run(args []string) int {
 		return 1
 	}
 
-	state, err := c.stateBackend.GetLayerState(layer, instance)
+	err = c.kill(layer, instance)
 	if err != nil {
-		fmt.Printf("%v\n", errors.Wrapf(err, "fail to get layer %s %s state", layerName, instance))
-		return 1
-	}
-
-	if state == nil {
-		fmt.Printf("Instance %s of layer %s not found", instance, layer.Name)
-		return 1
-	}
-
-	tmpDir, layerDir, err := materializeLayerToDisk(layer)
-	if err != nil {
-		fmt.Printf("%v\n", errors.Wrapf(err, "fail to materialize layer %s to disk", layerName))
-		return 1
-	}
-
-	fmt.Println(tmpDir, layerDir)
-
-	err = c.terraformClient.Init(layerDir)
-	if err != nil {
-		fmt.Printf("%v\n", errors.Wrap(err, "fail to terraform init"))
-		return 1
-	}
-
-	state, err = c.terraformClient.Destroy(layerDir, state)
-	if err != nil {
-		fmt.Printf("%v\n", errors.Wrap(err, "fail to terraform init"))
-		return 1
-	}
-
-	err = c.stateBackend.SaveLayerState(layer, instance, state)
-	if err != nil {
-		fmt.Printf("%v\n", err)
+		fmt.Printf("%v\n", errors.Wrapf(err, "fail to kill \"%s\" of layer \"%s\"\n", layerName, instance))
 		return 1
 	}
 
 	return 0
+}
+
+func (c *killCommand) materializeLayerWithDeps(layer *model.Layer, dir string) (string, error) {
+	deps, err := c.layersBackend.ResolveDependencies(layer)
+	if err != nil {
+		return "", errors.Wrapf(err, "fail to resolve dependencies of \"%s\"", layer.Name)
+	}
+
+	for _, d := range deps {
+		_, err = c.materializeLayerWithDeps(d, dir)
+		if err != nil {
+			return "", errors.Wrapf(err, "fail to materialize layer dependencies of \"%s\"", layer.Name)
+		}
+	}
+
+	layerDir, err := materializeLayerToDisk(layer, dir)
+	return layerDir, errors.Wrapf(err, "fail to materialize layers \"%s\" to disk", layer.Name)
+}
+
+func (c *killCommand) kill(layer *model.Layer, instance string) error {
+	dir, err := os.MkdirTemp("", fmt.Sprintf("layerform_%s", layer.Name))
+	if err != nil {
+		return errors.Wrapf(err, "fail to create a directory to materialize layers")
+	}
+	defer os.RemoveAll(dir)
+
+	layerState, err := c.stateBackend.GetLayerState(layer, instance)
+	if err != nil {
+		return errors.Wrap(err, "fail to get layer state")
+	}
+
+	layersDir, err := c.materializeLayerWithDeps(layer, dir)
+	if err != nil {
+		return errors.Wrapf(err, "fail to materialize layer \"%s\" with dependencies", layer.Name)
+	}
+
+	deps, err := c.layersBackend.ResolveDependencies(layer)
+	if err != nil {
+		return errors.Wrapf(err, "fail to resolve dependencies of layer \"%s\"", layer.Name)
+	}
+
+	resources := map[string]struct{}{}
+	for _, dep := range deps {
+		depState, err := c.stateBackend.GetLayerState(dep, "default")
+		if err != nil {
+			return errors.Wrapf(err, "fail to get \"%s\" state of layer \"%s\"", "default", dep.Name)
+		}
+
+		diff := depState.Terraform().ResourceDiff(layerState.Terraform())
+		if err != nil {
+			return errors.Wrapf(
+				err,
+				"fail to compute resource diff between state \"%s\" of layer \"%s\" and state \"%s\" of layer \"%s\"", "default",
+				dep.Name,
+				instance,
+				layer.Name,
+			)
+		}
+
+		for _, res := range diff {
+			resources[res.Address()] = struct{}{}
+		}
+	}
+
+	err = c.terraformClient.Init(layersDir)
+	if err != nil {
+		return errors.Wrap(err, "fail to initialize terraform")
+	}
+
+	targets := []string{}
+	for t := range resources {
+		targets = append(targets, t)
+	}
+
+	fmt.Println("TARGETS", targets)
+
+	_, err = c.terraformClient.Destroy(layersDir, layerState.Terraform(), targets...)
+	if err != nil {
+		return errors.Wrap(err, "fail to apply terraform")
+	}
+
+	err = c.stateBackend.RemoveLayerState(layer, instance)
+	return errors.Wrapf(err, "fail to remove state \"%s\" of layer \"%s\"", instance, layer.Name)
 }

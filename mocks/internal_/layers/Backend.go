@@ -74,6 +74,60 @@ func (_c *Backend_GetLayer_Call) RunAndReturn(run func(string) (*model.Layer, er
 	return _c
 }
 
+// ResolveDependencies provides a mock function with given fields: _a0
+func (_m *Backend) ResolveDependencies(_a0 *model.Layer) ([]*model.Layer, error) {
+	ret := _m.Called(_a0)
+
+	var r0 []*model.Layer
+	var r1 error
+	if rf, ok := ret.Get(0).(func(*model.Layer) ([]*model.Layer, error)); ok {
+		return rf(_a0)
+	}
+	if rf, ok := ret.Get(0).(func(*model.Layer) []*model.Layer); ok {
+		r0 = rf(_a0)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]*model.Layer)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(*model.Layer) error); ok {
+		r1 = rf(_a0)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// Backend_ResolveDependencies_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ResolveDependencies'
+type Backend_ResolveDependencies_Call struct {
+	*mock.Call
+}
+
+// ResolveDependencies is a helper method to define mock.On call
+//   - _a0 *model.Layer
+func (_e *Backend_Expecter) ResolveDependencies(_a0 interface{}) *Backend_ResolveDependencies_Call {
+	return &Backend_ResolveDependencies_Call{Call: _e.mock.On("ResolveDependencies", _a0)}
+}
+
+func (_c *Backend_ResolveDependencies_Call) Run(run func(_a0 *model.Layer)) *Backend_ResolveDependencies_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(*model.Layer))
+	})
+	return _c
+}
+
+func (_c *Backend_ResolveDependencies_Call) Return(_a0 []*model.Layer, _a1 error) *Backend_ResolveDependencies_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *Backend_ResolveDependencies_Call) RunAndReturn(run func(*model.Layer) ([]*model.Layer, error)) *Backend_ResolveDependencies_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // NewBackend creates a new instance of Backend. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
 // The first argument is typically a *testing.T value.
 func NewBackend(t interface {

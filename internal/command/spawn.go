@@ -62,65 +62,45 @@ func (c *spawnCommand) Run(args []string) int {
 		return 1
 	}
 
-	state, err := c.stateBackend.GetLayerState(layer, instance)
-	if err != nil {
-		fmt.Printf("%v\n", errors.Wrapf(err, "fail to get layer %s %s state", layerName, instance))
-		return 1
-	}
+	// baseLayers, err := c.layersBackend.ResolveDependencies(layer)
+	// if err != nil {
+	//   fmt.Printf("ERROR: Fail to resolve \"%s\" dependencies\n", layer.Name)
+	//   return 1
+	// }
 
-	tmpDir, layerDir, err := materializeLayerToDisk(layer)
-	if err != nil {
-		fmt.Printf("%v\n", errors.Wrapf(err, "fail to materialize layer %s to disk", layerName))
-		return 1
-	}
-	defer os.RemoveAll(tmpDir)
+	// var baseState []byte
+	// for _, bl := range baseLayers {
+	// }
 
-	err = c.terraformClient.Init(layerDir)
+	err = c.spawn(layer, instance)
 	if err != nil {
-		fmt.Printf("%v\n", errors.Wrap(err, "fail to terraform init"))
-		return 1
-	}
-
-	state, err = c.terraformClient.Apply(layerDir, state)
-	if err != nil {
-		fmt.Printf("%v\n", errors.Wrap(err, "fail to terraform apply"))
-		return 1
-	}
-
-	err = c.stateBackend.SaveLayerState(layer, instance, state)
-	if err != nil {
-		fmt.Printf("%v\n", err)
+		fmt.Printf("%v\n", errors.Wrapf(err, "fail to spawn %s of layer %s", instance, layerName))
 		return 1
 	}
 
 	return 0
 }
 
-func materializeLayerToDisk(layer *model.Layer) (string, string, error) {
-	tmpDir, err := os.MkdirTemp("", fmt.Sprintf("layerform_%s", layer.Name))
-	if err != nil {
-		return "", "", err
-	}
-
-	layerDir := tmpDir
+func materializeLayerToDisk(layer *model.Layer, dir string) (string, error) {
+	layerDir := dir
 
 	if len(layer.Files) == 0 {
-		return tmpDir, layerDir, nil
+		return layerDir, nil
 	}
 
 	for _, file := range layer.Files {
-		filePath := filepath.Join(tmpDir, file.Path)
+		filePath := filepath.Join(dir, file.Path)
 
 		// Ensure the parent directory exists.
 		if err := os.MkdirAll(filepath.Dir(filePath), os.ModePerm); err != nil {
-			os.RemoveAll(tmpDir)
-			return "", "", err
+			os.RemoveAll(dir)
+			return "", err
 		}
 
 		// Write the content to the file.
 		if err := os.WriteFile(filePath, file.Content, 0644); err != nil {
-			os.RemoveAll(tmpDir)
-			return "", "", err
+			os.RemoveAll(dir)
+			return "", err
 		}
 	}
 
@@ -134,5 +114,78 @@ func materializeLayerToDisk(layer *model.Layer) (string, string, error) {
 		layerDir = path.Join(layerDir, commonParent)
 	}
 
-	return tmpDir, layerDir, nil
+	return layerDir, nil
+}
+
+func mergeState(a *state.State, b *state.State) *state.State {
+	// TODO: actually merge states? is that possible?
+	if b == nil {
+		return a
+	}
+
+	return b
+}
+
+func (c *spawnCommand) spawnRecursively(layer *model.Layer, instance string, dir string) (*state.State, error) {
+	deps, err := c.layersBackend.ResolveDependencies(layer)
+	if err != nil {
+		return nil, errors.Wrapf(err, "fail to resolve dependencies of layer \"%s\"", layer.Name)
+	}
+
+	var baseState *state.State
+	for _, dep := range deps {
+		state, err := c.spawnRecursively(dep, "default", dir)
+		if err != nil {
+			return nil, errors.Wrapf(err, "fail to spawn dependecy \"%s\" of layer \"%s\"", dep.Name, layer.Name)
+		}
+
+		baseState = mergeState(baseState, state)
+	}
+
+	layerState, err := c.stateBackend.GetLayerState(layer, instance)
+	if err != nil {
+		return nil, errors.Wrapf(err, "fail to get layer %s %s state", layer.Name, instance)
+	}
+
+	layerState = mergeState(baseState, layerState)
+
+	layerDir, err := materializeLayerToDisk(layer, dir)
+	if err != nil {
+		return nil, errors.Wrapf(err, "fail to materialize layer %s to disk", layer.Name)
+	}
+
+	fmt.Printf("#######################################\n")
+	fmt.Printf("[INFO]: Spawning \"%s\" of layer \"%s\"\n", instance, layer.Name)
+	fmt.Printf("#######################################\n")
+
+	err = c.terraformClient.Init(layerDir)
+	if err != nil {
+		return nil, errors.Wrap(err, "fail to terraform init")
+	}
+
+	tfState, err := c.terraformClient.Apply(layerDir, layerState.Terraform())
+	if err != nil {
+		return nil, errors.Wrap(err, "fail to terraform apply")
+	}
+
+	layerState = state.NewState(tfState)
+	err = c.stateBackend.SaveLayerState(layer, instance, layerState)
+
+	return layerState, errors.Wrapf(err, "fail to save state %s of layer %s", instance, layer.Name)
+}
+
+func (c *spawnCommand) spawn(layer *model.Layer, instance string) error {
+	dir, err := os.MkdirTemp("", fmt.Sprintf("layerform_%s", layer.Name))
+	if err != nil {
+		return errors.Wrap(err, "fail to create a directory to materialize layers to")
+	}
+	defer os.RemoveAll(dir)
+
+	state, err := c.spawnRecursively(layer, instance, dir)
+	if err != nil {
+		return errors.Wrapf(err, "fail to spawn layer \"%s\"", layer.Name)
+	}
+
+	err = c.stateBackend.SaveLayerState(layer, instance, state)
+	return errors.Wrapf(err, "fail to save state \"%s\" of layer \"%s\"", instance, layer.Name)
 }

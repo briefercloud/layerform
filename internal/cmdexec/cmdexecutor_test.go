@@ -1,4 +1,4 @@
-package terraform
+package cmdexec
 
 import (
 	"bytes"

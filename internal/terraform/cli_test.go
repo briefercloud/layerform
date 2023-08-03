@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	mocks "github.com/ergomake/layerform/mocks/internal_/commandexecutor"
+	mocks "github.com/ergomake/layerform/mocks/internal_/cmdexec"
 )
 
 func TestTerraformCLI_Init(t *testing.T) {
@@ -34,22 +34,23 @@ func TestTerraformCLI_Apply(t *testing.T) {
 
 		exec := mocks.NewCommandExecutor(t)
 
+		nextStateBytes := []byte(`{ "resources": [] }`)
 		exec.EXPECT().SetDir(tmpDir).Return()
 		exec.EXPECT().
 			Run("terraform", "apply").
 			RunAndReturn(func(_ string, _ ...string) (int, error) {
-				err := os.WriteFile(path.Join(tmpDir, "terraform.tfstate"), []byte("next state"), 0644)
+				err := os.WriteFile(path.Join(tmpDir, "terraform.tfstate"), nextStateBytes, 0644)
 
 				return 0, err
 			})
 
 		cli := NewCLI(exec)
-		nextState, err := cli.Apply(tmpDir, []byte("curr state"))
+		nextState, err := cli.Apply(tmpDir, &State{Bytes: []byte("curr state")})
 
 		require.NoError(t, err)
 		require.NotNil(t, nextState)
 
-		assert.Equal(t, "next state", string(nextState))
+		assert.Equal(t, string(nextStateBytes), string(nextState.Bytes))
 	})
 
 	t.Run("ignores nil state", func(t *testing.T) {
@@ -81,7 +82,7 @@ func TestTerraformCLI_Apply(t *testing.T) {
 		exec := mocks.NewCommandExecutor(t)
 
 		cli := NewCLI(exec)
-		_, err = cli.Apply(tmpDir, []byte("curr state"))
+		_, err = cli.Apply(tmpDir, &State{Bytes: []byte("curr state")})
 		assert.Error(t, err)
 	})
 
@@ -120,22 +121,43 @@ func TestTerraformCLI_Destroy(t *testing.T) {
 
 		exec := mocks.NewCommandExecutor(t)
 
+		nextStateBytes := []byte(`{ "resources": [] }`)
 		exec.EXPECT().SetDir(tmpDir).Return()
 		exec.EXPECT().
 			Run("terraform", "destroy").
 			RunAndReturn(func(_ string, _ ...string) (int, error) {
-				err := os.WriteFile(path.Join(tmpDir, "terraform.tfstate"), []byte("next state"), 0644)
+				err := os.WriteFile(path.Join(tmpDir, "terraform.tfstate"), nextStateBytes, 0644)
 
 				return 0, err
 			})
 
 		cli := NewCLI(exec)
-		nextState, err := cli.Destroy(tmpDir, []byte("curr state"))
+		nextState, err := cli.Destroy(tmpDir, &State{Bytes: []byte("curr state")})
 
 		require.NoError(t, err)
-		require.NotNil(t, nextState)
+		require.NotNil(t, nextStateBytes)
 
-		assert.Equal(t, "next state", string(nextState))
+		assert.FileExists(t, path.Join(tmpDir, "terraform.tfstate"))
+		assert.Equal(t, string(nextStateBytes), string(nextState.Bytes))
+	})
+
+	t.Run("calls terraform destroy with target", func(t *testing.T) {
+		tmpDir := t.TempDir()
+
+		exec := mocks.NewCommandExecutor(t)
+
+		exec.EXPECT().SetDir(tmpDir).Return()
+		exec.EXPECT().
+			Run("terraform", "destroy", "-target", "resource1", "-target", "resource2").
+			RunAndReturn(func(_ string, _ ...string) (int, error) {
+				err := os.WriteFile(path.Join(tmpDir, "terraform.tfstate"), []byte(`{ "resources": [] }`), 0644)
+				return 0, err
+			})
+
+		cli := NewCLI(exec)
+		_, err := cli.Destroy(tmpDir, &State{Bytes: []byte("curr state")}, "resource1", "resource2")
+
+		require.NoError(t, err)
 	})
 
 	t.Run("ignores nil state", func(t *testing.T) {
@@ -167,7 +189,7 @@ func TestTerraformCLI_Destroy(t *testing.T) {
 		exec := mocks.NewCommandExecutor(t)
 
 		cli := NewCLI(exec)
-		_, err = cli.Destroy(tmpDir, []byte("curr state"))
+		_, err = cli.Destroy(tmpDir, &State{Bytes: []byte("curr state")})
 		assert.Error(t, err)
 	})
 
@@ -198,4 +220,5 @@ func TestTerraformCLI_Destroy(t *testing.T) {
 		_, err := cli.Destroy(tmpDir, nil)
 		assert.Error(t, err)
 	})
+
 }

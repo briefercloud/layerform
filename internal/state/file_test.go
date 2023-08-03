@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/ergomake/layerform/internal/data/model"
+	"github.com/ergomake/layerform/internal/terraform"
 )
 
 func TestState_FileBackend_NewFileBackend(t *testing.T) {
@@ -30,9 +31,9 @@ func TestState_FileBackend_NewFileBackend(t *testing.T) {
 		existingFilePath := path.Join(tmpDir, "test_existing_file.json")
 
 		existingData := &fileContent{
-			State: map[string]map[string][]byte{
+			State: map[string]map[string]*State{
 				"eks": {
-					"default": []byte("test state"),
+					"default": NewState(&terraform.State{Bytes: []byte("test state")}),
 				},
 			},
 		}
@@ -63,10 +64,10 @@ func TestState_FileBackend_GetLayerState(t *testing.T) {
 	filePath := path.Join(tmpDir, "test_get_layer_state.json")
 
 	testData := fileContent{
-		State: map[string]map[string][]byte{
+		State: map[string]map[string]*State{
 			"test_layer": {
-				"instance1": []byte("state_data_instance1"),
-				"instance2": []byte("state_data_instance2"),
+				"instance1": NewState(&terraform.State{Bytes: []byte("state_data_instance1")}),
+				"instance2": NewState(&terraform.State{Bytes: []byte("state_data_instance2")}),
 			},
 		},
 	}
@@ -82,7 +83,7 @@ func TestState_FileBackend_GetLayerState(t *testing.T) {
 	}
 
 	// Test fetching a layer state for an existing layer and instance
-	expectedState := []byte("state_data_instance1")
+	expectedState := NewState(&terraform.State{Bytes: []byte("state_data_instance1")})
 	state, err := client.GetLayerState(layer, "instance1")
 	require.NoError(t, err)
 	assert.Equal(t, expectedState, state)
@@ -98,10 +99,10 @@ func TestState_FileBackend_SaveLayerState(t *testing.T) {
 	filePath := path.Join(tmpDir, "test_save_layer_state.json")
 
 	testData := fileContent{
-		State: map[string]map[string][]byte{
+		State: map[string]map[string]*State{
 			"test_layer": {
-				"instance1": []byte("state_data_instance1"),
-				"instance2": []byte("state_data_instance2"),
+				"instance1": NewState(&terraform.State{Bytes: []byte("state_data_instance1")}),
+				"instance2": NewState(&terraform.State{Bytes: []byte("state_data_instance2")}),
 			},
 		},
 	}
@@ -116,18 +117,17 @@ func TestState_FileBackend_SaveLayerState(t *testing.T) {
 		Name: "test_layer",
 	}
 
-	// Test saving a layer state for an existing layer and instance
-	err = client.SaveLayerState(layer, "new_instance", []byte("new_state_data"))
+	err = client.SaveLayerState(layer, "new_instance", NewState(&terraform.State{Bytes: []byte("new_state_data")}))
 	require.NoError(t, err)
-	expectedState := []byte("new_state_data")
+	expectedState := NewState(&terraform.State{Bytes: []byte("new_state_data")})
 	state, err := client.GetLayerState(layer, "new_instance")
 	require.NoError(t, err)
 	assert.Equal(t, expectedState, state)
 
 	// Test saving a layer state for an existing layer but non-existing instance
-	err = client.SaveLayerState(layer, "non_existing_instance", []byte("state_data"))
+	err = client.SaveLayerState(layer, "non_existing_instance", NewState(&terraform.State{Bytes: []byte("state_data")}))
 	require.NoError(t, err)
-	expectedState = []byte("state_data")
+	expectedState = NewState(&terraform.State{Bytes: []byte("state_data")})
 	state, err = client.GetLayerState(layer, "non_existing_instance")
 	require.NoError(t, err)
 	assert.Equal(t, expectedState, state)

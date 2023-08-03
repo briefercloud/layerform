@@ -14,7 +14,7 @@ const version = 1
 
 type fileContent struct {
 	Version uint                         `json:"version"`
-	State   map[string]map[string][]byte `json:"state"`
+	State   map[string]map[string]*State `json:"state"`
 }
 
 type fileBackend struct {
@@ -29,7 +29,7 @@ var _ Backend = &fileBackend{}
 func NewFileBackend(filePath string) (*fileBackend, error) {
 	fileContent := &fileContent{
 		Version: version,
-		State:   make(map[string]map[string][]byte),
+		State:   make(map[string]map[string]*State),
 	}
 
 	_, err := os.Stat(filePath)
@@ -62,7 +62,7 @@ func NewFileBackend(filePath string) (*fileBackend, error) {
 }
 
 // GetLayerState fetches a layer state for a instance, return nil when instance has no state
-func (c *fileBackend) GetLayerState(layer *model.Layer, instance string) ([]byte, error) {
+func (c *fileBackend) GetLayerState(layer *model.Layer, instance string) (*State, error) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
@@ -76,19 +76,32 @@ func (c *fileBackend) GetLayerState(layer *model.Layer, instance string) ([]byte
 }
 
 // SaveLayerState saves a layer state for a instance
-func (c *fileBackend) SaveLayerState(layer *model.Layer, instance string, state []byte) error {
+func (c *fileBackend) SaveLayerState(layer *model.Layer, instance string, state *State) error {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
 	layerState := c.state.State[layer.Name]
 	if layerState == nil {
-		layerState = make(map[string][]byte)
+		layerState = make(map[string]*State)
 	}
 
 	layerState[instance] = state
 
 	c.state.State[layer.Name] = layerState
 
+	return errors.Wrap(c.commit(), "fail to commit")
+}
+
+func (c *fileBackend) RemoveLayerState(layer *model.Layer, instance string) error {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+
+	delete(c.state.State[layer.Name], instance)
+
+	return errors.Wrap(c.commit(), "fail to commit")
+}
+
+func (c *fileBackend) commit() error {
 	data, err := json.Marshal(c.state)
 	if err != nil {
 		return errors.Wrap(err, "fail to marshal state to json")
