@@ -3,27 +3,35 @@ package main
 import (
 	"log"
 	"os"
-	"path/filepath"
 
 	"github.com/mitchellh/cli"
 	"github.com/pkg/errors"
 
-	"github.com/ergomake/layerform/client"
 	"github.com/ergomake/layerform/internal/command"
 	"github.com/ergomake/layerform/internal/commandexecutor"
+	"github.com/ergomake/layerform/internal/layerfile"
+	"github.com/ergomake/layerform/internal/layers"
+	"github.com/ergomake/layerform/internal/state"
 	"github.com/ergomake/layerform/internal/terraform"
 )
 
 func main() {
-	homeDir, err := os.UserHomeDir()
+	layerfile, err := layerfile.FromFile("layerform.json")
 	if err != nil {
-		panic(errors.Wrap(err, "fail to fetch user home directory"))
+		panic(errors.Wrap(err, "fail to load layerform.json"))
 	}
 
-	apiClient, err := client.NewFileClient(filepath.Join(homeDir, ".layerform.state.json"))
+	layerslist, err := layerfile.ToLayers()
 	if err != nil {
-		panic(errors.Wrap(err, "fail to create Layerform API Client"))
+		panic(errors.Wrap(err, "fail to import layers defined at layerform.json"))
 	}
+
+	stateBackend, err := state.NewFileBackend("layerform.lfstate")
+	if err != nil {
+		panic(errors.Wrap(err, "fail to initialize a state backend backed by file"))
+	}
+
+	layersBackend := layers.NewInMemoryBackend(layerslist)
 
 	cmdExecutor := &commandexecutor.OSCommandExecutor{
 		Stdin:  os.Stdin,
@@ -37,15 +45,11 @@ func main() {
 
 	c.Args = os.Args[1:]
 	c.Commands = map[string]cli.CommandFactory{
-		// TODO: this command will most likely be replaced with a proper terraform provider
-		"import": func() (cli.Command, error) {
-			return command.NewImport(apiClient), nil
-		},
 		"spawn": func() (cli.Command, error) {
-			return command.NewSpawn(apiClient, terraformClient), nil
+			return command.NewSpawn(layersBackend, stateBackend, terraformClient), nil
 		},
 		"kill": func() (cli.Command, error) {
-			return command.NewKill(apiClient, terraformClient), nil
+			return command.NewKill(layersBackend, stateBackend, terraformClient), nil
 		},
 	}
 

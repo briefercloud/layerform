@@ -4,7 +4,7 @@ mocks:
 
 .PHONY: fmt
 fmt:
-	goimports -local=github.com/ergomake/layerform -w client cmd internal
+	goimports -local=github.com/ergomake/layerform -w cmd internal
 
 .PHONY: lint
 lint:
@@ -15,12 +15,12 @@ lint:
 tidy:
 	go mod tidy
 
-TESTS = ./internal/... ./client/...
+TESTS = ./internal/...
 .PHONY: test
 test:
 	go test -v -race $(TESTS)
 
-COVERPKG = ./internal/...,./client/...
+COVERPKG = ./internal/...
 .PHONY: coverage
 coverage:
 	go test -v -race -covermode=atomic -coverprofile=cover.out -coverpkg=$(COVERPKG) $(TESTS)

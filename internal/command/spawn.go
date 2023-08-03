@@ -10,21 +10,27 @@ import (
 	"github.com/mitchellh/cli"
 	"github.com/pkg/errors"
 
-	"github.com/ergomake/layerform/client"
 	"github.com/ergomake/layerform/internal/data/model"
+	"github.com/ergomake/layerform/internal/layers"
 	"github.com/ergomake/layerform/internal/pathutils"
+	"github.com/ergomake/layerform/internal/state"
 	"github.com/ergomake/layerform/internal/terraform"
 )
 
 type spawnCommand struct {
-	layerformClient client.Client
+	layersBackend   layers.Backend
+	stateBackend    state.Backend
 	terraformClient terraform.Client
 }
 
 var _ cli.Command = &spawnCommand{}
 
-func NewSpawn(layerformClient client.Client, terraformClient terraform.Client) *spawnCommand {
-	return &spawnCommand{layerformClient, terraformClient}
+func NewSpawn(
+	layersBackend layers.Backend,
+	stateBackend state.Backend,
+	terraformClient terraform.Client,
+) *spawnCommand {
+	return &spawnCommand{layersBackend, stateBackend, terraformClient}
 }
 
 func (c *spawnCommand) Help() string {
@@ -45,7 +51,7 @@ func (c *spawnCommand) Run(args []string) int {
 		instance = shortuuid.New()
 	}
 
-	layer, err := c.layerformClient.GetLayer(layerName)
+	layer, err := c.layersBackend.GetLayer(layerName)
 	if err != nil {
 		fmt.Printf("%v\n", errors.Wrapf(err, "fail to get layer %s", layerName))
 		return 1
@@ -56,7 +62,7 @@ func (c *spawnCommand) Run(args []string) int {
 		return 1
 	}
 
-	state, err := c.layerformClient.GetLayerState(layer, instance)
+	state, err := c.stateBackend.GetLayerState(layer, instance)
 	if err != nil {
 		fmt.Printf("%v\n", errors.Wrapf(err, "fail to get layer %s %s state", layerName, instance))
 		return 1
@@ -81,7 +87,7 @@ func (c *spawnCommand) Run(args []string) int {
 		return 1
 	}
 
-	err = c.layerformClient.SaveLayerState(layer, instance, state)
+	err = c.stateBackend.SaveLayerState(layer, instance, state)
 	if err != nil {
 		fmt.Printf("%v\n", err)
 		return 1

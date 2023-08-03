@@ -1,44 +1,46 @@
-[
-  {
-    "name": "eks",
-    "files": [
-      "layers/eks.tf",
-      "layers/eks/main.tf",
-      "layers/eks/output.tf"
-    ]
-  },
-  {
-    "name"  : "kibana",
-    "files": [
-      "layers/kibana.tf",
-      "layers/kibana/main.tf",
-      "layers/kibana/output.tf",
-      "layers/kibana/variables.tf"
-    ],
-    "dependencies": [
-      "eks"
-    ]
-  },
-  {
-    "name": "metricbeat",
-    "files": [
-      "layers/metricbeat.tf",
-      "layers/metricbeat/main.tf",
-      "layers/metricbeat/variables.tf"
-    ],
-    "dependencies": [
-      "kibana"
-    ]
-  },
-  {
-    "name": "filebeat",
-    "files": [
-      "layers/filebeat.tf",
-      "layers/filebeat/main.tf",
-      "layers/filebeat/variables.tf"
-    ],
-    "dependencies": [
-      "kibana"
-    ]
-  }
-]
+{
+  "layers": [
+    {
+      "name": "eks",
+      "files": [
+        "layers/eks.tf",
+        "layers/eks/main.tf",
+        "layers/eks/output.tf"
+      ]
+    },
+    {
+      "name"  : "kibana",
+      "files": [
+        "layers/kibana.tf",
+        "layers/kibana/main.tf",
+        "layers/kibana/output.tf",
+        "layers/kibana/variables.tf"
+      ],
+      "dependencies": [
+        "eks"
+      ]
+    },
+    {
+      "name": "metricbeat",
+      "files": [
+        "layers/metricbeat.tf",
+        "layers/metricbeat/main.tf",
+        "layers/metricbeat/variables.tf"
+      ],
+      "dependencies": [
+        "kibana"
+      ]
+    },
+    {
+      "name": "filebeat",
+      "files": [
+        "layers/filebeat.tf",
+        "layers/filebeat/main.tf",
+        "layers/filebeat/variables.tf"
+      ],
+      "dependencies": [
+        "kibana"
+      ]
+    }
+  ]
+}
