@@ -21,6 +21,18 @@
       ]
     },
     {
+      "name"  : "elasticsearch",
+      "files": [
+        "layers/elasticsearch.tf",
+        "layers/elasticsearch/main.tf",
+        "layers/elasticsearch/output.tf",
+        "layers/elasticsearch/variables.tf"
+      ],
+      "dependencies": [
+        "eks"
+      ]
+    },
+    {
       "name": "metricbeat",
       "files": [
         "layers/metricbeat.tf",
@@ -28,7 +40,8 @@
         "layers/metricbeat/variables.tf"
       ],
       "dependencies": [
-        "kibana"
+        "kibana",
+        "elasticsearch"
       ]
     },
     {

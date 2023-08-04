@@ -9,3 +9,7 @@ variable "bucket_name" {
 variable "kibana_folder" {
   type = string
 }
+
+variable "elasticsearch_folder" {
+  type = string
+}

@@ -15,9 +15,15 @@ provider "aws" {
   region = var.aws_region
 }
 
-resource "aws_s3_object" "metricbeat" {
+resource "aws_s3_object" "kibana-metricbeat" {
   bucket  = var.bucket_name
   key     = "${var.kibana_folder}/metricbeat-${random_string.suffix.result}/.keep"
+  content = "metricbeat"
+}
+
+resource "aws_s3_object" "elasticsearch-metricbeat" {
+  bucket  = var.bucket_name
+  key     = "${var.elasticsearch_folder}/metricbeat-${random_string.suffix.result}/.keep"
   content = "metricbeat"
 }
 
