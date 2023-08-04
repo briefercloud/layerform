@@ -12,6 +12,7 @@ import (
 	"github.com/ergomake/layerform/internal/layerfile"
 	"github.com/ergomake/layerform/internal/layers"
 	"github.com/ergomake/layerform/internal/state"
+	"github.com/ergomake/layerform/internal/states"
 	"github.com/ergomake/layerform/internal/terraform"
 )
 
@@ -32,6 +33,7 @@ func main() {
 	}
 
 	layersBackend := layers.NewInMemoryBackend(layerslist)
+	statesBackend := states.NewFileBackend("layerform2.lfstate")
 
 	terraformClient := terraform.NewCLI(&cmdexec.OSCommandExecutor{
 		Stdin:  os.Stdin,
@@ -45,7 +47,10 @@ func main() {
 	c.Args = os.Args[1:]
 	c.Commands = map[string]cli.CommandFactory{
 		"spawn": func() (cli.Command, error) {
-			return command.NewSpawn(layersBackend, stateBackend, terraformClient), nil
+			return command.NewSpawn2(layersBackend), nil
+		},
+		"launch": func() (cli.Command, error) {
+			return command.NewLaunch(layersBackend, statesBackend), nil
 		},
 		"kill": func() (cli.Command, error) {
 			return command.NewKill(layersBackend, stateBackend, terraformClient), nil
