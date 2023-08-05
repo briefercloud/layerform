@@ -33,7 +33,7 @@ func main() {
 	}
 
 	layersBackend := layers.NewInMemoryBackend(layerslist)
-	statesBackend := states.NewFileBackend("layerform2.lfstate")
+	statesBackend := states.NewFileBackend("layerform.lfstate")
 
 	terraformClient := terraform.NewCLI(&cmdexec.OSCommandExecutor{
 		Stdin:  os.Stdin,
@@ -47,9 +47,6 @@ func main() {
 	c.Args = os.Args[1:]
 	c.Commands = map[string]cli.CommandFactory{
 		"spawn": func() (cli.Command, error) {
-			return command.NewSpawn2(layersBackend), nil
-		},
-		"launch": func() (cli.Command, error) {
 			return command.NewLaunch(layersBackend, statesBackend), nil
 		},
 		"kill": func() (cli.Command, error) {
