@@ -1,4 +1,4 @@
-package states
+package layerstate
 
 import "errors"
 

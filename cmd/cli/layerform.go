@@ -10,7 +10,7 @@ import (
 	"github.com/ergomake/layerform/internal/command"
 	"github.com/ergomake/layerform/internal/layerfile"
 	"github.com/ergomake/layerform/internal/layers"
-	"github.com/ergomake/layerform/internal/states"
+	"github.com/ergomake/layerform/internal/layerstate"
 )
 
 func main() {
@@ -25,7 +25,7 @@ func main() {
 	}
 
 	layersBackend := layers.NewInMemoryBackend(layerslist)
-	statesBackend := states.NewFileBackend("layerform.lfstate")
+	statesBackend := layerstate.NewFileBackend("layerform.lfstate")
 
 	// TODO: fix hardcoded version
 	c := cli.NewCLI("layerform", "0.0.1")

@@ -3,7 +3,7 @@
 package mocks
 
 import (
-	states "github.com/ergomake/layerform/internal/states"
+	layerstate "github.com/ergomake/layerform/internal/layerstate"
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -21,19 +21,19 @@ func (_m *Backend) EXPECT() *Backend_Expecter {
 }
 
 // GetState provides a mock function with given fields: layerName, stateName
-func (_m *Backend) GetState(layerName string, stateName string) (*states.State, error) {
+func (_m *Backend) GetState(layerName string, stateName string) (*layerstate.State, error) {
 	ret := _m.Called(layerName, stateName)
 
-	var r0 *states.State
+	var r0 *layerstate.State
 	var r1 error
-	if rf, ok := ret.Get(0).(func(string, string) (*states.State, error)); ok {
+	if rf, ok := ret.Get(0).(func(string, string) (*layerstate.State, error)); ok {
 		return rf(layerName, stateName)
 	}
-	if rf, ok := ret.Get(0).(func(string, string) *states.State); ok {
+	if rf, ok := ret.Get(0).(func(string, string) *layerstate.State); ok {
 		r0 = rf(layerName, stateName)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*states.State)
+			r0 = ret.Get(0).(*layerstate.State)
 		}
 	}
 
@@ -65,12 +65,12 @@ func (_c *Backend_GetState_Call) Run(run func(layerName string, stateName string
 	return _c
 }
 
-func (_c *Backend_GetState_Call) Return(_a0 *states.State, _a1 error) *Backend_GetState_Call {
+func (_c *Backend_GetState_Call) Return(_a0 *layerstate.State, _a1 error) *Backend_GetState_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *Backend_GetState_Call) RunAndReturn(run func(string, string) (*states.State, error)) *Backend_GetState_Call {
+func (_c *Backend_GetState_Call) RunAndReturn(run func(string, string) (*layerstate.State, error)) *Backend_GetState_Call {
 	_c.Call.Return(run)
 	return _c
 }

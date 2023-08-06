@@ -21,19 +21,19 @@ import (
 
 	"github.com/ergomake/layerform/internal/data/model"
 	"github.com/ergomake/layerform/internal/layers"
+	"github.com/ergomake/layerform/internal/layerstate"
 	"github.com/ergomake/layerform/internal/pathutils"
-	"github.com/ergomake/layerform/internal/states"
 )
 
 type launchCommand struct {
-	layers layers.Backend
-	states states.Backend
+	layersBackend layers.Backend
+	statesBackend layerstate.Backend
 }
 
 var _ cli.Command = &launchCommand{}
 
-func NewLaunch(layers layers.Backend, states states.Backend) *launchCommand {
-	return &launchCommand{layers, states}
+func NewLaunch(layersBackend layers.Backend, statesBackend layerstate.Backend) *launchCommand {
+	return &launchCommand{layersBackend, statesBackend}
 }
 
 func (c *launchCommand) Help() string {
@@ -201,7 +201,7 @@ func (c *launchCommand) spawnLayer(ctx context.Context, layerName, stateName, wo
 			return "", errors.Wrap(err, "fail to create sub work directory for layer")
 		}
 
-		layer, err := c.layers.GetLayer(layerName)
+		layer, err := c.layersBackend.GetLayer(layerName)
 		if err != nil {
 			return "", errors.Wrap(err, "fail to get layer")
 		}
@@ -247,7 +247,7 @@ func (c *launchCommand) spawnLayer(ctx context.Context, layerName, stateName, wo
 		}
 		fmt.Printf("dependencies of layer %s spawned\n", layerName)
 
-		state, err := c.states.GetState(layerName, stateName)
+		state, err := c.statesBackend.GetState(layerName, stateName)
 		if err == nil {
 			err := os.WriteFile(statePath, state.Bytes, 0644)
 			if err != nil {
@@ -258,7 +258,7 @@ func (c *launchCommand) spawnLayer(ctx context.Context, layerName, stateName, wo
 			depStates = append(depStates, statePath)
 		}
 
-		if err != nil && !errors.Is(err, states.ErrStateNotFound) {
+		if err != nil && !errors.Is(err, layerstate.ErrStateNotFound) {
 			return "", errors.Wrap(err, "fail to get layer state")
 		}
 
@@ -302,7 +302,7 @@ func (c *launchCommand) spawnLayer(ctx context.Context, layerName, stateName, wo
 			return "", errors.Wrap(err, "fail to read next state")
 		}
 
-		err = c.states.SaveState(layerName, stateName, nextState)
+		err = c.statesBackend.SaveState(layerName, stateName, nextState)
 		if err != nil {
 			return "", errors.Wrap(err, "fail to save state")
 		}
@@ -321,7 +321,7 @@ func (c *launchCommand) writeLayerToWorkdir(layerWorkdir string, layer *model.La
 	inner = func(layer *model.Layer) ([]string, error) {
 		fpaths := make([]string, 0)
 		for _, dep := range layer.Dependencies {
-			layer, err := c.layers.GetLayer(dep)
+			layer, err := c.layersBackend.GetLayer(dep)
 			if err != nil {
 				return nil, errors.Wrap(err, "fail to get layer")
 			}
