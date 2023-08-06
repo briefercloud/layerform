@@ -15,6 +15,7 @@ var ErrStateNotFound = errors.New("state not found")
 
 type Backend interface {
 	GetState(ctx context.Context, layerName, stateName string) (*State, error)
+	ListStatesByLayer(ctx context.Context, layerName string) ([]*State, error)
 	SaveState(ctx context.Context, layerName, stateName string, bytes []byte) error
 	DeleteState(ctx context.Context, layerName, stateName string) error
 }

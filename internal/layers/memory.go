@@ -50,3 +50,13 @@ func (mb *inMemoryBackend) ResolveDependencies(ctx context.Context, layer *model
 
 	return layers, nil
 }
+
+func (mb *inMemoryBackend) ListLayers(ctx context.Context) ([]*model.Layer, error) {
+	hclog.FromContext(ctx).Debug("Listing layers")
+	layers := make([]*model.Layer, 0)
+	for _, l := range mb.layers {
+		layers = append(layers, l)
+	}
+
+	return layers, nil
+}

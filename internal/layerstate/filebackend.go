@@ -119,3 +119,21 @@ func (fb *filebackend) DeleteState(ctx context.Context, layerName, stateName str
 
 	return fb.writeFile(ctx, fstate)
 }
+
+func (fb *filebackend) ListStatesByLayer(ctx context.Context, layerName string) ([]*State, error) {
+	hclog.FromContext(ctx).Debug("Listing states by layer", "layer", layerName)
+
+	fstate, err := fb.readFile(ctx)
+	if err != nil {
+		return nil, errors.Wrapf(err, "fail to read file")
+	}
+
+	result := make([]*State, 0)
+	for _, s := range fstate.States {
+		if s.LayerName == layerName {
+			result = append(result, s)
+		}
+	}
+
+	return result, nil
+}

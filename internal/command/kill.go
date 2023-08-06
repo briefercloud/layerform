@@ -54,6 +54,30 @@ func (c *killCommand) Run(args []string) int {
 	}
 	ctx := hclog.WithContext(context.Background(), logger)
 
+	layer, err := c.layersBackend.GetLayer(ctx, layerName)
+	if err != nil {
+		fmt.Println("Fail to get layer", err)
+		return 1
+	}
+
+	if layer == nil {
+		fmt.Println("Layer not found")
+		return 1
+	}
+
+	// TODO: revisit this once layers can be spawned on top of not default states
+	if stateName == "default" {
+		hasDependants, err := c.hasDependants(ctx, layerName)
+		if err != nil {
+			fmt.Println("Fail to check if layer has dependants", err)
+			return 1
+		}
+		if hasDependants {
+			fmt.Println("Can't kill this layer because other layers depend on it")
+			return 1
+		}
+	}
+
 	logger.Debug("Finding terraform installation")
 	i := install.NewInstaller()
 	i.SetLogger(logger.StandardLogger(&hclog.StandardLoggerOptions{
@@ -78,18 +102,7 @@ func (c *killCommand) Run(args []string) int {
 		return 1
 	}
 	fmt.Println(workdir)
-	// defer os.RemoveAll(workdir)
-
-	layer, err := c.layersBackend.GetLayer(ctx, layerName)
-	if err != nil {
-		fmt.Println("Fail to get layer", err)
-		return 1
-	}
-
-	if layer == nil {
-		fmt.Println("Layer not found")
-		return 1
-	}
+	defer os.RemoveAll(workdir)
 
 	layerDir := path.Join(workdir, layerName)
 	layerAddrs, layerDir, err := c.getLayerAddresses(ctx, layer, layerDir, tfpath, stateName)
@@ -208,4 +221,36 @@ func (c *killCommand) getLayerAddresses(
 	addresses := getStateModuleAddresses(tfState.Values.RootModule)
 
 	return addresses, layerWorkdir, nil
+}
+
+func (c *killCommand) hasDependants(ctx context.Context, layerName string) (bool, error) {
+	hclog.FromContext(ctx).Debug("Checking if layer has dependants", "layer", layerName)
+
+	layers, err := c.layersBackend.ListLayers(ctx)
+	if err != nil {
+		return false, errors.Wrap(err, "fail to list layers")
+	}
+
+	for _, layer := range layers {
+		isChild := false
+		for _, d := range layer.Dependencies {
+			if d == layerName {
+				isChild = true
+				break
+			}
+		}
+
+		if isChild {
+			states, err := c.statesBackend.ListStatesByLayer(ctx, layer.Name)
+			if err != nil {
+				return false, errors.Wrap(err, "fail to list layer states")
+			}
+
+			if len(states) > 0 {
+				return true, nil
+			}
+		}
+	}
+
+	return false, nil
 }

@@ -78,6 +78,60 @@ func (_c *Backend_GetLayer_Call) RunAndReturn(run func(context.Context, string) 
 	return _c
 }
 
+// ListLayers provides a mock function with given fields: ctx
+func (_m *Backend) ListLayers(ctx context.Context) ([]*model.Layer, error) {
+	ret := _m.Called(ctx)
+
+	var r0 []*model.Layer
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context) ([]*model.Layer, error)); ok {
+		return rf(ctx)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context) []*model.Layer); ok {
+		r0 = rf(ctx)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]*model.Layer)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = rf(ctx)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// Backend_ListLayers_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ListLayers'
+type Backend_ListLayers_Call struct {
+	*mock.Call
+}
+
+// ListLayers is a helper method to define mock.On call
+//   - ctx context.Context
+func (_e *Backend_Expecter) ListLayers(ctx interface{}) *Backend_ListLayers_Call {
+	return &Backend_ListLayers_Call{Call: _e.mock.On("ListLayers", ctx)}
+}
+
+func (_c *Backend_ListLayers_Call) Run(run func(ctx context.Context)) *Backend_ListLayers_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context))
+	})
+	return _c
+}
+
+func (_c *Backend_ListLayers_Call) Return(_a0 []*model.Layer, _a1 error) *Backend_ListLayers_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *Backend_ListLayers_Call) RunAndReturn(run func(context.Context) ([]*model.Layer, error)) *Backend_ListLayers_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // ResolveDependencies provides a mock function with given fields: ctx, layer
 func (_m *Backend) ResolveDependencies(ctx context.Context, layer *model.Layer) ([]*model.Layer, error) {
 	ret := _m.Called(ctx, layer)
