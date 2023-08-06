@@ -1,6 +1,9 @@
 package layerstate
 
-import "errors"
+import (
+	"context"
+	"errors"
+)
 
 type State struct {
 	LayerName string `json:"layerName"`
@@ -11,6 +14,6 @@ type State struct {
 var ErrStateNotFound = errors.New("state not found")
 
 type Backend interface {
-	GetState(layerName, stateName string) (*State, error)
-	SaveState(layerName, stateName string, bytes []byte) error
+	GetState(ctx context.Context, layerName, stateName string) (*State, error)
+	SaveState(ctx context.Context, layerName, stateName string, bytes []byte) error
 }

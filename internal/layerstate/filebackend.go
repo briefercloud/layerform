@@ -1,9 +1,11 @@
 package layerstate
 
 import (
+	"context"
 	"encoding/json"
 	"os"
 
+	"github.com/hashicorp/go-hclog"
 	"github.com/pkg/errors"
 )
 
@@ -24,7 +26,9 @@ func NewFileBackend(fpath string) *filebackend {
 	return &filebackend{fpath}
 }
 
-func (fb *filebackend) readFile() (*filestate, error) {
+func (fb *filebackend) readFile(ctx context.Context) (*filestate, error) {
+	hclog.FromContext(ctx).Debug("Reading state file")
+
 	raw, err := os.ReadFile(fb.fpath)
 	if errors.Is(err, os.ErrNotExist) {
 		return &filestate{Version: fileStateVersion}, nil
@@ -40,8 +44,10 @@ func (fb *filebackend) readFile() (*filestate, error) {
 	return &fstate, errors.Wrapf(err, "fail to parse state out of %s", fb.fpath)
 }
 
-func (fb *filebackend) GetState(layerName, stateName string) (*State, error) {
-	fstate, err := fb.readFile()
+func (fb *filebackend) GetState(ctx context.Context, layerName, stateName string) (*State, error) {
+	hclog.FromContext(ctx).Debug("Getting layer state", "layer", layerName, "state", stateName)
+
+	fstate, err := fb.readFile(ctx)
 	if err != nil {
 		return nil, errors.Wrapf(err, "fail to read file")
 	}
@@ -55,8 +61,10 @@ func (fb *filebackend) GetState(layerName, stateName string) (*State, error) {
 	return nil, errors.Wrapf(ErrStateNotFound, "state %s for layer %s not found", stateName, layerName)
 }
 
-func (fb *filebackend) SaveState(layerName, stateName string, bytes []byte) error {
-	fstate, err := fb.readFile()
+func (fb *filebackend) SaveState(ctx context.Context, layerName, stateName string, bytes []byte) error {
+	hclog.FromContext(ctx).Debug("Saving layer state", "layer", layerName, "state", stateName)
+
+	fstate, err := fb.readFile(ctx)
 	if err != nil {
 		return errors.Wrapf(err, "fail to read file")
 	}

@@ -3,11 +3,11 @@ package command
 import (
 	"context"
 	"fmt"
-	"log"
 	"os"
 	"path"
 	"path/filepath"
 
+	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-version"
 	install "github.com/hashicorp/hc-install"
 	"github.com/hashicorp/hc-install/fs"
@@ -45,8 +45,6 @@ func (c *launchCommand) Synopsis() string {
 }
 
 func (c *launchCommand) Run(args []string) int {
-	ctx := context.Background()
-
 	layerName := args[0]
 
 	stateName := ""
@@ -56,8 +54,19 @@ func (c *launchCommand) Run(args []string) int {
 		stateName = shortuuid.New()
 	}
 
+	logger := hclog.Default()
+	logLevel := hclog.LevelFromString(os.Getenv("LF_LOG"))
+	if logLevel != hclog.NoLevel {
+		logger.SetLevel(logLevel)
+	}
+
+	ctx := hclog.WithContext(context.Background(), logger)
+
+	logger.Debug("Finding terraform installation")
 	i := install.NewInstaller()
-	i.SetLogger(log.Default())
+	i.SetLogger(logger.StandardLogger(&hclog.StandardLoggerOptions{
+		ForceLevel: hclog.Debug,
+	}))
 	tfpath, err := i.Ensure(ctx, []src.Source{
 		&fs.Version{
 			Product:     product.Terraform,
@@ -68,7 +77,9 @@ func (c *launchCommand) Run(args []string) int {
 		fmt.Println("fail to ensure terraform", err)
 		return 1
 	}
+	logger.Debug("Found terraform installation", "tfpath", tfpath)
 
+	logger.Debug("Creating a temporary work directory")
 	workdir, err := os.MkdirTemp("", "")
 	if err != nil {
 		fmt.Println("fail to create work directory", err)
@@ -86,6 +97,7 @@ func (c *launchCommand) Run(args []string) int {
 }
 
 func getTFState(ctx context.Context, statePath string, tfpath string) (*tfjson.State, error) {
+	hclog.FromContext(ctx).Debug("Getting terraform state", "path", statePath)
 	dir := filepath.Dir(statePath)
 	tf, err := tfexec.NewTerraform(dir, tfpath)
 	if err != nil {
@@ -125,7 +137,8 @@ func getStateDiff(a *tfjson.State, b *tfjson.State) []string {
 	return diff
 }
 
-func mergeTFState(ctx context.Context, tfpath string, basePath string, dest string, states ...string) error {
+func mergeTFState(ctx context.Context, tfpath, basePath, dest string, states ...string) error {
+	hclog.FromContext(ctx).Debug("Merging terraform state", "base", basePath, "dest", dest, "states", states)
 	dir := filepath.Dir(basePath)
 
 	err := copyFile(basePath, dest)
@@ -183,11 +196,18 @@ func copyFile(src, dst string) error {
 }
 
 func (c *launchCommand) spawnLayer(ctx context.Context, layerName, stateName, workdir, tfpath string) error {
+	logger := hclog.FromContext(ctx)
+	logger.Debug("Start spawning layer")
+
 	visited := make(map[string]string)
 
 	var inner func(layerName, stateName, layerWorkdir string) (string, error)
 	inner = func(layerName, stateName, layerWorkdir string) (string, error) {
+		logger = logger.With("layer", layerName, "state", stateName, "layerWorkdir", layerWorkdir)
+
+		logger.Debug("Spawning layer")
 		if st, ok := visited[layerName]; ok {
+			logger.Debug("Layer already spawned before")
 			return st, nil
 		}
 
@@ -196,7 +216,7 @@ func (c *launchCommand) spawnLayer(ctx context.Context, layerName, stateName, wo
 			return "", errors.Wrap(err, "fail to create sub work directory for layer")
 		}
 
-		layer, err := c.layersBackend.GetLayer(layerName)
+		layer, err := c.layersBackend.GetLayer(ctx, layerName)
 		if err != nil {
 			return "", errors.Wrap(err, "fail to get layer")
 		}
@@ -205,7 +225,7 @@ func (c *launchCommand) spawnLayer(ctx context.Context, layerName, stateName, wo
 			return "", errors.New("layer not found")
 		}
 
-		layerWorkdir, err = c.writeLayerToWorkdir(layerWorkdir, layer)
+		layerWorkdir, err = c.writeLayerToWorkdir(ctx, layerWorkdir, layer)
 		if err != nil {
 			return "", errors.Wrap(err, "fail to write layer to workdir")
 		}
@@ -215,6 +235,7 @@ func (c *launchCommand) spawnLayer(ctx context.Context, layerName, stateName, wo
 			return "", errors.Wrap(err, "fail to get terraform client")
 		}
 
+		logger.Debug("Running terraform init")
 		err = tf.Init(ctx)
 		if err != nil {
 			return "", errors.Wrap(err, "fail to terraform init")
@@ -238,7 +259,7 @@ func (c *launchCommand) spawnLayer(ctx context.Context, layerName, stateName, wo
 			depStates = append(depStates, depState)
 		}
 
-		state, err := c.statesBackend.GetState(layerName, stateName)
+		state, err := c.statesBackend.GetState(ctx, layerName, stateName)
 		if err == nil {
 			err := os.WriteFile(statePath, state.Bytes, 0644)
 			if err != nil {
@@ -278,6 +299,7 @@ func (c *launchCommand) spawnLayer(ctx context.Context, layerName, stateName, wo
 			}
 		}
 
+		logger.Debug("Running terraform apply")
 		err = tf.Apply(ctx)
 		if err != nil {
 			return "", errors.Wrap(err, "fail to terraform apply")
@@ -288,7 +310,7 @@ func (c *launchCommand) spawnLayer(ctx context.Context, layerName, stateName, wo
 			return "", errors.Wrap(err, "fail to read next state")
 		}
 
-		err = c.statesBackend.SaveState(layerName, stateName, nextState)
+		err = c.statesBackend.SaveState(ctx, layerName, stateName, nextState)
 		if err != nil {
 			return "", errors.Wrap(err, "fail to save state")
 		}
@@ -302,12 +324,17 @@ func (c *launchCommand) spawnLayer(ctx context.Context, layerName, stateName, wo
 	return err
 }
 
-func (c *launchCommand) writeLayerToWorkdir(layerWorkdir string, layer *model.Layer) (string, error) {
+func (c *launchCommand) writeLayerToWorkdir(ctx context.Context, layerWorkdir string, layer *model.Layer) (string, error) {
+	logger := hclog.FromContext(ctx).With("layer", layer.Name, "layerWorkdir", layerWorkdir)
+	logger.Debug("Writting layer to workdir")
+
 	var inner func(*model.Layer) ([]string, error)
 	inner = func(layer *model.Layer) ([]string, error) {
 		fpaths := make([]string, 0)
 		for _, dep := range layer.Dependencies {
-			layer, err := c.layersBackend.GetLayer(dep)
+			logger.Debug("Writting dependency to workdir", "dependency", dep)
+
+			layer, err := c.layersBackend.GetLayer(ctx, dep)
 			if err != nil {
 				return nil, errors.Wrap(err, "fail to get layer")
 			}

@@ -3,6 +3,8 @@
 package mocks
 
 import (
+	context "context"
+
 	layerstate "github.com/ergomake/layerform/internal/layerstate"
 	mock "github.com/stretchr/testify/mock"
 )
@@ -20,25 +22,25 @@ func (_m *Backend) EXPECT() *Backend_Expecter {
 	return &Backend_Expecter{mock: &_m.Mock}
 }
 
-// GetState provides a mock function with given fields: layerName, stateName
-func (_m *Backend) GetState(layerName string, stateName string) (*layerstate.State, error) {
-	ret := _m.Called(layerName, stateName)
+// GetState provides a mock function with given fields: ctx, layerName, stateName
+func (_m *Backend) GetState(ctx context.Context, layerName string, stateName string) (*layerstate.State, error) {
+	ret := _m.Called(ctx, layerName, stateName)
 
 	var r0 *layerstate.State
 	var r1 error
-	if rf, ok := ret.Get(0).(func(string, string) (*layerstate.State, error)); ok {
-		return rf(layerName, stateName)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string) (*layerstate.State, error)); ok {
+		return rf(ctx, layerName, stateName)
 	}
-	if rf, ok := ret.Get(0).(func(string, string) *layerstate.State); ok {
-		r0 = rf(layerName, stateName)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string) *layerstate.State); ok {
+		r0 = rf(ctx, layerName, stateName)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*layerstate.State)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(string, string) error); ok {
-		r1 = rf(layerName, stateName)
+	if rf, ok := ret.Get(1).(func(context.Context, string, string) error); ok {
+		r1 = rf(ctx, layerName, stateName)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -52,15 +54,16 @@ type Backend_GetState_Call struct {
 }
 
 // GetState is a helper method to define mock.On call
+//   - ctx context.Context
 //   - layerName string
 //   - stateName string
-func (_e *Backend_Expecter) GetState(layerName interface{}, stateName interface{}) *Backend_GetState_Call {
-	return &Backend_GetState_Call{Call: _e.mock.On("GetState", layerName, stateName)}
+func (_e *Backend_Expecter) GetState(ctx interface{}, layerName interface{}, stateName interface{}) *Backend_GetState_Call {
+	return &Backend_GetState_Call{Call: _e.mock.On("GetState", ctx, layerName, stateName)}
 }
 
-func (_c *Backend_GetState_Call) Run(run func(layerName string, stateName string)) *Backend_GetState_Call {
+func (_c *Backend_GetState_Call) Run(run func(ctx context.Context, layerName string, stateName string)) *Backend_GetState_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string))
 	})
 	return _c
 }
@@ -70,18 +73,18 @@ func (_c *Backend_GetState_Call) Return(_a0 *layerstate.State, _a1 error) *Backe
 	return _c
 }
 
-func (_c *Backend_GetState_Call) RunAndReturn(run func(string, string) (*layerstate.State, error)) *Backend_GetState_Call {
+func (_c *Backend_GetState_Call) RunAndReturn(run func(context.Context, string, string) (*layerstate.State, error)) *Backend_GetState_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
-// SaveState provides a mock function with given fields: layerName, stateName, bytes
-func (_m *Backend) SaveState(layerName string, stateName string, bytes []byte) error {
-	ret := _m.Called(layerName, stateName, bytes)
+// SaveState provides a mock function with given fields: ctx, layerName, stateName, bytes
+func (_m *Backend) SaveState(ctx context.Context, layerName string, stateName string, bytes []byte) error {
+	ret := _m.Called(ctx, layerName, stateName, bytes)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(string, string, []byte) error); ok {
-		r0 = rf(layerName, stateName, bytes)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, []byte) error); ok {
+		r0 = rf(ctx, layerName, stateName, bytes)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -95,16 +98,17 @@ type Backend_SaveState_Call struct {
 }
 
 // SaveState is a helper method to define mock.On call
+//   - ctx context.Context
 //   - layerName string
 //   - stateName string
 //   - bytes []byte
-func (_e *Backend_Expecter) SaveState(layerName interface{}, stateName interface{}, bytes interface{}) *Backend_SaveState_Call {
-	return &Backend_SaveState_Call{Call: _e.mock.On("SaveState", layerName, stateName, bytes)}
+func (_e *Backend_Expecter) SaveState(ctx interface{}, layerName interface{}, stateName interface{}, bytes interface{}) *Backend_SaveState_Call {
+	return &Backend_SaveState_Call{Call: _e.mock.On("SaveState", ctx, layerName, stateName, bytes)}
 }
 
-func (_c *Backend_SaveState_Call) Run(run func(layerName string, stateName string, bytes []byte)) *Backend_SaveState_Call {
+func (_c *Backend_SaveState_Call) Run(run func(ctx context.Context, layerName string, stateName string, bytes []byte)) *Backend_SaveState_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string), args[2].([]byte))
+		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].([]byte))
 	})
 	return _c
 }
@@ -114,7 +118,7 @@ func (_c *Backend_SaveState_Call) Return(_a0 error) *Backend_SaveState_Call {
 	return _c
 }
 
-func (_c *Backend_SaveState_Call) RunAndReturn(run func(string, string, []byte) error) *Backend_SaveState_Call {
+func (_c *Backend_SaveState_Call) RunAndReturn(run func(context.Context, string, string, []byte) error) *Backend_SaveState_Call {
 	_c.Call.Return(run)
 	return _c
 }

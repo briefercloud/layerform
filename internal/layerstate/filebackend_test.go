@@ -1,6 +1,7 @@
 package layerstate
 
 import (
+	"context"
 	"encoding/json"
 	"os"
 	"testing"
@@ -22,19 +23,19 @@ func TestFileBackend_GetState(t *testing.T) {
 		fb := NewFileBackend(tempDir + "/testfile.json")
 
 		// adds new state
-		err := fb.SaveState(state.LayerName, state.StateName, state.Bytes)
+		err := fb.SaveState(context.Background(), state.LayerName, state.StateName, state.Bytes)
 		require.NoError(t, err)
 
-		result, err := fb.GetState(state.LayerName, state.StateName)
+		result, err := fb.GetState(context.Background(), state.LayerName, state.StateName)
 		require.NoError(t, err)
 		assert.Equal(t, state, result)
 
 		// updates existing state
 		state.Bytes = []byte("state2")
-		err = fb.SaveState(state.LayerName, state.StateName, state.Bytes)
+		err = fb.SaveState(context.Background(), state.LayerName, state.StateName, state.Bytes)
 		require.NoError(t, err)
 
-		result, err = fb.GetState(state.LayerName, state.StateName)
+		result, err = fb.GetState(context.Background(), state.LayerName, state.StateName)
 		require.NoError(t, err)
 		assert.Equal(t, "state2", string(result.Bytes))
 
@@ -44,10 +45,10 @@ func TestFileBackend_GetState(t *testing.T) {
 			StateName: "testState2",
 			Bytes:     []byte("state3"),
 		}
-		err = fb.SaveState(state2.LayerName, state2.StateName, state2.Bytes)
+		err = fb.SaveState(context.Background(), state2.LayerName, state2.StateName, state2.Bytes)
 		require.NoError(t, err)
 
-		result, err = fb.GetState(state.LayerName, state.StateName)
+		result, err = fb.GetState(context.Background(), state.LayerName, state.StateName)
 		require.NoError(t, err)
 		assert.Equal(t, state, result)
 	})
@@ -56,7 +57,7 @@ func TestFileBackend_GetState(t *testing.T) {
 		tempDir := t.TempDir()
 
 		fb := NewFileBackend(tempDir + "/testfile.json")
-		_, err := fb.GetState("nonExistentLayer", "nonExistentState")
+		_, err := fb.GetState(context.Background(), "nonExistentLayer", "nonExistentState")
 		assert.ErrorIs(t, err, ErrStateNotFound)
 	})
 
@@ -69,7 +70,7 @@ func TestFileBackend_GetState(t *testing.T) {
 
 		fb := NewFileBackend(tempDir + "/testfile.json")
 
-		_, err = fb.GetState("not-importannt", "not-important")
+		_, err = fb.GetState(context.Background(), "not-importannt", "not-important")
 		assert.Error(t, err)
 	})
 }
@@ -80,7 +81,7 @@ func TestFileBackend_SaveState(t *testing.T) {
 
 		fb := NewFileBackend(tempDir + "/testfile.json")
 
-		err := fb.SaveState("layer1", "state1", []byte("data1"))
+		err := fb.SaveState(context.Background(), "layer1", "state1", []byte("data1"))
 		require.NoError(t, err)
 
 		data, err := os.ReadFile(tempDir + "/testfile.json")
@@ -105,7 +106,7 @@ func TestFileBackend_SaveState(t *testing.T) {
 
 		fb := NewFileBackend(tempDir + "/testfile.json")
 
-		err = fb.SaveState("not-importannt", "not-important", []byte("not-important"))
+		err = fb.SaveState(context.Background(), "not-importannt", "not-important", []byte("not-important"))
 		assert.Error(t, err)
 	})
 }
@@ -123,7 +124,7 @@ func TestFileBackend_readFile(t *testing.T) {
 
 		fb := NewFileBackend(tempDir + "/testfile.json")
 
-		_, err = fb.readFile()
+		_, err = fb.readFile(context.Background())
 		assert.Error(t, err)
 	})
 
@@ -136,7 +137,7 @@ func TestFileBackend_readFile(t *testing.T) {
 
 		fb := NewFileBackend(tempDir + "/testfile.json")
 
-		_, err = fb.readFile()
+		_, err = fb.readFile(context.Background())
 		assert.Error(t, err)
 	})
 }
