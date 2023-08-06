@@ -25,26 +25,26 @@ import (
 	"github.com/ergomake/layerform/internal/pathutils"
 )
 
-type launchCommand struct {
+type spawnCommand struct {
 	layersBackend layers.Backend
 	statesBackend layerstate.Backend
 }
 
-var _ cli.Command = &launchCommand{}
+var _ cli.Command = &spawnCommand{}
 
-func NewLaunch(layersBackend layers.Backend, statesBackend layerstate.Backend) *launchCommand {
-	return &launchCommand{layersBackend, statesBackend}
+func NewSpawn(layersBackend layers.Backend, statesBackend layerstate.Backend) *spawnCommand {
+	return &spawnCommand{layersBackend, statesBackend}
 }
 
-func (c *launchCommand) Help() string {
-	return "launch help"
+func (c *spawnCommand) Help() string {
+	return "spawn help"
 }
 
-func (c *launchCommand) Synopsis() string {
-	return "launch synopsis"
+func (c *spawnCommand) Synopsis() string {
+	return "spawn synopsis"
 }
 
-func (c *launchCommand) Run(args []string) int {
+func (c *spawnCommand) Run(args []string) int {
 	layerName := args[0]
 
 	stateName := ""
@@ -195,7 +195,7 @@ func copyFile(src, dst string) error {
 	return nil
 }
 
-func (c *launchCommand) spawnLayer(ctx context.Context, layerName, stateName, workdir, tfpath string) error {
+func (c *spawnCommand) spawnLayer(ctx context.Context, layerName, stateName, workdir, tfpath string) error {
 	logger := hclog.FromContext(ctx)
 	logger.Debug("Start spawning layer")
 
@@ -324,7 +324,7 @@ func (c *launchCommand) spawnLayer(ctx context.Context, layerName, stateName, wo
 	return err
 }
 
-func (c *launchCommand) writeLayerToWorkdir(ctx context.Context, layerWorkdir string, layer *model.Layer) (string, error) {
+func (c *spawnCommand) writeLayerToWorkdir(ctx context.Context, layerWorkdir string, layer *model.Layer) (string, error) {
 	logger := hclog.FromContext(ctx).With("layer", layer.Name, "layerWorkdir", layerWorkdir)
 	logger.Debug("Writting layer to workdir")
 

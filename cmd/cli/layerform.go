@@ -33,7 +33,7 @@ func main() {
 	c.Args = os.Args[1:]
 	c.Commands = map[string]cli.CommandFactory{
 		"spawn": func() (cli.Command, error) {
-			return command.NewLaunch(layersBackend, statesBackend), nil
+			return command.NewSpawn(layersBackend, statesBackend), nil
 		},
 	}
 
