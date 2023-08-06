@@ -27,7 +27,7 @@ func NewFileBackend(fpath string) *filebackend {
 }
 
 func (fb *filebackend) readFile(ctx context.Context) (*filestate, error) {
-	hclog.FromContext(ctx).Debug("Reading state file")
+	hclog.FromContext(ctx).Debug("Reading state file", "path", fb.fpath)
 
 	raw, err := os.ReadFile(fb.fpath)
 	if errors.Is(err, os.ErrNotExist) {
@@ -42,6 +42,18 @@ func (fb *filebackend) readFile(ctx context.Context) (*filestate, error) {
 	err = json.Unmarshal(raw, &fstate)
 
 	return &fstate, errors.Wrapf(err, "fail to parse state out of %s", fb.fpath)
+}
+
+func (fb *filebackend) writeFile(ctx context.Context, fstate *filestate) error {
+	hclog.FromContext(ctx).Debug("Writting state to file", "path", fb.fpath)
+
+	data, err := json.Marshal(fstate)
+	if err != nil {
+		return errors.Wrap(err, "fail to marshal file state")
+	}
+
+	err = os.WriteFile(fb.fpath, data, 0644)
+	return errors.Wrap(err, "fail to write file")
 }
 
 func (fb *filebackend) GetState(ctx context.Context, layerName, stateName string) (*State, error) {
@@ -84,11 +96,26 @@ func (fb *filebackend) SaveState(ctx context.Context, layerName, stateName strin
 	nextStates = append(nextStates, state)
 
 	fstate.States = nextStates
-	data, err := json.Marshal(fstate)
+
+	return fb.writeFile(ctx, fstate)
+}
+
+func (fb *filebackend) DeleteState(ctx context.Context, layerName, stateName string) error {
+	hclog.FromContext(ctx).Debug("Deleting layer state", "layer", layerName, "state", stateName)
+
+	fstate, err := fb.readFile(ctx)
 	if err != nil {
-		return errors.Wrap(err, "fail to marshal file state")
+		return errors.Wrapf(err, "fail to read file")
 	}
 
-	err = os.WriteFile(fb.fpath, data, 0644)
-	return errors.Wrap(err, "fail to write file")
+	nextStates := []*State{}
+	for _, s := range fstate.States {
+		if s.LayerName != layerName || s.StateName != stateName {
+			nextStates = append(nextStates, s)
+		}
+	}
+
+	fstate.States = nextStates
+
+	return fb.writeFile(ctx, fstate)
 }

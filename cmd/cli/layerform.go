@@ -35,6 +35,9 @@ func main() {
 		"spawn": func() (cli.Command, error) {
 			return command.NewSpawn(layersBackend, statesBackend), nil
 		},
+		"kill": func() (cli.Command, error) {
+			return command.NewKill(layersBackend, statesBackend), nil
+		},
 	}
 
 	exitStatus, err := c.Run()
