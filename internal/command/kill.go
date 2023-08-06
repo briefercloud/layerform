@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"strings"
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-version"
@@ -154,6 +155,18 @@ func (c *killCommand) Run(args []string) int {
 		"Running terraform destroy targetting layer specific addresses",
 		"layer", layer.Name, "state", stateName, "targets", targets,
 	)
+
+	var answer string
+	fmt.Printf("Deleting %s.%s. This can't be undone. Are you sure? [yes/no]: ", layerName, stateName)
+	_, err = fmt.Scan(&answer)
+	if err != nil {
+		fmt.Println("Fail to read asnwer", err)
+		return 1
+	}
+
+	if strings.ToLower(strings.TrimSpace(answer)) != "yes" {
+		return 0
+	}
 
 	err = tf.Destroy(ctx, targets...)
 	if err != nil {
