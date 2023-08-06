@@ -160,6 +160,7 @@ func MergeState(ctx context.Context, tfpath string, basePath string, dest string
 				continue
 			}
 
+			//lint:ignore SA1019 tfexec.State is deprecated but the workaround does not support our use case
 			err = tf.StateMv(ctx, item, item, tfexec.State(bPath), tfexec.StateOut(dest))
 			if err != nil {
 				return errors.Wrapf(err, "fail to move state %s out of %s to %s", item, bPath, dest)
@@ -185,10 +186,6 @@ func copyFile(src, dst string) error {
 }
 
 func (c *launchCommand) spawnLayer(ctx context.Context, layerName, stateName, workdir, tfpath string) error {
-	type statet struct {
-		path string
-	}
-
 	visited := make(map[string]string)
 
 	var inner func(layerName, stateName, layerWorkdir string) (string, error)
