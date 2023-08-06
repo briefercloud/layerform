@@ -10,32 +10,44 @@ import (
 )
 
 func TestFromFile(t *testing.T) {
-	tmpDir := t.TempDir()
-	content := `
-	{
-		"layers": [
-			{
-				"name": "layer1",
-				"files": ["main.tf"],
-				"dependencies": []
-			}
-		]
-	}`
+	t.Run("parses layers from file", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		content := `{
+  "layers": [
+    {
+      "name": "layer1",
+      "files": ["main.tf"],
+      "dependencies": []
+    }
+  ]
+}`
 
-	filePath := path.Join(tmpDir, "layerform.json")
+		filePath := path.Join(tmpDir, "layerform.json")
 
-	err := os.WriteFile(filePath, []byte(content), 0644)
-	require.NoError(t, err)
+		err := os.WriteFile(filePath, []byte(content), 0644)
+		require.NoError(t, err)
 
-	lf, err := FromFile(filePath)
-	require.NoError(t, err)
+		lf, err := FromFile(filePath)
+		require.NoError(t, err)
 
-	assert.NotNil(t, lf)
-	assert.Equal(t, 1, len(lf.Layers))
-	assert.Equal(t, "layer1", lf.Layers[0].Name)
-	assert.Equal(t, 1, len(lf.Layers[0].Files))
-	assert.Equal(t, "main.tf", lf.Layers[0].Files[0])
-	assert.Equal(t, 0, len(lf.Layers[0].Dependencies))
+		assert.NotNil(t, lf)
+		assert.Equal(t, 1, len(lf.Layers))
+		assert.Equal(t, "layer1", lf.Layers[0].Name)
+		assert.Equal(t, 1, len(lf.Layers[0].Files))
+		assert.Equal(t, "main.tf", lf.Layers[0].Files[0])
+		assert.Equal(t, 0, len(lf.Layers[0].Dependencies))
+	})
+
+	t.Run("fails to read file", func(t *testing.T) {
+		tmpDir := t.TempDir()
+
+		filePath := path.Join(tmpDir, "layerform.json")
+
+		// did not actually create the file
+
+		_, err := FromFile(filePath)
+		assert.Error(t, err)
+	})
 }
 
 func TestToLayers(t *testing.T) {
