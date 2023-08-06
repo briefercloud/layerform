@@ -74,8 +74,7 @@ func (c *launchCommand) Run(args []string) int {
 		fmt.Println("fail to create work directory", err)
 		return 1
 	}
-	fmt.Println(workdir)
-	// defer os.RemoveAll(workdir)
+	defer os.RemoveAll(workdir)
 
 	err = c.spawnLayer(ctx, layerName, stateName, workdir, tfpath)
 	if err != nil {
@@ -86,7 +85,7 @@ func (c *launchCommand) Run(args []string) int {
 	return 0
 }
 
-func GetTFState(ctx context.Context, statePath string, tfpath string) (*tfjson.State, error) {
+func getTFState(ctx context.Context, statePath string, tfpath string) (*tfjson.State, error) {
 	dir := filepath.Dir(statePath)
 	tf, err := tfexec.NewTerraform(dir, tfpath)
 	if err != nil {
@@ -96,28 +95,28 @@ func GetTFState(ctx context.Context, statePath string, tfpath string) (*tfjson.S
 	return tf.ShowStateFile(ctx, statePath)
 }
 
-func Addresses(module *tfjson.StateModule) []string {
+func getStateModuleAddresses(module *tfjson.StateModule) []string {
 	addresses := make([]string, 0)
 	for _, res := range module.Resources {
 		addresses = append(addresses, res.Address)
 	}
 
 	for _, child := range module.ChildModules {
-		addresses = append(addresses, Addresses(child)...)
+		addresses = append(addresses, getStateModuleAddresses(child)...)
 	}
 
 	return addresses
 }
 
-func StateDiff(a *tfjson.State, b *tfjson.State) []string {
-	aAddrs := Addresses(a.Values.RootModule)
+func getStateDiff(a *tfjson.State, b *tfjson.State) []string {
+	aAddrs := getStateModuleAddresses(a.Values.RootModule)
 	resourceMap := make(map[string]struct{})
 	for _, addr := range aAddrs {
 		resourceMap[addr] = struct{}{}
 	}
 
 	diff := make([]string, 0)
-	for _, addr := range Addresses(b.Values.RootModule) {
+	for _, addr := range getStateModuleAddresses(b.Values.RootModule) {
 		if _, found := resourceMap[addr]; !found {
 			diff = append(diff, addr)
 		}
@@ -126,7 +125,7 @@ func StateDiff(a *tfjson.State, b *tfjson.State) []string {
 	return diff
 }
 
-func MergeState(ctx context.Context, tfpath string, basePath string, dest string, states ...string) error {
+func mergeTFState(ctx context.Context, tfpath string, basePath string, dest string, states ...string) error {
 	dir := filepath.Dir(basePath)
 
 	err := copyFile(basePath, dest)
@@ -134,21 +133,19 @@ func MergeState(ctx context.Context, tfpath string, basePath string, dest string
 		return errors.Wrap(err, "fail to copy file")
 	}
 
-	aState, err := GetTFState(ctx, basePath, tfpath)
+	aState, err := getTFState(ctx, basePath, tfpath)
 	if err != nil {
 		return errors.Wrap(err, "fail to get tf state")
 	}
 
 	addedAddress := make(map[string]struct{})
 	for _, bPath := range states {
-		fmt.Printf("merging state %s into %s\n", bPath, basePath)
-		bState, err := GetTFState(ctx, bPath, tfpath)
+		bState, err := getTFState(ctx, bPath, tfpath)
 		if err != nil {
 			return errors.Wrap(err, "fail to get tf state")
 		}
 
-		diff := StateDiff(aState, bState)
-		fmt.Printf("diff %+v\n", diff)
+		diff := getStateDiff(aState, bState)
 
 		tf, err := tfexec.NewTerraform(dir, tfpath)
 		if err != nil {
@@ -190,9 +187,7 @@ func (c *launchCommand) spawnLayer(ctx context.Context, layerName, stateName, wo
 
 	var inner func(layerName, stateName, layerWorkdir string) (string, error)
 	inner = func(layerName, stateName, layerWorkdir string) (string, error) {
-		fmt.Printf("Spawning layer %s, state %s\n", layerName, stateName)
 		if st, ok := visited[layerName]; ok {
-			fmt.Printf("Layer %s was cached\n", layerName)
 			return st, nil
 		}
 
@@ -220,12 +215,10 @@ func (c *launchCommand) spawnLayer(ctx context.Context, layerName, stateName, wo
 			return "", errors.Wrap(err, "fail to get terraform client")
 		}
 
-		fmt.Printf("Initting layer %s\n", layerName)
 		err = tf.Init(ctx)
 		if err != nil {
 			return "", errors.Wrap(err, "fail to terraform init")
 		}
-		fmt.Printf("Layer %s initted\n", layerName)
 
 		statePath := path.Join(layerWorkdir, "terraform.tfstate")
 		err = os.WriteFile(statePath, []byte{}, 0644)
@@ -233,7 +226,6 @@ func (c *launchCommand) spawnLayer(ctx context.Context, layerName, stateName, wo
 			return "", errors.Wrap(err, "fail to create empty terraform state")
 		}
 
-		fmt.Printf("Spawnning %d dependencies of layer %s first\n", len(layer.Dependencies), layerName)
 		depStates := []string{}
 		for _, dep := range layer.Dependencies {
 			layerWorkdir := path.Join(workdir, dep)
@@ -245,7 +237,6 @@ func (c *launchCommand) spawnLayer(ctx context.Context, layerName, stateName, wo
 
 			depStates = append(depStates, depState)
 		}
-		fmt.Printf("dependencies of layer %s spawned\n", layerName)
 
 		state, err := c.statesBackend.GetState(layerName, stateName)
 		if err == nil {
@@ -254,7 +245,6 @@ func (c *launchCommand) spawnLayer(ctx context.Context, layerName, stateName, wo
 				return "", errors.Wrap(err, "fail to write layer state to layer work dir")
 			}
 
-			fmt.Printf("Layer %s, state %s already exists, appending state to merge\n", layerName, stateName)
 			depStates = append(depStates, statePath)
 		}
 
@@ -263,8 +253,6 @@ func (c *launchCommand) spawnLayer(ctx context.Context, layerName, stateName, wo
 		}
 
 		if len(depStates) > 1 {
-			fmt.Printf("Layer %s has more than 1 dependency state, merging states\n", layerName)
-			fmt.Printf("%+v\n", depStates)
 			destFile, err := os.CreateTemp("", "")
 			if err != nil {
 				return "", errors.Wrap(err, "fail to create temp file to use as output of merged state")
@@ -274,7 +262,7 @@ func (c *launchCommand) spawnLayer(ctx context.Context, layerName, stateName, wo
 
 			base := depStates[0]
 			rest := depStates[1:]
-			err = MergeState(ctx, tfpath, base, destFile.Name(), rest...)
+			err = mergeTFState(ctx, tfpath, base, destFile.Name(), rest...)
 			if err != nil {
 				return "", errors.Wrap(err, "fail to merge states")
 			}
@@ -290,12 +278,10 @@ func (c *launchCommand) spawnLayer(ctx context.Context, layerName, stateName, wo
 			}
 		}
 
-		fmt.Printf("Applying layer %s, state %s\n", layerName, stateName)
 		err = tf.Apply(ctx)
 		if err != nil {
 			return "", errors.Wrap(err, "fail to terraform apply")
 		}
-		fmt.Printf("Layer %s, state %s applied\n", layerName, stateName)
 
 		nextState, err := os.ReadFile(statePath)
 		if err != nil {
