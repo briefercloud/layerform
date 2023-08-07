@@ -58,3 +58,27 @@ func TestInMemoryBackend_ResolveDependencies(t *testing.T) {
 		assert.Equal(t, layer3, dependencies[1])
 	})
 }
+
+func TestInMemoryBackend_ListLayers(t *testing.T) {
+	layer1 := &model.Layer{Name: "layer1"}
+	layer2 := &model.Layer{Name: "layer2"}
+	layer3 := &model.Layer{Name: "layer3"}
+
+	stateBackend := NewInMemoryBackend([]*model.Layer{layer1, layer2, layer3})
+
+	t.Run("list all layers", func(t *testing.T) {
+		list, err := stateBackend.ListLayers(context.Background())
+		assert.NoError(t, err)
+		assert.Len(t, list, 3)
+		assert.Contains(t, list, layer1)
+		assert.Contains(t, list, layer2)
+		assert.Contains(t, list, layer3)
+	})
+
+	t.Run("empty list", func(t *testing.T) {
+		emptyBackend := NewInMemoryBackend([]*model.Layer{})
+		list, err := emptyBackend.ListLayers(context.Background())
+		assert.NoError(t, err)
+		assert.Empty(t, list)
+	})
+}
