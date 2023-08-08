@@ -60,6 +60,14 @@ func (c *spawnCommand) Run(layerName, stateName string, dependenciesState map[st
 	}
 	defer os.RemoveAll(workdir)
 
+	_, err = c.statesBackend.GetState(ctx, layerName, stateName)
+	if err == nil {
+		return errors.Errorf("layer %s already spawned with name %s", layerName, stateName)
+	}
+	if !errors.Is(err, layerstate.ErrStateNotFound) {
+		return errors.Wrap(err, "fail to get state")
+	}
+
 	err = c.spawnLayer(ctx, layerName, stateName, workdir, tfpath, dependenciesState)
 	if err != nil {
 		return errors.Wrap(err, "fail to spawn layer")
