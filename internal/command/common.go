@@ -5,6 +5,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strings"
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/terraform-exec/tfexec"
@@ -92,4 +93,35 @@ func getStateModuleAddresses(module *tfjson.StateModule) []string {
 	}
 
 	return addresses
+}
+
+func findTFVarFiles() ([]string, error) {
+	var matchingFiles []string
+
+	cwd, err := os.Getwd()
+	if err != nil {
+		return nil, errors.Wrap(err, "fail to get current working directory")
+	}
+
+	filepath.WalkDir(cwd, func(path string, info os.DirEntry, err error) error {
+		if err != nil {
+			return errors.Wrap(err, "fail to walk current working directory")
+		}
+
+		if info.IsDir() {
+			return nil
+		}
+
+		filename := info.Name()
+		if filename == "terraform.tfvars" ||
+			filename == "terraform.tfvars.json" ||
+			strings.HasSuffix(filename, ".auto.tfvars") ||
+			strings.HasSuffix(filename, ".auto.tfvars.json") {
+			matchingFiles = append(matchingFiles, path)
+		}
+
+		return nil
+	})
+
+	return matchingFiles, nil
 }

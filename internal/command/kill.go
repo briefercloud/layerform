@@ -30,13 +30,7 @@ func NewKill(layersBackend layers.Backend, statesBackend layerstate.Backend) *ki
 	return &killCommand{layersBackend, statesBackend}
 }
 
-func (c *killCommand) Run(args []string) error {
-	layerName := args[0]
-	stateName := layerstate.DEFAULT_LAYER_STATE_NAME
-	if len(args) > 1 {
-		stateName = args[1]
-	}
-
+func (c *killCommand) Run(layerName, stateName string, vars []string) error {
 	logger := hclog.Default()
 	logLevel := hclog.LevelFromString(os.Getenv("LF_LOG"))
 	if logLevel != hclog.NoLevel {
@@ -140,13 +134,27 @@ func (c *killCommand) Run(args []string) error {
 		return errors.Wrap(err, "fail to get terraform client")
 	}
 
-	targets := make([]tfexec.DestroyOption, 0)
+	logger.Debug("Looking for variable definitions in .tfvars files")
+	varFiles, err := findTFVarFiles()
+	if err != nil {
+		return errors.Wrap(err, "fail to find .tfvars files")
+	}
+	logger.Debug(fmt.Sprintf("Found %d var files", len(varFiles)), "varFiles", varFiles)
+
+	destroyOptions := make([]tfexec.DestroyOption, 0)
+	for _, vf := range varFiles {
+		destroyOptions = append(destroyOptions, tfexec.VarFile(vf))
+	}
+	for _, v := range vars {
+		destroyOptions = append(destroyOptions, tfexec.Var(v))
+	}
+
 	for addr := range layerAddrsMap {
-		targets = append(targets, tfexec.Target(addr))
+		destroyOptions = append(destroyOptions, tfexec.Target(addr))
 	}
 	logger.Debug(
 		"Running terraform destroy targetting layer specific addresses",
-		"layer", layer.Name, "state", stateName, "targets", targets,
+		"layer", layer.Name, "state", stateName, "targets", destroyOptions,
 	)
 
 	var answer string
@@ -160,7 +168,7 @@ func (c *killCommand) Run(args []string) error {
 		return nil
 	}
 
-	err = tf.Destroy(ctx, targets...)
+	err = tf.Destroy(ctx, destroyOptions...)
 	if err != nil {
 		return errors.Wrap(err, "fail to terraform destroy")
 	}

@@ -2,6 +2,7 @@ package command
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path"
 	"path/filepath"
@@ -29,7 +30,11 @@ func NewSpawn(layersBackend layers.Backend, statesBackend layerstate.Backend) *s
 	return &spawnCommand{layersBackend, statesBackend}
 }
 
-func (c *spawnCommand) Run(layerName, stateName string, dependenciesState map[string]string) error {
+func (c *spawnCommand) Run(
+	layerName, stateName string,
+	dependenciesState map[string]string,
+	vars []string,
+) error {
 	logger := hclog.Default()
 	logLevel := hclog.LevelFromString(os.Getenv("LF_LOG"))
 	if logLevel != hclog.NoLevel {
@@ -68,7 +73,7 @@ func (c *spawnCommand) Run(layerName, stateName string, dependenciesState map[st
 		return errors.Wrap(err, "fail to get state")
 	}
 
-	err = c.spawnLayer(ctx, layerName, stateName, workdir, tfpath, dependenciesState)
+	err = c.spawnLayer(ctx, layerName, stateName, workdir, tfpath, dependenciesState, vars)
 	if err != nil {
 		return errors.Wrap(err, "fail to spawn layer")
 	}
@@ -155,6 +160,7 @@ func (c *spawnCommand) spawnLayer(
 	ctx context.Context,
 	layerName, stateName, workdir, tfpath string,
 	dependenciesState map[string]string,
+	vars []string,
 ) error {
 	logger := hclog.FromContext(ctx)
 	logger.Debug("Start spawning layer")
@@ -268,8 +274,23 @@ func (c *spawnCommand) spawnLayer(
 			}
 		}
 
+		logger.Debug("Looking for variable definitions in .tfvars files")
+		varFiles, err := findTFVarFiles()
+		if err != nil {
+			return "", errors.Wrap(err, "fail to find .tfvars files")
+		}
+		logger.Debug(fmt.Sprintf("Found %d var files", len(varFiles)), "varFiles", varFiles)
+
+		applyOptions := []tfexec.ApplyOption{}
+		for _, vf := range varFiles {
+			applyOptions = append(applyOptions, tfexec.VarFile(vf))
+		}
+		for _, v := range vars {
+			applyOptions = append(applyOptions, tfexec.Var(v))
+		}
+
 		logger.Debug("Running terraform apply")
-		err = tf.Apply(ctx)
+		err = tf.Apply(ctx, applyOptions...)
 		if err != nil {
 			return "", errors.Wrap(err, "fail to terraform apply")
 		}
