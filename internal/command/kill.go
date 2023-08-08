@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/hc-install/product"
 	"github.com/hashicorp/hc-install/src"
 	"github.com/hashicorp/terraform-exec/tfexec"
-	"github.com/mitchellh/cli"
 	"github.com/pkg/errors"
 
 	"github.com/ergomake/layerform/internal/data/model"
@@ -27,23 +26,13 @@ type killCommand struct {
 	statesBackend layerstate.Backend
 }
 
-var _ cli.Command = &killCommand{}
-
 func NewKill(layersBackend layers.Backend, statesBackend layerstate.Backend) *killCommand {
 	return &killCommand{layersBackend, statesBackend}
 }
 
-func (c *killCommand) Help() string {
-	return "kill help"
-}
-
-func (c *killCommand) Synopsis() string {
-	return "kill synopsis"
-}
-
-func (c *killCommand) Run(args []string) int {
+func (c *killCommand) Run(args []string) error {
 	layerName := args[0]
-	stateName := "default"
+	stateName := layerstate.DEFAULT_LAYER_STATE_NAME
 	if len(args) > 1 {
 		stateName = args[1]
 	}
@@ -57,26 +46,32 @@ func (c *killCommand) Run(args []string) int {
 
 	layer, err := c.layersBackend.GetLayer(ctx, layerName)
 	if err != nil {
-		fmt.Println("Fail to get layer", err)
-		return 1
+		return errors.Wrap(err, "fail to get layer")
 	}
 
 	if layer == nil {
-		fmt.Println("Layer not found")
-		return 1
+		return errors.New("layer not found")
 	}
 
-	// TODO: revisit this once layers can be spawned on top of not default states
-	if stateName == "default" {
-		hasDependants, err := c.hasDependants(ctx, layerName)
-		if err != nil {
-			fmt.Println("Fail to check if layer has dependants", err)
-			return 1
+	state, err := c.statesBackend.GetState(ctx, layer.Name, stateName)
+	if err != nil {
+		if errors.Is(err, layerstate.ErrStateNotFound) {
+			return errors.Errorf(
+				"state %s not found for layer %s\n",
+				stateName,
+				layer.Name,
+			)
 		}
-		if hasDependants {
-			fmt.Println("Can't kill this layer because other layers depend on it")
-			return 1
-		}
+
+		return errors.Wrap(err, "fail to get layer state")
+	}
+
+	hasDependants, err := c.hasDependants(ctx, layerName, stateName)
+	if err != nil {
+		return errors.Wrap(err, "fail to check if layer has dependants")
+	}
+	if hasDependants {
+		return errors.New("can't kill this layer because other layers depend on it")
 	}
 
 	logger.Debug("Finding terraform installation")
@@ -91,25 +86,22 @@ func (c *killCommand) Run(args []string) int {
 		},
 	})
 	if err != nil {
-		fmt.Println("fail to ensure terraform", err)
-		return 1
+		return errors.Wrap(err, "fail to ensure terraform")
 	}
 	logger.Debug("Found terraform installation", "tfpath", tfpath)
 
 	logger.Debug("Creating a temporary work directory")
 	workdir, err := os.MkdirTemp("", "")
 	if err != nil {
-		fmt.Println("fail to create work directory", err)
-		return 1
+		return errors.Wrap(err, "fail to create work directory")
 	}
 	fmt.Println(workdir)
 	defer os.RemoveAll(workdir)
 
 	layerDir := path.Join(workdir, layerName)
-	layerAddrs, layerDir, err := c.getLayerAddresses(ctx, layer, layerDir, tfpath, stateName)
+	layerAddrs, layerDir, err := c.getLayerAddresses(ctx, layer, state, layerDir, tfpath)
 	if err != nil {
-		fmt.Println("Fail to get layer addresses", err)
-		return 1
+		return errors.Wrap(err, "fail to get layer addresses")
 	}
 
 	layerAddrsMap := make(map[string]struct{})
@@ -118,22 +110,24 @@ func (c *killCommand) Run(args []string) int {
 	}
 
 	for _, dep := range layer.Dependencies {
-		layer, err := c.layersBackend.GetLayer(ctx, dep)
+		depLayer, err := c.layersBackend.GetLayer(ctx, dep)
 		if err != nil {
-			fmt.Println("Fail to get dependency layer", err)
-			return 1
+			return errors.Wrap(err, "fail to get dependency layer")
 		}
 
-		if layer == nil {
-			fmt.Println("Dependency layer not found", err)
-			return 1
+		if depLayer == nil {
+			return errors.Wrap(err, "dependency layer not found")
+		}
+
+		depState, err := c.statesBackend.GetState(ctx, depLayer.Name, state.GetDependencyStateName(dep))
+		if err != nil {
+			return errors.Wrap(err, "fail to get dependency state")
 		}
 
 		depDir := path.Join(workdir, dep)
-		depAddrs, _, err := c.getLayerAddresses(ctx, layer, depDir, tfpath, "default")
+		depAddrs, _, err := c.getLayerAddresses(ctx, depLayer, depState, depDir, tfpath)
 		if err != nil {
-			fmt.Println("Fail to get dependency layer addresses", err)
-			return 1
+			return errors.Wrap(err, "fail to get dependency layer addresses")
 		}
 
 		for _, addr := range depAddrs {
@@ -143,8 +137,7 @@ func (c *killCommand) Run(args []string) int {
 
 	tf, err := tfexec.NewTerraform(layerDir, tfpath)
 	if err != nil {
-		fmt.Println("Fail to get terraform client", err)
-		return 1
+		return errors.Wrap(err, "fail to get terraform client")
 	}
 
 	targets := make([]tfexec.DestroyOption, 0)
@@ -160,53 +153,38 @@ func (c *killCommand) Run(args []string) int {
 	fmt.Printf("Deleting %s.%s. This can't be undone. Are you sure? [yes/no]: ", layerName, stateName)
 	_, err = fmt.Scan(&answer)
 	if err != nil {
-		fmt.Println("Fail to read asnwer", err)
-		return 1
+		return errors.Wrap(err, "fail to read asnwer")
 	}
 
 	if strings.ToLower(strings.TrimSpace(answer)) != "yes" {
-		return 0
+		return nil
 	}
 
 	err = tf.Destroy(ctx, targets...)
 	if err != nil {
-		fmt.Println("Fail to terraform destroy", err)
-		return 1
+		return errors.Wrap(err, "fail to terraform destroy")
 	}
 
 	err = c.statesBackend.DeleteState(ctx, layerName, stateName)
 	if err != nil {
-		fmt.Println("Fail to delete state", err)
-		return 1
+		return errors.Wrap(err, "fail to delete state")
 	}
 
-	return 0
+	return nil
 }
 
 func (c *killCommand) getLayerAddresses(
 	ctx context.Context,
 	layer *model.Layer,
-	layerDir, tfpath, stateName string,
+	state *layerstate.State,
+	layerDir, tfpath string,
 ) ([]string, string, error) {
 	logger := hclog.FromContext(ctx)
-	logger.Debug("Getting layer addresses", "layer", layer.Name, "state", stateName)
+	logger.Debug("Getting layer addresses", "layer", layer.Name, "state", state.StateName)
 
 	layerWorkdir, err := writeLayerToWorkdir(ctx, c.layersBackend, layerDir, layer)
 	if err != nil {
 		return nil, "", errors.Wrap(err, "fail to write layer to work directory")
-	}
-
-	state, err := c.statesBackend.GetState(ctx, layer.Name, stateName)
-	if err != nil {
-		if errors.Is(err, layerstate.ErrStateNotFound) {
-			return nil, "", errors.Errorf(
-				"State %s not found for layer %s\n",
-				stateName,
-				layer.Name,
-			)
-		}
-
-		return nil, "", errors.Wrap(err, "fail to get layer state")
 	}
 
 	statePath := path.Join(layerWorkdir, "terraform.tfstate")
@@ -220,7 +198,7 @@ func (c *killCommand) getLayerAddresses(
 		return nil, "", errors.Wrap(err, "fail to get terraform client")
 	}
 
-	logger.Debug("Running terraform init", "layer", layer.Name, "state", stateName)
+	logger.Debug("Running terraform init", "layer", layer.Name, "state", state.StateName)
 	err = tf.Init(ctx)
 	if err != nil {
 		return nil, "", errors.Wrap(err, "fail to terraform init")
@@ -236,8 +214,8 @@ func (c *killCommand) getLayerAddresses(
 	return addresses, layerWorkdir, nil
 }
 
-func (c *killCommand) hasDependants(ctx context.Context, layerName string) (bool, error) {
-	hclog.FromContext(ctx).Debug("Checking if layer has dependants", "layer", layerName)
+func (c *killCommand) hasDependants(ctx context.Context, layerName, stateName string) (bool, error) {
+	hclog.FromContext(ctx).Debug("Checking if layer has dependants", "layer", layerName, "state", stateName)
 
 	layers, err := c.layersBackend.ListLayers(ctx)
 	if err != nil {
@@ -259,8 +237,11 @@ func (c *killCommand) hasDependants(ctx context.Context, layerName string) (bool
 				return false, errors.Wrap(err, "fail to list layer states")
 			}
 
-			if len(states) > 0 {
-				return true, nil
+			for _, state := range states {
+				parentStateName := state.GetDependencyStateName(layerName)
+				if parentStateName == stateName {
+					return true, nil
+				}
 			}
 		}
 	}

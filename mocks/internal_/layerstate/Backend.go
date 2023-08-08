@@ -177,13 +177,13 @@ func (_c *Backend_ListStatesByLayer_Call) RunAndReturn(run func(context.Context,
 	return _c
 }
 
-// SaveState provides a mock function with given fields: ctx, layerName, stateName, bytes
-func (_m *Backend) SaveState(ctx context.Context, layerName string, stateName string, bytes []byte) error {
-	ret := _m.Called(ctx, layerName, stateName, bytes)
+// SaveState provides a mock function with given fields: ctx, state
+func (_m *Backend) SaveState(ctx context.Context, state *layerstate.State) error {
+	ret := _m.Called(ctx, state)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, string, []byte) error); ok {
-		r0 = rf(ctx, layerName, stateName, bytes)
+	if rf, ok := ret.Get(0).(func(context.Context, *layerstate.State) error); ok {
+		r0 = rf(ctx, state)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -198,16 +198,14 @@ type Backend_SaveState_Call struct {
 
 // SaveState is a helper method to define mock.On call
 //   - ctx context.Context
-//   - layerName string
-//   - stateName string
-//   - bytes []byte
-func (_e *Backend_Expecter) SaveState(ctx interface{}, layerName interface{}, stateName interface{}, bytes interface{}) *Backend_SaveState_Call {
-	return &Backend_SaveState_Call{Call: _e.mock.On("SaveState", ctx, layerName, stateName, bytes)}
+//   - state *layerstate.State
+func (_e *Backend_Expecter) SaveState(ctx interface{}, state interface{}) *Backend_SaveState_Call {
+	return &Backend_SaveState_Call{Call: _e.mock.On("SaveState", ctx, state)}
 }
 
-func (_c *Backend_SaveState_Call) Run(run func(ctx context.Context, layerName string, stateName string, bytes []byte)) *Backend_SaveState_Call {
+func (_c *Backend_SaveState_Call) Run(run func(ctx context.Context, state *layerstate.State)) *Backend_SaveState_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].([]byte))
+		run(args[0].(context.Context), args[1].(*layerstate.State))
 	})
 	return _c
 }
@@ -217,7 +215,7 @@ func (_c *Backend_SaveState_Call) Return(_a0 error) *Backend_SaveState_Call {
 	return _c
 }
 
-func (_c *Backend_SaveState_Call) RunAndReturn(run func(context.Context, string, string, []byte) error) *Backend_SaveState_Call {
+func (_c *Backend_SaveState_Call) RunAndReturn(run func(context.Context, *layerstate.State) error) *Backend_SaveState_Call {
 	_c.Call.Return(run)
 	return _c
 }

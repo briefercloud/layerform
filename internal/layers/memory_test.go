@@ -25,9 +25,8 @@ func TestLayers_InMemoryBackend(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, layers[1], layer2)
 
-	layer3, err := stateBackend.GetLayer(context.Background(), "layer3")
-	require.NoError(t, err)
-	assert.Nil(t, layer3)
+	_, err = stateBackend.GetLayer(context.Background(), "layer3")
+	assert.ErrorIs(t, err, ErrNotFound)
 }
 
 func TestInMemoryBackend_ResolveDependencies(t *testing.T) {

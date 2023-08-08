@@ -11,6 +11,7 @@ require (
 	github.com/lithammer/shortuuid/v3 v3.0.7
 	github.com/mitchellh/cli v1.1.5
 	github.com/pkg/errors v0.9.1
+	github.com/spf13/cobra v1.7.0
 	github.com/stretchr/testify v1.8.0
 )
 
@@ -28,6 +29,7 @@ require (
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/huandu/xstrings v1.3.2 // indirect
 	github.com/imdario/mergo v0.3.12 // indirect
+	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/mattn/go-colorable v0.1.12 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect
 	github.com/mitchellh/copystructure v1.2.0 // indirect
@@ -36,6 +38,7 @@ require (
 	github.com/posener/complete v1.1.1 // indirect
 	github.com/shopspring/decimal v1.2.0 // indirect
 	github.com/spf13/cast v1.3.1 // indirect
+	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/stretchr/objx v0.4.0 // indirect
 	github.com/zclconf/go-cty v1.13.0 // indirect
 	golang.org/x/crypto v0.5.0 // indirect

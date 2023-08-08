@@ -73,8 +73,8 @@ func (fb *filebackend) GetState(ctx context.Context, layerName, stateName string
 	return nil, errors.Wrapf(ErrStateNotFound, "state %s for layer %s not found", stateName, layerName)
 }
 
-func (fb *filebackend) SaveState(ctx context.Context, layerName, stateName string, bytes []byte) error {
-	hclog.FromContext(ctx).Debug("Saving layer state", "layer", layerName, "state", stateName)
+func (fb *filebackend) SaveState(ctx context.Context, state *State) error {
+	hclog.FromContext(ctx).Debug("Saving layer state", "layer", state.LayerName, "state", state.StateName)
 
 	fstate, err := fb.readFile(ctx)
 	if err != nil {
@@ -83,16 +83,11 @@ func (fb *filebackend) SaveState(ctx context.Context, layerName, stateName strin
 
 	nextStates := []*State{}
 	for _, s := range fstate.States {
-		if s.LayerName != layerName || s.StateName != stateName {
+		if s.LayerName != state.LayerName || s.StateName != state.StateName {
 			nextStates = append(nextStates, s)
 		}
 	}
 
-	state := &State{
-		LayerName: layerName,
-		StateName: stateName,
-		Bytes:     bytes,
-	}
 	nextStates = append(nextStates, state)
 
 	fstate.States = nextStates

@@ -15,15 +15,16 @@ func TestFileBackend_GetState(t *testing.T) {
 		tempDir := t.TempDir()
 
 		state := &State{
-			LayerName: "testLayer",
-			StateName: "testState",
-			Bytes:     []byte("state1"),
+			LayerName:         "testLayer",
+			StateName:         "testState",
+			DependenciesState: map[string]string{"base": "testBaseStae"},
+			Bytes:             []byte("state1"),
 		}
 
 		fb := NewFileBackend(tempDir + "/testfile.json")
 
 		// adds new state
-		err := fb.SaveState(context.Background(), state.LayerName, state.StateName, state.Bytes)
+		err := fb.SaveState(context.Background(), state)
 		require.NoError(t, err)
 
 		result, err := fb.GetState(context.Background(), state.LayerName, state.StateName)
@@ -32,7 +33,7 @@ func TestFileBackend_GetState(t *testing.T) {
 
 		// updates existing state
 		state.Bytes = []byte("state2")
-		err = fb.SaveState(context.Background(), state.LayerName, state.StateName, state.Bytes)
+		err = fb.SaveState(context.Background(), state)
 		require.NoError(t, err)
 
 		result, err = fb.GetState(context.Background(), state.LayerName, state.StateName)
@@ -45,7 +46,7 @@ func TestFileBackend_GetState(t *testing.T) {
 			StateName: "testState2",
 			Bytes:     []byte("state3"),
 		}
-		err = fb.SaveState(context.Background(), state2.LayerName, state2.StateName, state2.Bytes)
+		err = fb.SaveState(context.Background(), state2)
 		require.NoError(t, err)
 
 		result, err = fb.GetState(context.Background(), state.LayerName, state.StateName)
@@ -81,7 +82,12 @@ func TestFileBackend_SaveState(t *testing.T) {
 
 		fb := NewFileBackend(tempDir + "/testfile.json")
 
-		err := fb.SaveState(context.Background(), "layer1", "state1", []byte("data1"))
+		state := &State{
+			LayerName: "layer1",
+			StateName: "state1",
+			Bytes:     []byte("data1"),
+		}
+		err := fb.SaveState(context.Background(), state)
 		require.NoError(t, err)
 
 		data, err := os.ReadFile(tempDir + "/testfile.json")
@@ -106,7 +112,12 @@ func TestFileBackend_SaveState(t *testing.T) {
 
 		fb := NewFileBackend(tempDir + "/testfile.json")
 
-		err = fb.SaveState(context.Background(), "not-importannt", "not-important", []byte("not-important"))
+		state := &State{
+			LayerName: "not-importannt",
+			StateName: "not-important",
+			Bytes:     []byte("not-important"),
+		}
+		err = fb.SaveState(context.Background(), state)
 		assert.Error(t, err)
 	})
 }
@@ -165,13 +176,13 @@ func TestFileBackend_DeleteState(t *testing.T) {
 
 	fb := NewFileBackend(tempDir + "/testfile.json")
 
-	err := fb.SaveState(context.Background(), state1.LayerName, state1.StateName, state1.Bytes)
+	err := fb.SaveState(context.Background(), state1)
 	require.NoError(t, err)
 
-	err = fb.SaveState(context.Background(), state2.LayerName, state2.StateName, state2.Bytes)
+	err = fb.SaveState(context.Background(), state2)
 	require.NoError(t, err)
 
-	err = fb.SaveState(context.Background(), state3.LayerName, state3.StateName, state3.Bytes)
+	err = fb.SaveState(context.Background(), state3)
 	require.NoError(t, err)
 
 	t.Run("delete existing state", func(t *testing.T) {
@@ -213,13 +224,13 @@ func TestFileBackend_ListStatesByLayer(t *testing.T) {
 
 	fb := NewFileBackend(tempDir + "/testfile.json")
 
-	err := fb.SaveState(context.Background(), state1.LayerName, state1.StateName, state1.Bytes)
+	err := fb.SaveState(context.Background(), state1)
 	require.NoError(t, err)
 
-	err = fb.SaveState(context.Background(), state2.LayerName, state2.StateName, state2.Bytes)
+	err = fb.SaveState(context.Background(), state2)
 	require.NoError(t, err)
 
-	err = fb.SaveState(context.Background(), state3.LayerName, state3.StateName, state3.Bytes)
+	err = fb.SaveState(context.Background(), state3)
 	require.NoError(t, err)
 
 	t.Run("list states for existing layer", func(t *testing.T) {

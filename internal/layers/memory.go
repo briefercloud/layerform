@@ -28,7 +28,13 @@ func NewInMemoryBackend(list []*model.Layer) *inMemoryBackend {
 
 func (mb *inMemoryBackend) GetLayer(ctx context.Context, name string) (*model.Layer, error) {
 	hclog.FromContext(ctx).Debug("Getting layer", "layer", name)
-	return mb.layers[name], nil
+
+	layer, ok := mb.layers[name]
+	if !ok {
+		return nil, errors.Wrapf(ErrNotFound, "fail to get layer %s", name)
+	}
+
+	return layer, nil
 }
 
 func (mb *inMemoryBackend) ResolveDependencies(ctx context.Context, layer *model.Layer) ([]*model.Layer, error) {

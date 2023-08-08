@@ -2,7 +2,6 @@ package command
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"path"
 	"path/filepath"
@@ -15,8 +14,6 @@ import (
 	"github.com/hashicorp/hc-install/src"
 	"github.com/hashicorp/terraform-exec/tfexec"
 	tfjson "github.com/hashicorp/terraform-json"
-	"github.com/lithammer/shortuuid/v3"
-	"github.com/mitchellh/cli"
 	"github.com/pkg/errors"
 
 	"github.com/ergomake/layerform/internal/layers"
@@ -28,28 +25,11 @@ type spawnCommand struct {
 	statesBackend layerstate.Backend
 }
 
-var _ cli.Command = &spawnCommand{}
-
 func NewSpawn(layersBackend layers.Backend, statesBackend layerstate.Backend) *spawnCommand {
 	return &spawnCommand{layersBackend, statesBackend}
 }
 
-func (c *spawnCommand) Help() string {
-	return "spawn help"
-}
-
-func (c *spawnCommand) Synopsis() string {
-	return "spawn synopsis"
-}
-
-func (c *spawnCommand) Run(args []string) int {
-	layerName := args[0]
-
-	stateName := shortuuid.New()
-	if len(args) > 1 {
-		stateName = args[1]
-	}
-
+func (c *spawnCommand) Run(layerName, stateName string, dependenciesState map[string]string) error {
 	logger := hclog.Default()
 	logLevel := hclog.LevelFromString(os.Getenv("LF_LOG"))
 	if logLevel != hclog.NoLevel {
@@ -69,26 +49,23 @@ func (c *spawnCommand) Run(args []string) int {
 		},
 	})
 	if err != nil {
-		fmt.Println("fail to ensure terraform", err)
-		return 1
+		return errors.Wrap(err, "fail to ensure terraform")
 	}
 	logger.Debug("Found terraform installation", "tfpath", tfpath)
 
 	logger.Debug("Creating a temporary work directory")
 	workdir, err := os.MkdirTemp("", "")
 	if err != nil {
-		fmt.Println("fail to create work directory", err)
-		return 1
+		return errors.Wrap(err, "fail to create work directory")
 	}
 	defer os.RemoveAll(workdir)
 
-	err = c.spawnLayer(ctx, layerName, stateName, workdir, tfpath)
+	err = c.spawnLayer(ctx, layerName, stateName, workdir, tfpath, dependenciesState)
 	if err != nil {
-		fmt.Println("fail to spawn layer", err)
-		return 1
+		return errors.Wrap(err, "fail to spawn layer")
 	}
 
-	return 0
+	return nil
 }
 
 func getStateDiff(a *tfjson.State, b *tfjson.State) []string {
@@ -166,7 +143,11 @@ func copyFile(src, dst string) error {
 	return nil
 }
 
-func (c *spawnCommand) spawnLayer(ctx context.Context, layerName, stateName, workdir, tfpath string) error {
+func (c *spawnCommand) spawnLayer(
+	ctx context.Context,
+	layerName, stateName, workdir, tfpath string,
+	dependenciesState map[string]string,
+) error {
 	logger := hclog.FromContext(ctx)
 	logger.Debug("Start spawning layer")
 
@@ -175,8 +156,10 @@ func (c *spawnCommand) spawnLayer(ctx context.Context, layerName, stateName, wor
 	var inner func(layerName, stateName, layerWorkdir string) (string, error)
 	inner = func(layerName, stateName, layerWorkdir string) (string, error) {
 		logger = logger.With("layer", layerName, "state", stateName, "layerWorkdir", layerWorkdir)
-
 		logger.Debug("Spawning layer")
+
+		thisLayerDepStates := map[string]string{}
+
 		if st, ok := visited[layerName]; ok {
 			logger.Debug("Layer already spawned before")
 			return st, nil
@@ -222,7 +205,14 @@ func (c *spawnCommand) spawnLayer(ctx context.Context, layerName, stateName, wor
 		for _, dep := range layer.Dependencies {
 			layerWorkdir := path.Join(workdir, dep)
 
-			depState, err := inner(dep, "default", layerWorkdir)
+			depStateName := dependenciesState[dep]
+			if depStateName == "" {
+				depStateName = layerstate.DEFAULT_LAYER_STATE_NAME
+			} else {
+				thisLayerDepStates[dep] = depStateName
+			}
+
+			depState, err := inner(dep, depStateName, layerWorkdir)
 			if err != nil {
 				return "", errors.Wrap(err, "fail to launch dependency layer")
 			}
@@ -276,12 +266,18 @@ func (c *spawnCommand) spawnLayer(ctx context.Context, layerName, stateName, wor
 			return "", errors.Wrap(err, "fail to terraform apply")
 		}
 
-		nextState, err := os.ReadFile(statePath)
+		nextStateBytes, err := os.ReadFile(statePath)
 		if err != nil {
 			return "", errors.Wrap(err, "fail to read next state")
 		}
 
-		err = c.statesBackend.SaveState(ctx, layerName, stateName, nextState)
+		state = &layerstate.State{
+			LayerName:         layerName,
+			StateName:         stateName,
+			DependenciesState: thisLayerDepStates,
+			Bytes:             nextStateBytes,
+		}
+		err = c.statesBackend.SaveState(ctx, state)
 		if err != nil {
 			return "", errors.Wrap(err, "fail to save state")
 		}
