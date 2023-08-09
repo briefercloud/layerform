@@ -31,16 +31,12 @@ func NewSpawn(layersBackend layers.Backend, statesBackend layerstate.Backend) *s
 }
 
 func (c *spawnCommand) Run(
+	ctx context.Context,
 	layerName, stateName string,
 	dependenciesState map[string]string,
 	vars []string,
 ) error {
-	logger := hclog.Default()
-	logLevel := hclog.LevelFromString(os.Getenv("LF_LOG"))
-	if logLevel != hclog.NoLevel {
-		logger.SetLevel(logLevel)
-	}
-	ctx := hclog.WithContext(context.Background(), logger)
+	logger := hclog.FromContext(ctx)
 
 	logger.Debug("Finding terraform installation")
 	i := install.NewInstaller()

@@ -30,13 +30,8 @@ func NewKill(layersBackend layers.Backend, statesBackend layerstate.Backend) *ki
 	return &killCommand{layersBackend, statesBackend}
 }
 
-func (c *killCommand) Run(layerName, stateName string, vars []string) error {
-	logger := hclog.Default()
-	logLevel := hclog.LevelFromString(os.Getenv("LF_LOG"))
-	if logLevel != hclog.NoLevel {
-		logger.SetLevel(logLevel)
-	}
-	ctx := hclog.WithContext(context.Background(), logger)
+func (c *killCommand) Run(ctx context.Context, layerName, stateName string, vars []string) error {
+	logger := hclog.FromContext(ctx)
 
 	layer, err := c.layersBackend.GetLayer(ctx, layerName)
 	if err != nil {
