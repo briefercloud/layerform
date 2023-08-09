@@ -14,7 +14,7 @@
 
 <p align="center">
     <strong>
-        Layerform helps engineers create their own staging environment using plain Terraform files.
+        Layerform helps engineers create their own staging environments using plain Terraform files.
     </strong>
 </p>
 
@@ -41,19 +41,23 @@
 
 <br>
 
+<br>
+
 ## What is Layerform?
 
 **Layerform is a Terraform wrapper which helps engineers create their own production-like staging environment using plain Terraform files.**
 
-In addition to being much easier to use, Layerform allows teams to reuse core-pieces of infrastructure. That way, development infrastructure is much cheaper and quicker to spin up. With Layerform, Engineers only spawn the infrastructure layers they need.
-
 To enable reuse, Layerform introduces the concept of _layers_. Each layer contains some infrastructure, and can be stacked up on top of another layer.
+
+In addition to being much easier to use, Layerform allows teams to reuse core-pieces of infrastructure. That way, development infrastructure is much cheaper and quicker to spin up. With Layerform, Engineers only spawn the infrastructure layers they need.
 
 <p align="center">
   <img width="600px" src="./assets/img/dev-environments.png" />
 </p>
 
-> We don't want to run your text-editor. Layerform is the standard tool for development _infrastructure_. You can keep using your text-editors, IDEs, and other local tools directly on your machine.
+> We don't want to run your text-editor. Layerform is the standard tool for development _infrastructure_. You can keep using your text-editors, IDEs, and other local development directly on your machine.
+
+<br>
 
 ## Why use Layerform
 
@@ -90,6 +94,8 @@ When applying layers, Layerform will automatically tag the resources it creates 
 Then, each resource on top of those base layers will include `layerform_base_name` with its respective base layer. For example, if multiple developers are spinning up resources on top of the `development` base layer, their own resources will contain a `layerform_base_name` tag whose value is `development`.
 
 That way, Layerform can recursively traverse layers' resources to collect cost management information. Consequently, it will be able to tell the cost of your whole `production` and `development` layers, as well as an aggregate cost report of everything on top of those layers.
+
+<br>
 
 ## Getting started
 
@@ -179,6 +185,8 @@ $ layerform spawn services two --base "eks=one"
   <img width="350px" src="./assets/img/one-two-layers.png" />
 </p>
 
+<br>
+
 ## Layer immutability and layer rebasing
 
 A layer can only mutate itself or the layers above. For example, if you have a `base` layer and a `backend` layer, the `backend` layer's Terraform files will _not_ be able to mutate any infrastructure in a `base` layer instance. Still, the `base` layer files can mutate any instances of the layers above it.
@@ -192,6 +200,8 @@ This design allows for platform teams to "rebase" layer instances on top of thei
 On the other hand, product engineers on the layers above cannot modify the `base` layer containing the Kubernetes cluster. Otherwise, they could break everyone else's applications.
 
 In addition to preventing failures, immutability defines clearer communication interfaces between teams and helps organizations avoid lots of lateral channels.
+
+<br>
 
 ## How Layerform works
 
@@ -211,6 +221,8 @@ Finally, the Layerform CLI talks to the Layerform Back-end to fetch the files fo
 
 The way the Layerform CLI creates new layers on top of the correct existing layers is by injecting the underlying layer's state when applying each layer.
 
+<br>
+
 ## Layerform design philosophy
 
 Our main goal with Layerform was to make it as easy as possible for engineers to create and share different parts of their infrastructure. That way, we'd empower teams to create their own environments without burdening their organization with unnecessary costs or complex configuration files.
@@ -219,13 +231,19 @@ When developing Layerform, we also determined it should support virtually _any_ 
 
 Third, we decided Layerform should be simple and intuitive. Engineers shouldn't have to learn new proprietary languages or configuration formats to use Layerform. Whenever possible, we should allow them to reuse their existing configurations. Layerform concepts are the only thing engineers will need to learn about. Everything else should be "just Terraform".
 
-Finally, we decided Layerform needs to be open and free. It's for that reason we're using a GPL license, and that's why you don't necessarily need to pay for anything before you can extract value from Layerform. Sure, Layerform Cloud can make things easier and provide a bunch of interesting Governance and Management features, but those are not necessary.
+Finally, we decided Layerform needs to be open and free. It's for that reason we're using a GPL license, and that's why you don't necessarily need to pay for anything before you can extract value from Layerform.
+
+For the sake of transparency, the way we intend to make money in the future is by providing a managed service with governance, management, and cost-control features.
+
+<br>
 
 ## Issues & Support
 
 You can find Layerform's users and maintainers in [GitHub Discussions](https://github.com/ergomake/layerform/discussions). There you can ask how to set up Layerform, ask us about the roadmap, and discuss any other related topics.
 
 You can also reach us directly (and more quickly) on our [Discord server](https://discord.gg/daGzchUGDt).
+
+<br>
 
 ## Other channels
 
@@ -234,6 +252,12 @@ You can also reach us directly (and more quickly) on our [Discord server](https:
 -   [LinkedIn](https://www.linkedin.com/company/layerform)
 -   [Ergomake Engineering Blog](https://ergomake.dev/blog)
 
+<br>
+
 ## License
 
+Layerform is _truly_ open-source.
+
 Licensed under the [GNU GPLv3 License](https://github.com/layerform/layerform/blob/main/LICENSE).
+
+![](./assets/img/lgtm-gnu.png)
