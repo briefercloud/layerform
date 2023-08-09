@@ -1,31 +1,36 @@
 <p align="center">
   <a href="https://layerform.dev">
   <picture>
-    <source width="500px" media="(prefers-color-scheme: dark)" srcset="https://github.com/ergomake/layerform/blob/main/assets/img/layerform-dark.png">
-    <source width="500px" media="(prefers-color-scheme: light)" srcset="https://github.com/ergomake/layerform/blob/main/assets/img/layerform-light.png">
-    <img width="500px" alt="layerform logo" src="https://github.com/ergomake/layerform/blob/main/assets/img/layerform-light.png">
+    <source width="500px" media="(prefers-color-scheme: dark)" srcset="https://github.com/ergomake/layerform/blob/main/assets/img/logo-square.png">
+    <source width="500px" media="(prefers-color-scheme: light)" srcset="https://github.com/ergomake/layerform/blob/main/assets/img/logo-square.png">
+    <img width="500px" alt="layerform logo" src="https://github.com/ergomake/layerform/blob/main/assets/img/logo-square.png">
     </picture>
   </a>
 </p>
 
 <h4 align="center">
+  <a href="https://layerform.dev">Home Page</a> |
   <a href="https://docs.layerform.dev">Documentation</a> |
-  <a href="https://layerform.dev">Website</a>
+  <a href="https://discord.gg/daGzchUGDt">Discord</a> |
+  <a href="https://docs.layerform.dev">Blog</a>
 </h4>
 
-<h4 align="center">
-  <p>⚠️ This repo only showcases our spec for Layerform.</p>
-</h4>
+<h1 align="center">
+  Layerform
+</h1>
 
 <p align="center">
-  Terraform wrapper for provisioning reusable layers of infrastructure.
+    <strong>
+        Layerform helps engineers create their own staging environment using plain Terraform files.
+    </strong>
 </p>
+
 <p align="center">
   <a href="https://github.com/ergomake/layerform/blob/main/LICENSE">
     <img src="https://img.shields.io/github/license/ergomake/layerform" alt="Layerform is released under the GNU GPLv3 license." />
   </a>
   <a href="https://discord.gg/daGzchUGDt">
-    <img src="https://img.shields.io/badge/chat-on%20discord-7289DA.svg" alt="Discord Chat" />
+    <img src="https://img.shields.io/discord/1055836143733706874" alt="Discord Chat" />
   </a>
   <a href="https://twitter.com/intent/follow?screen_name=GetErgomake">
     <img src="https://img.shields.io/twitter/follow/GetErgomake.svg?label=Follow%20@GetErgomake" alt="Follow @GetErgomake" />
