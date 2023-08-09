@@ -69,6 +69,8 @@ When using Layerform, engineers can share the same core-pieces of infrastructure
 
 For example, if you run applications in a Kubernetes cluster, you don't have to create a brand new cluster for each engineer's environment. Instead, you can reuse the same cluster and have multiple engineers spin up their applications on top of it.
 
+<br>
+
 ### It's just like production
 
 Layerform's environments are just like production because they are spun up from plain Terraform files.
@@ -77,6 +79,14 @@ Whatever you can set up using a Terraform file, you can set up in a Layerform la
 
 That way, **your development infrastructure will be just like production, including Lambdas, DynamoDB instances, and whatever else that you need**.
 
+<br>
+
+### You own the infrastructure and permissions
+
+Layerform runs in _your_ infrastructure. Just like Terraform, Layerform will store state and spin up resources in _your_ cloud providers. Therefore, you have full control over who gets access to what, and what resources are currently running and how much they cost.
+
+<br>
+
 ### Encapsulation / Isolation of concerns
 
 By breaking infrastructure into layers, your organization can define clearer boundaries between teams. Consequently, it will be easier to [mirror your organization's structure into your system's structure](https://martinfowler.com/bliki/ConwaysLaw.html).
@@ -84,6 +94,8 @@ By breaking infrastructure into layers, your organization can define clearer bou
 <p align="center">
   <img width="600px" src="./assets/img/layers-vs-org.png" />
 </p>
+
+<br>
 
 ### Cost attribution and cost savings
 
