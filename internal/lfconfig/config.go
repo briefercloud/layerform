@@ -13,7 +13,7 @@ import (
 )
 
 type configFile struct {
-	CurrentContext string                   `yaml:"current-context"`
+	CurrentContext string                   `yaml:"currentContext"`
 	Contexts       map[string]configContext `yaml:"contexts"`
 }
 
