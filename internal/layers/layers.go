@@ -3,8 +3,12 @@ package layers
 import (
 	"context"
 
+	"github.com/pkg/errors"
+
 	"github.com/ergomake/layerform/internal/data/model"
 )
+
+var ErrNotFound = errors.New("layer not found")
 
 type Backend interface {
 	ListLayers(ctx context.Context) ([]*model.Layer, error)

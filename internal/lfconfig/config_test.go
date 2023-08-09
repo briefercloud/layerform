@@ -39,7 +39,7 @@ func TestLoad(t *testing.T) {
 	t.Run("load config successfully", func(t *testing.T) {
 		tmpDir := t.TempDir()
 		fpath := path.Join(tmpDir, "config")
-		raw := `current-context: context
+		raw := `currentContext: context
 contexts:
   context:
     type: local

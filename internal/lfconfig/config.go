@@ -10,6 +10,7 @@ import (
 
 	"github.com/ergomake/layerform/internal/layers"
 	"github.com/ergomake/layerform/internal/layerstate"
+	"github.com/ergomake/layerform/internal/storage"
 )
 
 type configFile struct {
@@ -18,8 +19,10 @@ type configFile struct {
 }
 
 type configContext struct {
-	Type string `yaml:"type"`
-	Dir  string `yaml:"dir,omitempty"`
+	Type   string `yaml:"type"`
+	Dir    string `yaml:"dir,omitempty"`
+	Bucket string `yaml:"bucket,omitempty"`
+	Region string `yaml:"region,omitempty"`
 }
 
 func getDefaultPath() (string, error) {
@@ -65,9 +68,12 @@ func Load(path string) (*config, error) {
 	return &config{configFile: &cfg, path: path}, nil
 }
 
+func (c *config) getCurrent() configContext {
+	return c.Contexts[c.CurrentContext]
+}
+
 func (c *config) getDir() string {
-	currentContext := c.Contexts[c.CurrentContext]
-	dir := currentContext.Dir
+	dir := c.getCurrent().Dir
 	if !path.IsAbs(dir) {
 		dir = path.Join(path.Dir(c.path), dir)
 	}
@@ -75,10 +81,40 @@ func (c *config) getDir() string {
 	return dir
 }
 
-func (c *config) GetStateBackend() layerstate.Backend {
-	return layerstate.NewFileBackend(path.Join(c.getDir(), "layerform.lftstate"))
+const stateFileName = "layerform.lfstate"
+
+func (c *config) GetStateBackend(ctx context.Context) (layerstate.Backend, error) {
+	current := c.getCurrent()
+	var blob storage.FileLike
+	switch current.Type {
+	case "local":
+		blob = storage.NewFileStorage(path.Join(c.getDir(), stateFileName))
+	case "s3":
+		b, err := storage.NewS3Backend(current.Bucket, stateFileName, current.Region)
+		if err != nil {
+			return nil, errors.Wrap(err, "fail to initialize s3 backend")
+		}
+		blob = b
+	}
+
+	return layerstate.NewFileLikeBackend(ctx, blob)
 }
 
+const definitionsFileName = "layerform.definitions.json"
+
 func (c *config) GetLayersBackend(ctx context.Context) (layers.Backend, error) {
-	return layers.NewFileBackend(ctx, path.Join(c.getDir(), "layerform.definitions.json"))
+	current := c.getCurrent()
+	var blob storage.FileLike
+	switch current.Type {
+	case "local":
+		blob = storage.NewFileStorage(path.Join(c.getDir(), definitionsFileName))
+	case "s3":
+		b, err := storage.NewS3Backend(current.Bucket, definitionsFileName, current.Region)
+		if err != nil {
+			return nil, errors.Wrap(err, "fail to initialize s3 backend")
+		}
+		blob = b
+	}
+
+	return layers.NewFileLikeBackend(ctx, blob)
 }

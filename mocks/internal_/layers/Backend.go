@@ -187,6 +187,49 @@ func (_c *Backend_ResolveDependencies_Call) RunAndReturn(run func(context.Contex
 	return _c
 }
 
+// UpdateLayers provides a mock function with given fields: ctx, _a1
+func (_m *Backend) UpdateLayers(ctx context.Context, _a1 []*model.Layer) error {
+	ret := _m.Called(ctx, _a1)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, []*model.Layer) error); ok {
+		r0 = rf(ctx, _a1)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// Backend_UpdateLayers_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'UpdateLayers'
+type Backend_UpdateLayers_Call struct {
+	*mock.Call
+}
+
+// UpdateLayers is a helper method to define mock.On call
+//   - ctx context.Context
+//   - _a1 []*model.Layer
+func (_e *Backend_Expecter) UpdateLayers(ctx interface{}, _a1 interface{}) *Backend_UpdateLayers_Call {
+	return &Backend_UpdateLayers_Call{Call: _e.mock.On("UpdateLayers", ctx, _a1)}
+}
+
+func (_c *Backend_UpdateLayers_Call) Run(run func(ctx context.Context, _a1 []*model.Layer)) *Backend_UpdateLayers_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].([]*model.Layer))
+	})
+	return _c
+}
+
+func (_c *Backend_UpdateLayers_Call) Return(_a0 error) *Backend_UpdateLayers_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *Backend_UpdateLayers_Call) RunAndReturn(run func(context.Context, []*model.Layer) error) *Backend_UpdateLayers_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // NewBackend creates a new instance of Backend. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
 // The first argument is typically a *testing.T value.
 func NewBackend(t interface {

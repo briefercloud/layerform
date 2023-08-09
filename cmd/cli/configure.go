@@ -25,7 +25,7 @@ var configureCmd = &cobra.Command{
 	Short: "configure short help text",
 	// TODO: :bike: fill long description of configure command
 	Long: "configure long help text",
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(cmd *cobra.Command, _ []string) error {
 		logger := hclog.Default()
 		logLevel := hclog.LevelFromString(os.Getenv("LF_LOG"))
 		if logLevel != hclog.NoLevel {

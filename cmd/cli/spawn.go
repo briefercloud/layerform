@@ -57,7 +57,10 @@ var spawnCmd = &cobra.Command{
 			return errors.Wrap(err, "fail to get layers backend")
 		}
 
-		statesBackend := cfg.GetStateBackend()
+		statesBackend, err := cfg.GetStateBackend(ctx)
+		if err != nil {
+			return errors.Wrap(err, "fail to get state backend")
+		}
 
 		layerName := args[0]
 		stateName := shortuuid.New()
