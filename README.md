@@ -61,6 +61,8 @@ In addition to being much easier to use, Layerform allows teams to reuse core-pi
 
 ## Why use Layerform
 
+<img width="384px" align="right" src="./assets/img/crocodile-spawn.png">
+
 ### Cheaper and quicker development infrastructure
 
 Layerform is much cheaper and quicker than spinning up an entire `staging` environment for each engineer.
@@ -236,6 +238,8 @@ The way the Layerform CLI creates new layers on top of the correct existing laye
 <br>
 
 ## Layerform design philosophy
+
+<img width="384px" align="right" src="./assets/img/bear-spawn.png">
 
 Our main goal with Layerform was to make it as easy as possible for engineers to create and share different parts of their infrastructure. That way, we'd empower teams to create their own environments without burdening their organization with unnecessary costs or complex configuration files.
 
