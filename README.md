@@ -165,7 +165,13 @@ After defining each layer definition, you should `terraform apply` them.
 
 The `layerform-provider` will then take care of creating unique IDs for each layer and sending the Terraform files' contents to the Layerform back-end, which, in this case, is an S3 bucket.
 
-After saving these layer definitions, you can use `layerform spawn <definition_name> <desired_id>` to create an instance of that particular layer.
+After saving these layer definitions, install the Layerform CLI.
+
+```
+$ go install github.com/ergomake/layerform
+```
+
+Then, you can use `layerform spawn <definition_name> <desired_id>` to create an instance of that particular layer.
 
 ```
 $ layerform spawn services my-dev-infra
