@@ -1,9 +1,9 @@
 <p align="center">
   <a href="https://layerform.dev">
   <picture>
-    <source width="384px" media="(prefers-color-scheme: dark)" srcset="./assets/img/layerformspawn-dark-sm.png">
-    <source width="384px" media="(prefers-color-scheme: light)" srcset="./assets/img/layerformspawn-light-sm.png">
-    <img width="384px" alt="layerform logo" src="./assets/img/layerformspawn-light-sm.png">
+    <source width="320px" media="(prefers-color-scheme: dark)" srcset="./assets/img/layerformspawn-dark-sm.png">
+    <source width="320px" media="(prefers-color-scheme: light)" srcset="./assets/img/layerformspawn-light-sm.png">
+    <img width="320px" alt="layerform logo" src="./assets/img/layerformspawn-light-sm.png">
     </picture>
   </a>
 </p>
