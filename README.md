@@ -168,7 +168,7 @@ The `layerform-provider` will then take care of creating unique IDs for each lay
 After saving these layer definitions, install the Layerform CLI.
 
 ```
-$ go install github.com/ergomake/layerform
+$ go install github.com/ergomake/layerform@latest
 ```
 
 Then, you can use `layerform spawn <definition_name> <desired_id>` to create an instance of that particular layer.
