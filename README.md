@@ -1,70 +1,103 @@
 <p align="center">
   <a href="https://layerform.dev">
   <picture>
-    <source width="500px" media="(prefers-color-scheme: dark)" srcset="https://github.com/ergomake/layerform/blob/main/assets/img/layerform-dark.png">
-    <source width="500px" media="(prefers-color-scheme: light)" srcset="https://github.com/ergomake/layerform/blob/main/assets/img/layerform-light.png">
-    <img width="500px" alt="layerform logo" src="https://github.com/ergomake/layerform/blob/main/assets/img/layerform-light.png">
+    <source width="320px" media="(prefers-color-scheme: dark)" srcset="./assets/img/layerformspawn-dark-sm.png">
+    <source width="320px" media="(prefers-color-scheme: light)" srcset="./assets/img/layerformspawn-light-sm.png">
+    <img width="320px" alt="layerform logo" src="./assets/img/layerformspawn-light-sm.png">
     </picture>
   </a>
 </p>
 
-<h4 align="center">
-  <a href="https://docs.layerform.dev">Documentation</a> |
-  <a href="https://layerform.dev">Website</a>
-</h4>
-
-<h4 align="center">
-  <p>⚠️ This repo only showcases our spec for Layerform.</p>
-</h4>
+<h1 align="center">
+  Layerform
+</h1>
 
 <p align="center">
-  Terraform wrapper for provisioning reusable layers of infrastructure.
+    <strong>
+        Layerform helps engineers create their own staging environments using plain Terraform files.
+    </strong>
 </p>
+
+<br>
+
+<h4 align="center">
+  <a href="https://layerform.dev">Home Page</a> |
+  <a href="https://docs.layerform.dev">Documentation</a> |
+  <a href="https://discord.gg/daGzchUGDt">Discord</a> |
+  <a href="https://docs.layerform.dev">Blog</a>
+</h4>
+
 <p align="center">
   <a href="https://github.com/ergomake/layerform/blob/main/LICENSE">
     <img src="https://img.shields.io/github/license/ergomake/layerform" alt="Layerform is released under the GNU GPLv3 license." />
   </a>
   <a href="https://discord.gg/daGzchUGDt">
-    <img src="https://img.shields.io/badge/chat-on%20discord-7289DA.svg" alt="Discord Chat" />
+    <img src="https://img.shields.io/discord/1055836143733706874" alt="Discord Chat" />
   </a>
   <a href="https://twitter.com/intent/follow?screen_name=GetErgomake">
     <img src="https://img.shields.io/twitter/follow/GetErgomake.svg?label=Follow%20@GetErgomake" alt="Follow @GetErgomake" />
   </a>
 </p>
 
+<br>
+
+<br>
+
 ## What is Layerform?
 
-Layerform makes it easy for engineers to create reusable layers of infrastructure using plain Terraform files.
+**Layerform is a Terraform wrapper which helps engineers create their own production-like staging environment using plain Terraform files.**
 
-When using Layerform, engineers encapsulate each part of their infrastructure into layer definitions.
+To enable reuse, Layerform introduces the concept of _layers_. Each layer contains some infrastructure, and can be stacked up on top of another layer.
 
-Engineers can create infrastructure by stacking each of those layers. Layerform's magic is that layers can share the same base layers, allowing for easy and inexpensive reuse.
-
-<p align="center">
-  <img width="600px" src="./assets/img/all-layers.png" />
-</p>
-
-## Use cases
-
-### Development environments
-
-Engineers can use Layerform to quickly spin up production-like environments.
-
-Development environments created with Layerform are similar to production environments because they use the same Terraform files.
-
-Additionally, Layerform's development enviroments are less costly and quicker to spin up because they can reuse the same base layers of infrastructure. With Layerform, engineers only apply the infrastructure layers they need.
+In addition to being much easier to use, Layerform allows teams to reuse core-pieces of infrastructure. That way, development infrastructure is much cheaper and quicker to spin up. With Layerform, Engineers only spawn the infrastructure layers they need.
 
 <p align="center">
   <img width="600px" src="./assets/img/dev-environments.png" />
 </p>
 
+> We don't want to run your text-editor. Layerform is the standard tool for development _infrastructure_. You can keep using your text-editors, IDEs, and other local development directly on your machine.
+
+<br>
+
+## Why use Layerform
+
+<img width="384px" align="right" src="./assets/img/crocodile-spawn.png">
+
+### Cheaper and quicker development infrastructure
+
+Layerform is much cheaper and quicker than spinning up an entire `staging` environment for each engineer.
+
+When using Layerform, engineers can share the same core-pieces of infrastructure, and only spin up the layers they need on top of it.
+
+For example, if you run applications in a Kubernetes cluster, you don't have to create a brand new cluster for each engineer's environment. Instead, you can reuse the same cluster and have multiple engineers spin up their applications on top of it.
+
+<br>
+
+### It's just like production
+
+Layerform's environments are just like production because they are spun up from plain Terraform files.
+
+Whatever you can set up using a Terraform file, you can set up in a Layerform layer.
+
+That way, **your development infrastructure will be just like production, including Lambdas, DynamoDB instances, and whatever else that you need**.
+
+<br>
+
+### You own the infrastructure and permissions
+
+Layerform runs in _your_ infrastructure. Just like Terraform, Layerform will store state and spin up resources in _your_ cloud providers. Therefore, you have full control over who gets access to what, and what resources are currently running and how much they cost.
+
+<br>
+
 ### Encapsulation / Isolation of concerns
 
-Another advantage of breaking infrastructure into layers is that organizations can define clearer boundaries between teams. Consequently, it will be easier for these organizations to [mirror their team's structure into their system's structure](https://martinfowler.com/bliki/ConwaysLaw.html).
+By breaking infrastructure into layers, your organization can define clearer boundaries between teams. Consequently, it will be easier to [mirror your organization's structure into your system's structure](https://martinfowler.com/bliki/ConwaysLaw.html).
 
 <p align="center">
   <img width="600px" src="./assets/img/layers-vs-org.png" />
 </p>
+
+<br>
 
 ### Cost attribution and cost savings
 
@@ -76,31 +109,31 @@ Then, each resource on top of those base layers will include `layerform_base_nam
 
 That way, Layerform can recursively traverse layers' resources to collect cost management information. Consequently, it will be able to tell the cost of your whole `production` and `development` layers, as well as an aggregate cost report of everything on top of those layers.
 
+<br>
+
 ## Getting started
 
-The first step to use Layerform is to create the Terraform files to provision each layer of infrastructure.
+The first step to use Layerform is to create the Terraform files to provision each layer of infrastructure. In the example below, we have two layers: `eks`, which is the "base" layer, and `services`.
 
 ```
-terraform/
-├── layers/
-│   ├── base_layer/
-│   │   ├── eks.tf
-│   │   └── kafka.tf
-│   ├── services_layer/
-│   │   ├── topic.tf
-│   │   └── services.tf
-│   └── integrations_layer/
-│       ├── s3.tf
-│       ├── lambda.tf
-│       ├── topic.tf
-│       └── services.tf
-└── main.tf
+layerform/
+├─ services/
+│ ├─ pods.tf
+│ ├─ outputs.tf
+│ └─ inputs.tf
+├─ eks/
+│ ├─ eks.tf
+│ ├─ vpc.tf
+│ ├─ inputs.tf
+│ └─ outputs.tf
+├─ services.tf
+└─ eks.tf
 ```
 
-Once you have your infrastructure defined as code, you'll use Terraform and the `layerform-provider` to determine each layer's name and files.
+Once you have your infrastructure defined as code, you'll use Terraform and the `layerform-provider` to create the layer definitions that the CLI will use when spawning instances of each layer.
 
 ```hcl
-# In main.tf
+# In a Terraform file of yours, like `main.tf`
 
 terraform {
   required_providers {
@@ -112,82 +145,67 @@ terraform {
 }
 
 provider "layerform" {
-  backend = "local"
+  backend = "s3"
+  bucket = "my-example-bucket"
 }
 
-resource "layerform_layer" "base_layer" {
+resource "layerform_layer_definition" "base_layer" {
   name   = "base"
-  files = ["./base_layer/**"]
+  files = [ "./layerform/eks.tf", "./layerform/eks/**" ]
 }
 
-resource "layerform_layer" "services_layer" {
+resource "layerform_layer_definition" "services_layer" {
   name   = "services"
-  files = ["./services_layer/**"]
-  dependencies = [
-    layerform_layer.base_layer.id
-  ]
-}
-
-resource "layerform_layer" "integrations_layer" {
-  name   = "integrations"
-  files = ["./integrations_layer/**"]
-  dependencies = [
-    layerform_layer.base_layer.id
-  ]
+  files = [ "./layerform/services.tf", "./layerform/services/**" ]
+  dependencies = [ layerform_layer_definition.base_layer.name ]
 }
 ```
 
-After defining each layer, you should `terraform apply` them. The `layerform-provider` will then take care of creating unique IDs for each layer and sending the Terraform files' contents to the Layerform Back-end.
+After defining each layer definition, you should `terraform apply` them.
 
-After saving these layer definitions, you can use `layerform spawn <layer_name>` to create an instance of that particular layer. Each instance of a layer contains all the pieces of infrastructure defined within that layer's files.
+The `layerform-provider` will then take care of creating unique IDs for each layer and sending the Terraform files' contents to the Layerform back-end, which, in this case, is an S3 bucket.
 
-For example, to create infrastructure for the `services` layer you should run `layerform spawn services`. That command will cause `layerform` to:
+After saving these layer definitions, install the Layerform CLI.
 
-1. Create infrastructure for the `base` layer and assign it the ID `default`.
-2. Create the infrastruture for the `services` layer on top of the `default` instance of the `base` layer
-3. Assign a random ID to your `services` layer.
+```
+$ go install github.com/ergomake/layerform@latest
+```
+
+Then, you can use `layerform spawn <definition_name> <desired_id>` to create an instance of that particular layer.
+
+```
+$ layerform spawn services my-dev-infra
+```
+
+Each instance of a layer contains all the pieces of infrastructure defined within that layer's files.
 
 <p align="center">
   <img width="350px" src="./assets/img/default-base-layer.png" />
 </p>
 
-To spawn yet another `services` layer, just run `layerform spawn services` layer again. By default, Layerform will try to use underlying layers whose ID is `default` as base layers. Again, your `services` layer instance will be assigned a random ID.
+In this example, running that command will cause Layerform to also create an instance of the underlying `eks` layer and assign it the ID `default`.
+
+To spawn yet another `services` layer, just run `layerform spawn services another-dev-infra`. By default, Layerform will try to use underlying layers whose ID is `default` as base layers.
 
 <p align="center">
   <img width="350px" src="./assets/img/multiple-top-layers.png" />
 </p>
 
-> As a general rule, underlying layers are always the ones whose ID is `default`. Only the target layer gets a random ID.
-
-To specify the desired ID for each underlying layer, you'll have to use the `--id-[layername] <id>`. For example:
+As a general rule, underlying layers are always the ones whose ID is `default`. To specify the desired ID for each underlying layer, you'll have to use the `--base` parameter. For example:
 
 ```
 # Creates:
-# 1. A base layer with ID "one"
+# 1. An eks layer with ID "one"
 # 2. A services layer with ID "two"
 
-$ layerform spawn services two --id-base=one
+$ layerform spawn services two --base "eks=one"
 ```
 
 <p align="center">
   <img width="350px" src="./assets/img/one-two-layers.png" />
 </p>
 
-## Reusing infrastructure for development environments
-
-Let's assume you wanted to create a whole separate environment for engineers to develop their applications against. This environment needs to closely resemble production, but it can't interfere with production resources like the production Kubernetes and Kafka instances.
-
-For that, you can use `layerform spawn base development`. This command will cause `layerform` to create brand new resources corresponding to the `base` layer, and group them under the ID `development`.
-
-<p align="center">
-  <img width="450px" src="./assets/img/dev-single-layers.png" />
-</p>
-
-After that, multiple back-end engineers can spin-up their development infrastructure on top of this layer's resources. For example, an engineer called Alice could use `layerform spawn services alice-dev --x-base=development` to create their infrastructure, while an engineer called Bob could use `layerform spawn services bob-dev --x-base=development`.
-
-<p align="center">
-  <img width="600px" src="./assets/img/dev-multi-layers.png" />
-</p>
+<br>
 
 ## Layer immutability and layer rebasing
 
@@ -203,6 +221,8 @@ On the other hand, product engineers on the layers above cannot modify the `base
 
 In addition to preventing failures, immutability defines clearer communication interfaces between teams and helps organizations avoid lots of lateral channels.
 
+<br>
+
 ## How Layerform works
 
 Layerform has three major components. The `layerform-provider`, the Layerform Back-end, and Layerform CLI.
@@ -215,13 +235,17 @@ The `layerform-provider` is used by Terraform to provision the Layerform Back-en
 
 The Layerform Back-end stores the data for each layer definition and stores the state for each instance of each layer so that new layers know which base state to use.
 
-> There can be multiple types of back-ends. The most common types of back-end are `local`, for storing data locally, and `ergomake`, for storing data on the cloud.
+> There can be multiple types of back-ends. The most common types of back-end are `local`, for storing data locally, and `s3`, for storing data on the cloud, in an S3 bucket.
 
 Finally, the Layerform CLI talks to the Layerform Back-end to fetch the files for the layer it wants to apply, and the state for the underlying layer.
 
 The way the Layerform CLI creates new layers on top of the correct existing layers is by injecting the underlying layer's state when applying each layer.
 
+<br>
+
 ## Layerform design philosophy
+
+<img width="384px" align="right" src="./assets/img/bear-spawn.png">
 
 Our main goal with Layerform was to make it as easy as possible for engineers to create and share different parts of their infrastructure. That way, we'd empower teams to create their own environments without burdening their organization with unnecessary costs or complex configuration files.
 
@@ -229,13 +253,19 @@ When developing Layerform, we also determined it should support virtually _any_ 
 
 Third, we decided Layerform should be simple and intuitive. Engineers shouldn't have to learn new proprietary languages or configuration formats to use Layerform. Whenever possible, we should allow them to reuse their existing configurations. Layerform concepts are the only thing engineers will need to learn about. Everything else should be "just Terraform".
 
-Finally, we decided Layerform needs to be open and free. It's for that reason we're using a GPL license, and that's why you don't necessarily need to pay for anything before you can extract value from Layerform. Sure, Layerform Cloud can make things easier and provide a bunch of interesting Governance and Management features, but those are not necessary.
+Finally, we decided Layerform needs to be open and free. It's for that reason we're using a GPL license, and that's why you don't necessarily need to pay for anything before you can extract value from Layerform.
+
+For the sake of transparency, the way we intend to make money in the future is by providing a managed service with governance, management, and cost-control features.
+
+<br>
 
 ## Issues & Support
 
 You can find Layerform's users and maintainers in [GitHub Discussions](https://github.com/ergomake/layerform/discussions). There you can ask how to set up Layerform, ask us about the roadmap, and discuss any other related topics.
 
 You can also reach us directly (and more quickly) on our [Discord server](https://discord.gg/daGzchUGDt).
+
+<br>
 
 ## Other channels
 
@@ -244,6 +274,14 @@ You can also reach us directly (and more quickly) on our [Discord server](https:
 -   [LinkedIn](https://www.linkedin.com/company/layerform)
 -   [Ergomake Engineering Blog](https://ergomake.dev/blog)
 
+<br>
+
 ## License
 
+Layerform is _truly_ open-source.
+
 Licensed under the [GNU GPLv3 License](https://github.com/layerform/layerform/blob/main/LICENSE).
+
+<p align="center">
+  <img src="./assets/img/lgtm-gnu.png" alt="" width="384px">
+</p>
