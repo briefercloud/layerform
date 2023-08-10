@@ -272,4 +272,6 @@ Layerform is _truly_ open-source.
 
 Licensed under the [GNU GPLv3 License](https://github.com/layerform/layerform/blob/main/LICENSE).
 
-![](./assets/img/lgtm-gnu.png)
+<p align="center">
+  <img src="./assets/img/lgtm-gnu.png" alt="" width="384px">
+</p>
