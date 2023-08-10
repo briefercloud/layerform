@@ -25,13 +25,21 @@ type configContext struct {
 	Region string `yaml:"region,omitempty"`
 }
 
-func getDefaultPath() (string, error) {
+func getDefaultPaths() ([]string, error) {
 	homedir, err := os.UserHomeDir()
 	if err != nil {
-		return "", errors.Wrap(err, "fail to get user home dir")
+		return []string{}, errors.Wrap(err, "fail to get user home dir")
 	}
 
-	return path.Join(homedir, ".layerform", "config"), nil
+	return []string{
+		path.Join(homedir, ".layerform", "configurations.yaml"),
+		path.Join(homedir, ".layerform", "configurations.yml"),
+		path.Join(homedir, ".layerform", "configuration.yaml"),
+		path.Join(homedir, ".layerform", "configuration.yml"),
+		path.Join(homedir, ".layerform", "config.yaml"),
+		path.Join(homedir, ".layerform", "config.yml"),
+		path.Join(homedir, ".layerform", "config"),
+	}, nil
 }
 
 type config struct {
@@ -40,32 +48,47 @@ type config struct {
 }
 
 func Load(path string) (*config, error) {
+	paths := []string{path}
 	if path == "" {
-		p, err := getDefaultPath()
+		ps, err := getDefaultPaths()
 		if err != nil {
 			return nil, errors.Wrap(err, "fail to get default path")
 		}
 
-		path = p
+		paths = ps
 	}
 
 	var cfg configFile
+	var err error
 
-	data, err := os.ReadFile(path)
-	if err != nil {
-		return nil, errors.Wrap(err, "fail to read config file")
+	for _, path := range paths {
+		data, e := os.ReadFile(path)
+		if e != nil {
+			if err == nil {
+				err = errors.Wrap(e, "fail to read config file")
+			}
+			continue
+		}
+
+		err = yaml.Unmarshal(data, &cfg)
+		if e != nil {
+			if err == nil {
+				err = errors.Wrap(e, "fail to decode config content")
+			}
+			continue
+		}
+
+		if _, ok := cfg.Contexts[cfg.CurrentContext]; !ok {
+			if err == nil {
+				err = errors.Errorf("context %s not found", cfg.CurrentContext)
+			}
+			continue
+		}
+
+		return &config{configFile: &cfg, path: path}, nil
 	}
 
-	err = yaml.Unmarshal(data, &cfg)
-	if err != nil {
-		return nil, errors.Wrap(err, "fail to decode config content")
-	}
-
-	if _, ok := cfg.Contexts[cfg.CurrentContext]; !ok {
-		return nil, errors.Errorf("context %s not found", cfg.CurrentContext)
-	}
-
-	return &config{configFile: &cfg, path: path}, nil
+	return nil, err
 }
 
 func (c *config) getCurrent() configContext {
