@@ -8,11 +8,12 @@ import (
 )
 
 var rootCmd = &cobra.Command{
-	Use: "layerform",
-	// TODO: :bike: fill short description of layerform
-	Short: "layerform short help text",
-	// TODO: :bike: fill long description of layerform
-	Long: "layerform long help text",
+	Use:   "layerform",
+	Short: "Layerform helps engineers create their own staging environments using plain Terraform files.",
+	Long: `Layerform helps engineers create their own staging environments using plain Terraform files.
+
+Please read our documentation at https://docs.layerform.dev for more information.
+`,
 }
 
 func Execute() {

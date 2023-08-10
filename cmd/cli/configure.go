@@ -14,17 +14,44 @@ import (
 )
 
 func init() {
-	// TODO: :bike: fill usage of --file flag
-	configureCmd.Flags().String("file", "layerform.json", "usage of file flag")
+	configureCmd.Flags().String("file", "layerform.json", "the configuration file with layer definitions")
 	rootCmd.AddCommand(configureCmd)
 }
 
 var configureCmd = &cobra.Command{
-	Use: "configure",
-	// TODO: :bike: fill short description of configure command
-	Short: "configure short help text",
-	// TODO: :bike: fill long description of configure command
-	Long: "configure long help text",
+	Use:   "configure",
+	Short: "transforms layer definition configurations in an actual layer definition file",
+	Long: `Transforms layer definition configurations in an actual layer definition file.
+
+This command is temporary. It will eventually be replaced by a Terraform provider.
+
+Here's an example layer definition configurations:
+
+{
+  "layers": [
+    {
+      "name": "eks",
+      "files": [
+        "layers/eks.tf",
+        "layers/eks/main.tf",
+        "layers/eks/output.tf"
+      ]
+    },
+    {
+      "name"  : "kibana",
+      "files": [
+        "layers/kibana.tf",
+        "layers/kibana/main.tf",
+        "layers/kibana/output.tf",
+        "layers/kibana/variables.tf"
+      ],
+      "dependencies": [
+        "eks"
+      ]
+    }
+  ]
+}
+`,
 	RunE: func(cmd *cobra.Command, _ []string) error {
 		logger := hclog.Default()
 		logLevel := hclog.LevelFromString(os.Getenv("LF_LOG"))

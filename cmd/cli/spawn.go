@@ -15,19 +15,20 @@ import (
 )
 
 func init() {
-	// TODO: :bike: fill usage of --base flag of spawn command
-	spawnCmd.Flags().StringToString("base", map[string]string{}, "usage of base flag")
-	// TODO: :bike: fill usage of --var flag
-	spawnCmd.Flags().StringArray("var", []string{}, "usage of var flag")
+	spawnCmd.Flags().StringToString("base", map[string]string{}, "a map of underlying layers and their IDs to place the layer on top of")
+	spawnCmd.Flags().StringArray("var", []string{}, "a map of variables for the layer's Terraform files. I.e. 'foo=bar,baz=qux'")
 	rootCmd.AddCommand(spawnCmd)
 }
 
 var spawnCmd = &cobra.Command{
-	Use: "spawn [layer] <name>",
-	// TODO: :bike: fill short description of spawn command
-	Short: "spawn short help text",
-	// TODO: :bike: fill long description of spawn command
-	Long: "spawn long help text",
+	Use:   "spawn <layer> [desired_id]",
+	Short: "creates a layer instance",
+	Long: `The spawn command creates a layer instance.
+
+Whenever a desired ID is not provided, Layerform will generate a random UUID for the layer instance.
+
+If an instance with the same ID already exists for the layer definition, Layerform will return an error.
+    `,
 	Args: cobra.MinimumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		logger := hclog.Default()

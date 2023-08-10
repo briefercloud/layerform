@@ -15,18 +15,18 @@ import (
 )
 
 func init() {
-	// TODO: :bike: fill usage of --var flag for the kill command
-	killCmd.Flags().StringArray("var", []string{}, "usage of var flag")
+	killCmd.Flags().StringArray("var", []string{}, "a map of variables for the layer's Terraform files. I.e. 'foo=bar,baz=qux'")
 
 	rootCmd.AddCommand(killCmd)
 }
 
 var killCmd = &cobra.Command{
-	Use: "kill",
-	// TODO: :bike: fill short description of kill command
-	Short: "kill short help text",
-	// TODO: :bike: fill long description of kill command
-	Long: "kill long help text",
+	Use:   "kill",
+	Short: "destroys a layer instance",
+	Long: `The kill command destroys a layer instance.
+
+Please notice that the kill command cannot destroy a layer instance which has dependants. To delete a layer instance with dependants, you must first delete all of its dependants.
+    `,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		logger := hclog.Default()
 		logLevel := hclog.LevelFromString(os.Getenv("LF_LOG"))
