@@ -229,7 +229,7 @@ The `layerform-provider` is used by Terraform to provision the Layerform Back-en
 
 The Layerform Back-end stores the data for each layer definition and stores the state for each instance of each layer so that new layers know which base state to use.
 
-> There can be multiple types of back-ends. The most common types of back-end are `local`, for storing data locally, and `ergomake`, for storing data on the cloud.
+> There can be multiple types of back-ends. The most common types of back-end are `local`, for storing data locally, and `s3`, for storing data on the cloud, in an S3 bucket.
 
 Finally, the Layerform CLI talks to the Layerform Back-end to fetch the files for the layer it wants to apply, and the state for the underlying layer.
 
