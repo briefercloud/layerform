@@ -184,7 +184,7 @@ $ layerform spawn services my-dev-infra
 Each instance of a layer contains all the pieces of infrastructure defined within that layer's files.
 
 <p align="center">
-  <img width="350px" src="./assets/img/default-base-layer.png" />
+  <img width="500px" src="./assets/img/default-base-layer.png" />
 </p>
 
 In this example, running that command will cause Layerform to also create an instance of the underlying `eks` layer and assign it the ID `default`.
@@ -192,7 +192,7 @@ In this example, running that command will cause Layerform to also create an ins
 To spawn yet another `services` layer, just run `layerform spawn services another-dev-infra`. By default, Layerform will try to use underlying layers whose ID is `default` as base layers.
 
 <p align="center">
-  <img width="350px" src="./assets/img/multiple-top-layers.png" />
+  <img width="600px" src="./assets/img/multiple-top-layers.png" />
 </p>
 
 As a general rule, underlying layers are always the ones whose ID is `default`. To specify the desired ID for each underlying layer, you'll have to use the `--base` parameter. For example:
@@ -206,7 +206,7 @@ $ layerform spawn services two --base "eks=one"
 ```
 
 <p align="center">
-  <img width="350px" src="./assets/img/one-two-layers.png" />
+  <img src="./assets/img/one-two-layers.png" />
 </p>
 
 <br>
