@@ -24,7 +24,6 @@
   <a href="https://layerform.dev">Home Page</a> |
   <a href="https://docs.layerform.dev">Documentation</a> |
   <a href="https://discord.gg/daGzchUGDt">Discord</a> |
-  <a href="https://docs.layerform.dev">Blog</a>
 </h4>
 
 <p align="center">
