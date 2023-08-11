@@ -14,7 +14,7 @@
 
 <p align="center">
     <strong>
-        Layerform helps engineers create their own staging environments using plain Terraform files.
+        Layerform helps engineers create reusable environment stacks using plain Terraform files.
     </strong>
 </p>
 
@@ -41,11 +41,15 @@
 
 <br>
 
+**After HashiCorp's announcement that they're not using a truly open-source license anymore, we are now building on top of [our own fork](https://github.com/ergomake/layerfork).**
+
+We would love to maintain the new IP under an open foundation to all the extent that's legally possible. That way, we can ensure it will continue to serve the community's interests first, and be truly open-source for ever. If you're interested in helping, email me at lucas.costa@ergomake.dev.
+
 <br>
 
 ## What is Layerform?
 
-**Layerform is a Terraform wrapper which helps engineers create their own production-like staging environment using plain Terraform files.**
+**Layerform is a Terraform wrapper which helps engineers build reusable infrastructure using plain Terraform files.**
 
 To enable reuse, Layerform introduces the concept of _layers_. Each layer contains some infrastructure, and can be stacked up on top of another layer.
 
@@ -55,7 +59,7 @@ In addition to being much easier to use, Layerform allows teams to reuse core-pi
   <img width="600px" src="./assets/img/dev-environments.png" />
 </p>
 
-> We don't want to run your text-editor. Layerform is the standard tool for development _infrastructure_. You can keep using your text-editors, IDEs, and other local development directly on your machine.
+> For those wanting development environments: we don't want to run your text-editor. Layerform is the standard tool for development _infrastructure_. You can keep using your text-editors, IDEs, and other local development directly on your machine.
 
 <br>
 
@@ -73,7 +77,7 @@ For example, if you run applications in a Kubernetes cluster, you don't have to 
 
 <br>
 
-### It's just like production
+### It's just like production, every time
 
 Layerform's environments are just like production because they are spun up from plain Terraform files.
 
@@ -99,7 +103,7 @@ By breaking infrastructure into layers, your organization can define clearer bou
 
 <br>
 
-### Cost attribution and cost savings
+### Cost attribution and cost savings (WIP)
 
 In addition to saving costs by reusing infrastructure, Layerform allows you to automatically track costs for each layer instance.
 
@@ -253,9 +257,13 @@ When developing Layerform, we also determined it should support virtually _any_ 
 
 Third, we decided Layerform should be simple and intuitive. Engineers shouldn't have to learn new proprietary languages or configuration formats to use Layerform. Whenever possible, we should allow them to reuse their existing configurations. Layerform concepts are the only thing engineers will need to learn about. Everything else should be "just Terraform".
 
-Finally, we decided Layerform needs to be open and free. It's for that reason we're using a GPL license, and that's why you don't necessarily need to pay for anything before you can extract value from Layerform.
+Finally, we decided Layerform needs to be open and free, differently from other pieces of software out there. It's for that reason we're using a GPL license for the wrapper and maintaining the MPL license in our Terraform fork. That's also why you don't necessarily need to pay for anything before you can extract value from Layerform.
 
 For the sake of transparency, the way we intend to make money in the future is by providing a managed service with governance, management, and cost-control features.
+
+If you wish to bundle the Layerform wrapper itself, the GPL license will take care of ensuring ourselves and the community gets value back.
+
+To the extent that's legally possible, we'd also love to maintain the new IP under an open foundation. Please email me at lucas.costa@ergomake.dev if you can help with that.
 
 <br>
 
