@@ -8,17 +8,13 @@ import (
 	"path/filepath"
 
 	"github.com/hashicorp/go-hclog"
-	"github.com/hashicorp/go-version"
-	install "github.com/hashicorp/hc-install"
-	"github.com/hashicorp/hc-install/fs"
-	"github.com/hashicorp/hc-install/product"
-	"github.com/hashicorp/hc-install/src"
 	"github.com/hashicorp/terraform-exec/tfexec"
 	tfjson "github.com/hashicorp/terraform-json"
 	"github.com/pkg/errors"
 
 	"github.com/ergomake/layerform/internal/layers"
 	"github.com/ergomake/layerform/internal/layerstate"
+	"github.com/ergomake/layerform/internal/terraform"
 )
 
 type spawnCommand struct {
@@ -38,21 +34,11 @@ func (c *spawnCommand) Run(
 ) error {
 	logger := hclog.FromContext(ctx)
 
-	logger.Debug("Finding terraform installation")
-	i := install.NewInstaller()
-	i.SetLogger(logger.StandardLogger(&hclog.StandardLoggerOptions{
-		ForceLevel: hclog.Debug,
-	}))
-	tfpath, err := i.Ensure(ctx, []src.Source{
-		&fs.Version{
-			Product:     product.Terraform,
-			Constraints: version.MustConstraints(version.NewConstraint(">=1.1.0")),
-		},
-	})
+	tfpath, err := terraform.GetTFPath(ctx)
 	if err != nil {
-		return errors.Wrap(err, "fail to ensure terraform")
+		return errors.Wrap(err, "fail to get terraform path")
 	}
-	logger.Debug("Found terraform installation", "tfpath", tfpath)
+	logger.Debug("Using terraform from", "tfpath", tfpath)
 
 	logger.Debug("Creating a temporary work directory")
 	workdir, err := os.MkdirTemp("", "")

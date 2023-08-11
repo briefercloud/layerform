@@ -8,17 +8,13 @@ import (
 	"strings"
 
 	"github.com/hashicorp/go-hclog"
-	"github.com/hashicorp/go-version"
-	install "github.com/hashicorp/hc-install"
-	"github.com/hashicorp/hc-install/fs"
-	"github.com/hashicorp/hc-install/product"
-	"github.com/hashicorp/hc-install/src"
 	"github.com/hashicorp/terraform-exec/tfexec"
 	"github.com/pkg/errors"
 
 	"github.com/ergomake/layerform/internal/data/model"
 	"github.com/ergomake/layerform/internal/layers"
 	"github.com/ergomake/layerform/internal/layerstate"
+	"github.com/ergomake/layerform/internal/terraform"
 )
 
 type killCommand struct {
@@ -63,20 +59,11 @@ func (c *killCommand) Run(ctx context.Context, layerName, stateName string, vars
 		return errors.New("can't kill this layer because other layers depend on it")
 	}
 
-	logger.Debug("Finding terraform installation")
-	i := install.NewInstaller()
-	i.SetLogger(logger.StandardLogger(&hclog.StandardLoggerOptions{
-		ForceLevel: hclog.Debug,
-	}))
-	tfpath, err := i.Ensure(ctx, []src.Source{
-		&fs.Version{
-			Product:     product.Terraform,
-			Constraints: version.MustConstraints(version.NewConstraint(">=1.1.0")),
-		},
-	})
+	tfpath, err := terraform.GetTFPath(ctx)
 	if err != nil {
-		return errors.Wrap(err, "fail to ensure terraform")
+		return errors.Wrap(err, "fail to get terraform path")
 	}
+	logger.Debug("Using terraform from", "tfpath", tfpath)
 	logger.Debug("Found terraform installation", "tfpath", tfpath)
 
 	logger.Debug("Creating a temporary work directory")
