@@ -102,7 +102,7 @@ By breaking infrastructure into layers, your organization can define clearer bou
 
 <br>
 
-### Cost attribution and cost savings (WIP)
+### Cost attribution and cost savings
 
 In addition to saving costs by reusing infrastructure, Layerform allows you to automatically track costs for each layer instance.
 
