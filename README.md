@@ -14,7 +14,7 @@
 
 <p align="center">
     <strong>
-        Layerform helps engineers create reusable environment stacks using plain Terraform files.
+        Layerform helps engineers create reusable environment stacks using plain `.tf` files.
     </strong>
 </p>
 
@@ -40,17 +40,15 @@
 
 <br>
 
-**After HashiCorp's announcement that they're not using a truly open-source license anymore, we are now building on top of [our own fork](https://github.com/ergomake/layerfork).**
-
-We would love to maintain the new IP under an open foundation to all the extent that's legally possible. That way, we can ensure it will continue to serve the community's interests first, and be truly open-source for ever. If you're interested in helping, email me at lucas.costa@ergomake.dev.
+**After HashiCorp's announcement that they're not using the MPL license anymore, we'll be building on top of a community-supported fork.**
 
 <br>
 
 ## What is Layerform?
 
-**Layerform is a Terraform wrapper which helps engineers build reusable infrastructure using plain Terraform files.**
+**Layerform is a Terraform wrapper that helps engineers build reusable infrastructure using plain Terraform files.**
 
-To enable reuse, Layerform introduces the concept of _layers_. Each layer contains some infrastructure, and can be stacked up on top of another layer.
+To enable reuse, Layerform introduces the concept of _layers_. Each layer contains some infrastructure and can be stacked up on top of another layer.
 
 In addition to being much easier to use, Layerform allows teams to reuse core-pieces of infrastructure. That way, development infrastructure is much cheaper and quicker to spin up. With Layerform, Engineers only spawn the infrastructure layers they need.
 
@@ -78,9 +76,9 @@ For example, if you run applications in a Kubernetes cluster, you don't have to 
 
 ### It's just like production, every time
 
-Layerform's environments are just like production because they are spun up from plain Terraform files.
+Layerform's environments are just like production because they are spun up from plain `.tf` files.
 
-Whatever you can set up using a Terraform file, you can set up in a Layerform layer.
+Whatever you can set up using a ` .tf` file, you can set up in a Layerform layer.
 
 That way, **your development infrastructure will be just like production, including Lambdas, DynamoDB instances, and whatever else that you need**.
 
@@ -88,7 +86,7 @@ That way, **your development infrastructure will be just like production, includ
 
 ### You own the infrastructure and permissions
 
-Layerform runs in _your_ infrastructure. Just like Terraform, Layerform will store state and spin up resources in _your_ cloud providers. Therefore, you have full control over who gets access to what, and what resources are currently running and how much they cost.
+Layerform runs in _your_ infrastructure. Layerform will store state and spin up resources in _your_ cloud providers. Therefore, you have full control over who gets access to what, and what resources are currently running, and how much they cost.
 
 <br>
 
@@ -256,13 +254,11 @@ When developing Layerform, we also determined it should support virtually _any_ 
 
 Third, we decided Layerform should be simple and intuitive. Engineers shouldn't have to learn new proprietary languages or configuration formats to use Layerform. Whenever possible, we should allow them to reuse their existing configurations. Layerform concepts are the only thing engineers will need to learn about. Everything else should be "just Terraform".
 
-Finally, we decided Layerform needs to be open and free, differently from other pieces of software out there. It's for that reason we're using a GPL license for the wrapper and maintaining the MPL license in our Terraform fork. That's also why you don't necessarily need to pay for anything before you can extract value from Layerform.
+Finally, we decided Layerform needs to be open and free. It's for that reason we're using a GPL license for the wrapper and using a community-maintained fork. That's also why you don't necessarily need to pay for anything before you can extract value from Layerform.
 
 For the sake of transparency, the way we intend to make money in the future is by providing a managed service with governance, management, and cost-control features.
 
 If you wish to bundle the Layerform wrapper itself, the GPL license will take care of ensuring ourselves and the community gets value back.
-
-To the extent that's legally possible, we'd also love to maintain the new IP under an open foundation. Please email me at lucas.costa@ergomake.dev if you can help with that.
 
 <br>
 
@@ -285,10 +281,12 @@ You can also reach us directly (and more quickly) on our [Discord server](https:
 
 ## License
 
-Layerform is _truly_ open-source.
+Layerform is open-source.
 
 Licensed under the [GNU GPLv3 License](https://github.com/layerform/layerform/blob/main/LICENSE).
 
 <p align="center">
   <img src="./assets/img/lgtm-gnu.png" alt="" width="384px">
 </p>
+
+Layerform is not associated with Terraform. Terraform is a registered trademark of HashiCorp, Inc.
