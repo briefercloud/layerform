@@ -114,7 +114,13 @@ That way, Layerform can recursively traverse layers' resources to collect cost m
 
 ## Getting started
 
-The first step to use Layerform is to create the Terraform files to provision each layer of infrastructure. In the example below, we have two layers: `eks`, which is the "base" layer, and `services`.
+First, install the Layerform CLI.
+
+```
+$ go install github.com/ergomake/layerform@latest
+```
+
+Then, create the Terraform files you'll use to create each layer of infrastructure. In the example below, we have two layers: `eks`, which is the "base" layer, and `services`.
 
 ```
 layerform/
@@ -131,48 +137,40 @@ layerform/
 └─ eks.tf
 ```
 
-Once you have your infrastructure defined as code, you'll use Terraform and the `layerform-provider` to create the layer definitions that the CLI will use when spawning instances of each layer.
+Once you have your infrastructure defined as code, you'll create the layer definitions that the CLI will use when spawning instances of each layer.
 
-```hcl
-# In a Terraform file of yours, like `main.tf`
-
-terraform {
-  required_providers {
-    layerform = {
-      source  = "ergomake/layerform"
-      version = "~> 0.1"
-    }
-  }
-}
-
-provider "layerform" {
-  backend = "s3"
-  bucket = "my-example-bucket"
-}
-
-resource "layerform_layer_definition" "base_layer" {
-  name   = "base"
-  files = [ "./layerform/eks.tf", "./layerform/eks/**" ]
-}
-
-resource "layerform_layer_definition" "services_layer" {
-  name   = "services"
-  files = [ "./layerform/services.tf", "./layerform/services/**" ]
-  dependencies = [ layerform_layer_definition.base_layer.name ]
+```json
+{
+    "layers": [
+        {
+            "name": "base",
+            "files": ["./layerform/eks.tf", "./layerform/eks/**"]
+        },
+        {
+            "name": "services",
+            "files": ["./layerform/services.tf", "./layerform/services/**"],
+            "dependencies": ["base"]
+        }
+    ]
 }
 ```
 
-After defining each layer definition, you should `terraform apply` them.
+Now, configure the place in which the generated layer definitions will be saved.
 
-The `layerform-provider` will then take care of creating unique IDs for each layer and sending the Terraform files' contents to the Layerform back-end, which, in this case, is an S3 bucket.
-
-After saving these layer definitions, install the Layerform CLI.
-
+```yaml
+# In .config inside ~/.layerform
+currentContext: remote-context
+contexts:
+    remote-context:
+        type: s3
+        bucket: layerform-bucket-example
 ```
-$ go install github.com/ergomake/layerform@latest
-```
 
-Then, you can use `layerform spawn <definition_name> <desired_id>` to create an instance of that particular layer.
+Finally, you should provision S3 with your layer definitions using `layerform configure`.
+
+The Layerform CLI will then take care of creating unique IDs for each layer and sending the Terraform files' contents to the Layerform back-end, which, in this case, is an S3 bucket.
+
+After provisioning layer definitions, you can use `layerform spawn <definition_name> <desired_id>` to create an instance of that particular layer.
 
 ```
 $ layerform spawn services my-dev-infra
@@ -228,6 +226,8 @@ In addition to preventing failures, immutability defines clearer communication i
 
 Layerform has three major components. The `layerform-provider`, the Layerform Back-end, and Layerform CLI.
 
+> For now, we're only using the JSON file for configurations. The provider will be made publicly available soon.
+
 <p align="center">
   <img width="700px" src="./assets/img/all-components.png" />
 </p>
@@ -250,7 +250,7 @@ The way the Layerform CLI creates new layers on top of the correct existing laye
 
 Our main goal with Layerform was to make it as easy as possible for engineers to create and share different parts of their infrastructure. That way, we'd empower teams to create their own environments without burdening their organization with unnecessary costs or complex configuration files.
 
-When developing Layerform, we also determined it should support virtually _any_ type of infrastructure, including infrastructure for serverless applications. That's why we decided to create a wrapper on top of Terraform, which supports Kubernetes/Helm, and already has established providers for all major public clouds.
+When developing Layerform, we also determined it should support virtually _any_ type of infrastructure, including infrastructure for serverless applications. That's why we decided to create a wrapper on top of a comunity fork of Terraform, which supports Kubernetes/Helm, and already has established providers for all major public clouds.
 
 Third, we decided Layerform should be simple and intuitive. Engineers shouldn't have to learn new proprietary languages or configuration formats to use Layerform. Whenever possible, we should allow them to reuse their existing configurations. Layerform concepts are the only thing engineers will need to learn about. Everything else should be "just Terraform".
 
