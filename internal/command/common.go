@@ -15,6 +15,7 @@ import (
 	"github.com/ergomake/layerform/internal/data/model"
 	"github.com/ergomake/layerform/internal/layers"
 	"github.com/ergomake/layerform/internal/pathutils"
+	"github.com/ergomake/layerform/internal/tags"
 )
 
 func writeLayerToWorkdir(
@@ -22,6 +23,7 @@ func writeLayerToWorkdir(
 	layersBackend layers.Backend,
 	layerWorkdir string,
 	layer *model.Layer,
+	stateByLayer map[string]string,
 ) (string, error) {
 	logger := hclog.FromContext(ctx).With("layer", layer.Name, "layerWorkdir", layerWorkdir)
 	logger.Debug("Writting layer to workdir")
@@ -45,6 +47,8 @@ func writeLayerToWorkdir(
 			fpaths = append(fpaths, depPaths...)
 		}
 
+		stateName := stateByLayer[layer.Name]
+
 		for _, f := range layer.Files {
 			fpaths = append(fpaths, f.Path)
 			fpath := path.Join(layerWorkdir, f.Path)
@@ -57,6 +61,17 @@ func writeLayerToWorkdir(
 			err = os.WriteFile(fpath, f.Content, 0644)
 			if err != nil {
 				return fpaths, errors.Wrap(err, "fail to write layer file")
+			}
+
+			err = tags.AddTagsToFile(
+				fpath,
+				map[string]string{
+					"layerform_layer_name":     layer.Name,
+					"layerform_layer_instance": stateName,
+				},
+			)
+			if err != nil {
+				return fpaths, errors.Wrap(err, "fail to add tags")
 			}
 		}
 

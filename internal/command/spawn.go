@@ -175,7 +175,13 @@ func (c *spawnCommand) spawnLayer(
 			return "", errors.New("layer not found")
 		}
 
-		layerWorkdir, err = writeLayerToWorkdir(ctx, c.layersBackend, layerWorkdir, layer)
+		stateByLayer := map[string]string{}
+		stateByLayer[layer.Name] = stateName
+		for k, v := range thisLayerDepStates {
+			stateByLayer[k] = v
+		}
+
+		layerWorkdir, err = writeLayerToWorkdir(ctx, c.layersBackend, layerWorkdir, layer, stateByLayer)
 		if err != nil {
 			return "", errors.Wrap(err, "fail to write layer to workdir")
 		}
