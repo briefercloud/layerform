@@ -158,7 +158,7 @@ Once you have your infrastructure defined as code, you'll create the layer defin
 Now, configure the place in which the generated layer definitions will be saved.
 
 ```yaml
-# In .config inside ~/.layerform
+# In config inside ~/.layerform
 currentContext: remote-context
 contexts:
     remote-context:
