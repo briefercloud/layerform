@@ -4,17 +4,14 @@
       "name": "eks",
       "files": [
         "layers/eks.tf",
-        "layers/eks/main.tf",
-        "layers/eks/output.tf"
+        "layers/eks/**"
       ]
     },
     {
       "name"  : "kibana",
       "files": [
         "layers/kibana.tf",
-        "layers/kibana/main.tf",
-        "layers/kibana/output.tf",
-        "layers/kibana/variables.tf"
+        "layers/kibana/**"
       ],
       "dependencies": [
         "eks"
@@ -24,9 +21,7 @@
       "name"  : "elasticsearch",
       "files": [
         "layers/elasticsearch.tf",
-        "layers/elasticsearch/main.tf",
-        "layers/elasticsearch/output.tf",
-        "layers/elasticsearch/variables.tf"
+        "layers/elasticsearch/**"
       ],
       "dependencies": [
         "eks"
@@ -36,8 +31,7 @@
       "name": "metricbeat",
       "files": [
         "layers/metricbeat.tf",
-        "layers/metricbeat/main.tf",
-        "layers/metricbeat/variables.tf"
+        "layers/metricbeat/**"
       ],
       "dependencies": [
         "kibana",
@@ -48,8 +42,7 @@
       "name": "filebeat",
       "files": [
         "layers/filebeat.tf",
-        "layers/filebeat/main.tf",
-        "layers/filebeat/variables.tf"
+        "layers/filebeat/**"
       ],
       "dependencies": [
         "kibana"

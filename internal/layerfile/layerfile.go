@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"os"
 	"path"
+	"path/filepath"
 
 	"github.com/pkg/errors"
 
@@ -38,17 +39,28 @@ func (lf *layerfile) ToLayers() ([]*model.Layer, error) {
 
 	modelLayers := make([]*model.Layer, len(lf.Layers))
 	for i, l := range lf.Layers {
-		files := make([]model.LayerFile, len(l.Files))
-		for j, f := range l.Files {
-			fpath := path.Join(dir, f)
-			content, err := os.ReadFile(fpath)
+		files := []model.LayerFile{}
+		for _, f := range l.Files {
+			matches, err := filepath.Glob(path.Join(dir, f))
 			if err != nil {
-				return nil, errors.Wrapf(err, "could not read %s", fpath)
+				return nil, errors.Wrapf(err, "fail to apply glob pattern %s", f)
 			}
 
-			files[j] = model.LayerFile{
-				Path:    f,
-				Content: content,
+			for _, fpath := range matches {
+				content, err := os.ReadFile(fpath)
+				if err != nil {
+					return nil, errors.Wrapf(err, "could not read %s", fpath)
+				}
+
+				rel, err := filepath.Rel(dir, fpath)
+				if err != nil {
+					return nil, errors.Wrap(err, "fail to extract relative path")
+				}
+
+				files = append(files, model.LayerFile{
+					Path:    rel,
+					Content: content,
+				})
 			}
 		}
 
