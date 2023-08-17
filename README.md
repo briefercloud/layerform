@@ -201,7 +201,11 @@ In this example, running that command will cause Layerform to also create an ins
 To spawn yet another `services` layer, just run `layerform spawn services another-dev-infra`. By default, Layerform will try to use underlying layers whose ID is `default` as base layers.
 
 <p align="center">
-  <img width="600px" src="./assets/img/multiple-top-layers.png" />
+  <picture>
+    <source width="600px" media="(prefers-color-scheme: dark)" srcset="./assets/img/multiple-top-layers-dark.png">
+    <source width="600px" media="(prefers-color-scheme: light)" srcset="./assets/img/multiple-top-layers.png">
+    <img width="600px" alt="layerform logo" src="./assets/img/multiple-top-layers.png">
+  </picture>
 </p>
 
 As a general rule, underlying layers are always the ones whose ID is `default`. To specify the desired ID for each underlying layer, you'll have to use the `--base` parameter. For example:
