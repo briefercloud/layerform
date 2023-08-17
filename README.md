@@ -189,7 +189,11 @@ $ layerform spawn services my-dev-infra
 Each instance of a layer contains all the pieces of infrastructure defined within that layer's files.
 
 <p align="center">
-  <img width="500px" src="./assets/img/default-base-layer.png" />
+  <picture>
+    <source width="500px" media="(prefers-color-scheme: dark)" srcset="./assets/img/default-base-layer-dark.png">
+    <source width="500px" media="(prefers-color-scheme: light)" srcset="./assets/img/default-base-layer.png">
+    <img width="500px" alt="layerform logo" src="./assets/img/default-base-layer.png">
+  </picture>
 </p>
 
 In this example, running that command will cause Layerform to also create an instance of the underlying `eks` layer and assign it the ID `default`.
