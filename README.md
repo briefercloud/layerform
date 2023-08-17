@@ -66,7 +66,11 @@ In addition to being much easier to use, Layerform allows teams to reuse core-pi
 
 ## Why use Layerform
 
-<img width="384px" align="right" src="./assets/img/crocodile-spawn.png">
+<picture align="right">
+  <source  align="right" width="384px" media="(prefers-color-scheme: dark)" srcset="./assets/img/crocodile-spawn-dark.png">
+  <source align="right" width="384px" media="(prefers-color-scheme: light)" srcset="./assets/img/crocodile-spawn.png">
+  <img align="right" width="384px" alt="layerform logo" src="./assets/img/crocodile-spawn.png">
+</picture>
 
 ### Cheaper and quicker development infrastructure
 
