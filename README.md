@@ -251,7 +251,11 @@ Layerform has three major components. The `layerform-provider`, the Layerform Ba
 > For now, we're only using the JSON file for configurations. The provider will be made publicly available soon.
 
 <p align="center">
-  <img width="700px" src="./assets/img/all-components.png" />
+  <picture>
+    <source width="700px" media="(prefers-color-scheme: dark)" srcset="./assets/img/all-components-dark.png">
+    <source width="700px" media="(prefers-color-scheme: light)" srcset="./assets/img/all-components.png">
+    <img width="700px" alt="layerform logo" src="./assets/img/all-components.png">
+  </picture>
 </p>
 
 The `layerform-provider` is used by Terraform to provision the Layerform Back-end with all the metadata for each layer, like its name and dependencies, and all the Terraform files associated with that layer.
