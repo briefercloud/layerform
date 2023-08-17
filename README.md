@@ -105,8 +105,8 @@ By breaking infrastructure into layers, your organization can define clearer bou
 <p align="center">
   <picture>
     <source width="600px" media="(prefers-color-scheme: dark)" srcset="./assets/img/layers-vs-org-dark.png">
-    <source width="600px" media="(prefers-color-scheme: light)" srcset="./assets/img/layers-vs-org-dark.png">
-    <img width="600px" alt="layerform logo" src="./assets/img/layers-vs-org-dark.png">
+    <source width="600px" media="(prefers-color-scheme: light)" srcset="./assets/img/layers-vs-org.png">
+    <img width="600px" alt="layerform logo" src="./assets/img/layers-vs-org.png">
   </picture>
 </p>
 
