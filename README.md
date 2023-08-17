@@ -1,9 +1,9 @@
 <p align="center">
   <a href="https://layerform.dev">
-  <picture>
-    <source width="320px" media="(prefers-color-scheme: dark)" srcset="./assets/img/layerformspawn-dark-sm.png">
-    <source width="320px" media="(prefers-color-scheme: light)" srcset="./assets/img/layerformspawn-light-sm.png">
-    <img width="320px" alt="layerform logo" src="./assets/img/layerformspawn-light-sm.png">
+    <picture>
+      <source width="320px" media="(prefers-color-scheme: dark)" srcset="./assets/img/layerformspawn-dark-sm.png">
+      <source width="320px" media="(prefers-color-scheme: light)" srcset="./assets/img/layerformspawn-light-sm.png">
+      <img width="320px" alt="layerform logo" src="./assets/img/layerformspawn-light-sm.png">
     </picture>
   </a>
 </p>
@@ -53,7 +53,11 @@ To enable reuse, Layerform introduces the concept of _layers_. Each layer contai
 In addition to being much easier to use, Layerform allows teams to reuse core-pieces of infrastructure. That way, development infrastructure is much cheaper and quicker to spin up. With Layerform, Engineers only spawn the infrastructure layers they need.
 
 <p align="center">
-  <img width="600px" src="./assets/img/dev-environments.png" />
+  <picture>
+    <source width="600px" media="(prefers-color-scheme: dark)" srcset="./assets/img/dev-environments-dark.png">
+    <source width="600px" media="(prefers-color-scheme: light)" srcset="./assets/img/dev-environments.png">
+    <img width="600px" alt="layerform logo" src="./assets/img/dev-environments.png">
+  </picture>
 </p>
 
 > For those wanting development environments: we don't want to run your text-editor. Layerform is the standard tool for development _infrastructure_. You can keep using your text-editors, IDEs, and other local development directly on your machine.
