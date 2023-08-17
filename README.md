@@ -272,7 +272,11 @@ The way the Layerform CLI creates new layers on top of the correct existing laye
 
 ## Layerform design philosophy
 
-<img width="384px" align="right" src="./assets/img/bear-spawn.png">
+<picture>
+  <source align="right" width="384px" media="(prefers-color-scheme: dark)" srcset="./assets/img/bear-spawn-dark.png">
+  <source align="right" width="384px" media="(prefers-color-scheme: light)" srcset="./assets/img/bear-spawn.png">
+  <img align="right" width="384px" alt="layerform logo" src="./assets/img/bear-spawn.png">
+</picture>
 
 Our main goal with Layerform was to make it as easy as possible for engineers to create and share different parts of their infrastructure. That way, we'd empower teams to create their own environments without burdening their organization with unnecessary costs or complex configuration files.
 
