@@ -103,7 +103,11 @@ Layerform runs in _your_ infrastructure. Layerform will store state and spin up 
 By breaking infrastructure into layers, your organization can define clearer boundaries between teams. Consequently, it will be easier to [mirror your organization's structure into your system's structure](https://martinfowler.com/bliki/ConwaysLaw.html).
 
 <p align="center">
-  <img width="600px" src="./assets/img/layers-vs-org.png" />
+  <picture>
+    <source width="600px" media="(prefers-color-scheme: dark)" srcset="./assets/img/layers-vs-org-dark.png">
+    <source width="600px" media="(prefers-color-scheme: light)" srcset="./assets/img/layers-vs-org-dark.png">
+    <img width="600px" alt="layerform logo" src="./assets/img/layers-vs-org-dark.png">
+  </picture>
 </p>
 
 <br>
