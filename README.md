@@ -219,7 +219,11 @@ $ layerform spawn services two --base "eks=one"
 ```
 
 <p align="center">
-  <img src="./assets/img/one-two-layers.png" />
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="./assets/img/one-two-layers-dark.png">
+    <source media="(prefers-color-scheme: light)" srcset="./assets/img/one-two-layers.png">
+    <img alt="layerform logo" src="./assets/img/one-two-layers.png">
+  </picture>
 </p>
 
 <br>
