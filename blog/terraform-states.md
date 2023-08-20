@@ -4,13 +4,15 @@
 
 Assume you're running multiple pods in a Kubernetes cluster, for example. In that case, you can use Layerform so that each developer has their own pods and namespaces on top of a shared Kubernetes cluster.
 
+<br />
 <p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="./img/terraform-states/shared-cluster-dark.png">
-    <source media="(prefers-color-scheme: light)" srcset="terraform-states/shared-cluster.png">
-    <img alt="layerform logo" src="./img/terraform-states/shared-cluster.png">
+  <picture">
+    <source width="400px" media="(prefers-color-scheme: dark)" srcset="./img/terraform-states/shared-cluster-dark.png">
+    <source width="400px" media="(prefers-color-scheme: light)" srcset="terraform-states/shared-cluster.png">
+    <img width="400px" alt="layerform logo" src="./img/terraform-states/shared-cluster.png">
   </picture>
 </p>
+<br />
 
 In this post, I'll explain how Layerform allows engineers to do that by manipulating Terraform state.
 
@@ -22,13 +24,15 @@ Every Terraform setup has two parts: `.tf` files describing the _ideal_ state an
 
 Whenever you call `terraform apply`, it will compare the desired state described in your `.tf` files with the current state in your `.tfstate` files. Then, it will apply the differences.
 
+<br />
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="./img/terraform-states/terraform-state-and-declaration-dark.png">
-    <source media="(prefers-color-scheme: light)" srcset="./img/terraform-states/terraform-state-and-declaration.png">
-    <img alt="layerform logo" src="./img/terraform-states/terraform-state-and-declaration.png">
+    <source width="600px" media="(prefers-color-scheme: dark)" srcset="./img/terraform-states/terraform-state-and-declaration-dark.png">
+    <source width="600px" media="(prefers-color-scheme: light)" srcset="./img/terraform-states/terraform-state-and-declaration.png">
+    <img width="600px" alt="layerform logo" src="./img/terraform-states/terraform-state-and-declaration.png">
   </picture>
 </p>
+<br />
 
 Assume you want to create an S3 bucket in your AWS account. For that, you'll declare the _desired_ state in your `main.tf` file.
 
@@ -50,13 +54,15 @@ resource "aws_s3_bucket" "my_bucket" {
 
 Then, when running `terraform apply`, Terraform will invoke the AWS provider, which uses the [AWS CLI](https://aws.amazon.com/cli/) to talk to AWS and create your bucket.
 
+<br />
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="./img/terraform-states/terraform-bucket-dark.png">
-    <source media="(prefers-color-scheme: light)" srcset="./img/terraform-states/terraform-bucket.png">
-    <img alt="layerform logo" src="./img/terraform-states/terraform-bucket.png">
+    <source width="600px" media="(prefers-color-scheme: dark)" srcset="./img/terraform-states/terrafor-bucket-dark.png">
+    <source width="600px" media="(prefers-color-scheme: light)" srcset="./img/terraform-states/terrafor-bucket.png">
+    <img width="600px" alt="layerform logo" src="./img/terraform-states/terrafor-bucket.png">
   </picture>
 </p>
+<br />
 
 After creating your bucket, Terraform will store information about the new bucket in a `terraform.tfstate` file. That file contains the _actual_ state of your infrastructure.
 
@@ -96,13 +102,15 @@ After creating your bucket, Terraform will store information about the new bucke
 
 The next time you change your `main.tf` file, Terraform will compare the _desired_ state in `main.tf` with the _actual_ state in `terraform.tfstate` to determine which changes it must apply.
 
+<br />
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="./img/terraform-states/terraform-state-and-declaration-bucket-dark.png">
-    <source media="(prefers-color-scheme: light)" srcset="./img/terraform-states/terraform-state-and-declaration-bucket.png">
-    <img alt="layerform logo" src="./img/terraform-states/terraform-state-and-declaration-bucket.png">
+    <source width="600px" media="(prefers-color-scheme: dark)" srcset="./img/terraform-states/terraform-state-and-declaration-bucket-dark.png">
+    <source width="600px" media="(prefers-color-scheme: light)" srcset="./img/terraform-states/terraform-state-and-declaration-bucket.png">
+    <img width="600px" alt="layerform logo" src="./img/terraform-states/terraform-state-and-declaration-bucket.png">
   </picture>
 </p>
+<br />
 
 Let's say you change your bucket's tags and run `terraform apply`, for example.
 
@@ -248,13 +256,15 @@ $ terraform apply -state="aaron.tfstate"
 
 The problem with just using a new `.tfstate` file is that it will cause Terraform to throw an error because there's already a bucket whose name is `my-unique-bucket-name-layerform`.
 
+<br />
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="./img/terraform-states/duplicate-bucket-dark.png">
-    <source media="(prefers-color-scheme: light)" srcset="./img/terraform-states/duplicate-bucket.png">
-    <img alt="layerform logo" src="./img/terraform-states/duplicate-bucket.png">
+    <source width="600px" media="(prefers-color-scheme: dark)" srcset="./img/terraform-states/duplicate-bucket-dark.png">
+    <source width="600px" media="(prefers-color-scheme: light)" srcset="./img/terraform-states/duplicate-bucket.png">
+    <img width="600px" alt="layerform logo" src="./img/terraform-states/duplicate-bucket.png">
   </picture>
 </p>
+<br />
 
 To avoid conflicts, Aaron should create a `random_id` resource and use its random ID in the bucket's name.
 
@@ -285,13 +295,15 @@ $ terraform apply -state=nicolas.tfstate
 
 This approach will work because each `.tfstate` file will be empty, causing Terraform to generate a new ID every time. Consequently, each bucket will have a different name, and there won't be conflicts.
 
+<br />
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="./img/terraform-states/new-state-dark.png">
-    <source media="(prefers-color-scheme: light)" srcset="./img/terraform-states/new-state.png">
-    <img alt="layerform logo" src="./img/terraform-states/new-state.png">
+    <source width="600px" media="(prefers-color-scheme: dark)" srcset="./img/terraform-states/new-state-dark.png">
+    <source width="600px" media="(prefers-color-scheme: light)" srcset="./img/terraform-states/new-state.png">
+    <img width="600px" alt="layerform logo" src="./img/terraform-states/new-state.png">
   </picture>
 </p>
+<br />
 
 Besides the practical advantages of not having to modify `.tf` files every time someone needs a new bucket, this approach also completely detaches the concept of a _desired_ state with the concept of an _actual_ state.
 
@@ -305,23 +317,27 @@ Now, let's imagine Aaron's system ran on top of a Kubernetes cluster. At the tim
 
 If Aaron, Dalton, Pete, and Nicolas all use brand new EKS clusters for their testing and development environments, that will cost their company $288 a month, and all clusters will be subutilized, especially if they're provisioning large EC2 instances.
 
+<br />
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="./img/terraform-states/expensive-subutilized-dark.png">
-    <source media="(prefers-color-scheme: light)" srcset="./img/terraform-states/expensive-subutilized.png">
-    <img alt="layerform logo" src="./img/terraform-states/expensive-subutilized.png">
+    <source width="600px" media="(prefers-color-scheme: dark)" srcset="./img/terraform-states/expensive-subutilized-dark.png">
+    <source width="600px" media="(prefers-color-scheme: light)" srcset="./img/terraform-states/expensive-subutilized.png">
+    <img width="600px" alt="layerform logo" src="./img/terraform-states/expensive-subutilized.png">
   </picture>
 </p>
+<br />
 
 To save money, Aaron could share the Kubernetes cluster with his team and allow each colleague to deploy their testing pods to a new namespace. That way, they'd have a single cluster and pay only $72. Additionally, all pods could share the same EC2 instance, making it even cheaper to run these development environments.
 
+<br />
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="./img/terraform-states/cheaper-full-capacity-dark.png">
-    <source media="(prefers-color-scheme: light)" srcset="./img/terraform-states/cheaper-full-capacity.png">
-    <img alt="layerform logo" src="./img/terraform-states/cheaper-full-capacity.png">
+    <source width="400px" media="(prefers-color-scheme: dark)" srcset="./img/terraform-states/cheaper-full-capacity-dark.png">
+    <source width="400px" media="(prefers-color-scheme: light)" srcset="./img/terraform-states/cheaper-full-capacity.png">
+    <img width="400px" alt="layerform logo" src="./img/terraform-states/cheaper-full-capacity.png">
   </picture>
 </p>
+<br />
 
 For that, Aaron's first step would be to create an `eks.tf` file and declare an EKS cluster (Amazon's managed Kubernetes offering).
 
@@ -339,13 +355,15 @@ module "eks" "shared_cluster" {
 
 When Aaron applies this file using `terraform apply -state=base.tfstate`, Terraform will generate a `base.tfstate` file containing the cluster's data.
 
+<br />
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="./img/terraform-states/base-tfstate-kubernetes-dark.png">
-    <source media="(prefers-color-scheme: light)" srcset="./img/terraform-states/base-tfstate-kubernetes.png">
-    <img alt="layerform logo" src="./img/terraform-states/base-tfstate-kubernetes.png">
+    <source width="700px" media="(prefers-color-scheme: dark)" srcset="./img/terraform-states/base-tfstate-kubernetes-dark.png">
+    <source width="700px" media="(prefers-color-scheme: light)" srcset="./img/terraform-states/base-tfstate-kubernetes.png">
+    <img width="700px" alt="layerform logo" src="./img/terraform-states/base-tfstate-kubernetes.png">
   </picture>
 </p>
+<br />
 
 After that, Aaron will create a `pods.tf` file, which declares a namespace and pods within that namespace. To avoid conflicts, Aaron will use `random_id` to generate the namespace's name.
 
@@ -386,35 +404,41 @@ Then, Aaron can take a snapshot of the old `base.tfstate` by copying it to `base
 
 That way, Terraform will create his pods on top of the existing Kubernetes cluster without modifying `base-snapshot.tfstate`.
 
+<br />
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="./img/terraform-states/pods-snapshot-kubernetes-dark.png">
-    <source media="(prefers-color-scheme: light)" srcset="./img/terraform-states/pods-snapshot-kubernetes.png">
-    <img alt="layerform logo" src="./img/terraform-states/pods-snapshot-kubernetes.png">
+    <source width="800px" media="(prefers-color-scheme: dark)" srcset="./img/terraform-states/pods-snapshot-kubernetes-dark.png">
+    <source width="800px" media="(prefers-color-scheme: light)" srcset="./img/terraform-states/pods-snapshot-kubernetes.png">
+    <img width="800px" alt="layerform logo" src="./img/terraform-states/pods-snapshot-kubernetes.png">
   </picture>
 </p>
+<br />
 
 Now, let's say Dalton also needs his own development pods but doesn't want to spend another $72 (and an extra 20 minutes) to create a new cluster for himself.
 
 For that, Dalton could ask Aaron for the `base-snapshot.tfstate` file. Then, he'd run `terraform apply -state=base-snapshot.tfstate` to create his own set of pods within a new namespace in the same cluster.
 
+<br />
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="./img/terraform-states/dalton-pods-snapshot-kubernetes-dark.png">
-    <source media="(prefers-color-scheme: light)" srcset="./img/terraform-states/dalton-pods-snapshot-kubernetes.png">
-    <img alt="layerform logo" src="./img/terraform-states/dalton-pods-snapshot-kubernetes.png">
+    <source width="800px" media="(prefers-color-scheme: dark)" srcset="./img/terraform-states/dalton-pods-snapshot-kubernetes-dark.png">
+    <source width="800px" media="(prefers-color-scheme: light)" srcset="./img/terraform-states/dalton-pods-snapshot-kubernetes.png">
+    <img width="800px" alt="layerform logo" src="./img/terraform-states/dalton-pods-snapshot-kubernetes.png">
   </picture>
 </p>
+<br />
 
 Pete and Nicolas could do the same. All they need to create their development pods in the same cluster is to ask Aaron for the `base-snapshot.tfstate` and use it when running `terraform apply`.
 
+<br />
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="./img/terraform-states/all-pods-snapshot-kubernetes-dark.png">
-    <source media="(prefers-color-scheme: light)" srcset="./img/terraform-states/all-pods-snapshot-kubernetes.png">
-    <img alt="layerform logo" src="./img/terraform-states/all-pods-snapshot-kubernetes.png">
+    <source width="900px" media="(prefers-color-scheme: dark)" srcset="./img/terraform-states/all-pods-snapshot-kubernetes-dark.png">
+    <source width="900px" media="(prefers-color-scheme: light)" srcset="./img/terraform-states/all-pods-snapshot-kubernetes.png">
+    <img width="900px" alt="layerform logo" src="./img/terraform-states/all-pods-snapshot-kubernetes.png">
   </picture>
 </p>
+<br />
 
 ## The problem with sharing state snapshots
 
@@ -430,43 +454,49 @@ In Aaron's case, if he were to use Layerform, he'd create one layer definition r
 
 For the `pods` layer definition, Aaron would say it depends on an instance of the `eks` layer.
 
+<br />
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="./img/terraform-states/layer-definitions-dark.png">
-    <source media="(prefers-color-scheme: light)" srcset="./img/terraform-states/layer-definitions.png">
-    <img alt="layerform logo" src="./img/terraform-states/layer-definitions.png">
+    <source width="600px" media="(prefers-color-scheme: dark)" srcset="./img/terraform-states/layer-definitions-dark.png">
+    <source width="600px" media="(prefers-color-scheme: light)" srcset="./img/terraform-states/layer-definitions.png">
+    <img width="600px" alt="layerform logo" src="./img/terraform-states/layer-definitions.png">
   </picture>
 </p>
+<br />
 
 Then, when running `layerform spawn eks`, Layerform would run the `eks.tf` file and associate the resulting `.tfstate` to the ID `default`.
 
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="./img/terraform-states/layer-eks-tfstate-dark.png">
-    <source media="(prefers-color-scheme: light)" srcset="./img/terraform-states/layer-eks-tfstate.png">
-    <img alt="layerform logo" src="./img/terraform-states/layer-eks-tfstate.png">
+    <source width="600px" media="(prefers-color-scheme: dark)" srcset="./img/terraform-states/layer-eks-tfstate-dark.png">
+    <source width="600px" media="(prefers-color-scheme: light)" srcset="./img/terraform-states/layer-eks-tfstate.png">
+    <img width="600px" alt="layerform logo" src="./img/terraform-states/layer-eks-tfstate.png">
   </picture>
 </p>
 
 After that, if Pete runs `layerform spawn pods`, Layerform will pull the `state` for the `default` instance of `eks`. Then, it will merge the `eks.tf` and `pods.tf` files and apply them using that base state.
 
+<br />
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="./img/terraform-states/layer-pods-tfstate-dark.png">
-    <source media="(prefers-color-scheme: light)" srcset="./img/terraform-states/layer-pods-tfstate.png">
-    <img alt="layerform logo" src="./img/terraform-states/layer-pods-tfstate.png">
+    <source width="600px" media="(prefers-color-scheme: dark)" srcset="./img/terraform-states/layer-pods-tfstate-dark.png">
+    <source width="600px" media="(prefers-color-scheme: light)" srcset="./img/terraform-states/layer-pods-tfstate.png">
+    <img width="600px" alt="layerform logo" src="./img/terraform-states/layer-pods-tfstate.png">
   </picture>
 </p>
+<br />
 
 Dalton and Nicolas could do the same. When they run `layerform spawn pods`, Layerform will look for the `default` state for `eks` and spin their layer instances on top of it.
 
+<br />
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="./img/terraform-states/everyone-pods-tfstate-dark.png">
-    <source media="(prefers-color-scheme: light)" srcset="./img/terraform-states/everyone-pods-tfstate.png">
-    <img alt="layerform logo" src="./img/terraform-states/everyone-pods-tfstate.png">
+    <source width="900px" media="(prefers-color-scheme: dark)" srcset="./img/terraform-states/everyone-pods-tfstate-dark.png">
+    <source width="900px" media="(prefers-color-scheme: light)" srcset="./img/terraform-states/everyone-pods-tfstate.png">
+    <img width="900px" alt="layerform logo" src="./img/terraform-states/everyone-pods-tfstate.png">
   </picture>
 </p>
+<br />
 
 ## Storing state snapshots
 
@@ -476,9 +506,9 @@ The difference between Layerform and Terraform is that Layerform can pick and me
 
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="./img/terraform-states/components-backend-dark.png">
-    <source media="(prefers-color-scheme: light)" srcset="./img/terraform-states/components-backend.png">
-    <img alt="layerform logo" src="./img/terraform-states/components-backend.png">
+    <source width="600px" media="(prefers-color-scheme: dark)" srcset="./img/terraform-states/components-backend-dark.png">
+    <source width="600px" media="(prefers-color-scheme: light)" srcset="./img/terraform-states/components-backend.png">
+    <img width="600px" alt="layerform logo" src="./img/terraform-states/components-backend.png">
   </picture>
 </p>
 
@@ -490,13 +520,15 @@ For example, the platform team could put together the configurations for a Kuber
 
 The other teams could then build their layers on top of the platform team's. That way, each team takes care of its own infra and may spin up multiple instances of it without relying on numerous "matching strings" coming from [Terraform's data sources](https://developer.hashicorp.com/terraform/language/data-sources).
 
+<br />
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="./img/terraform-states/team-responsibilities-dark.png">
-    <source media="(prefers-color-scheme: light)" srcset="./img/terraform-states/team-responsibilities.png">
-    <img alt="layerform logo" src="./img/terraform-states/team-responsibilities.png">
+    <source width="600px" media="(prefers-color-scheme: dark)" srcset="./img/terraform-states/team-responsibilities-dark.png">
+    <source width="600px" media="(prefers-color-scheme: light)" srcset="./img/terraform-states/team-responsibilities.png">
+    <img width="600px" alt="layerform logo" src="./img/terraform-states/team-responsibilities.png">
   </picture>
 </p>
+<br />
 
 Besides encapsulation, layers are also helpful for cost control and chargebacks. By breaking down your infrastructure into layers, Layerform can automatically tag resources in each layer instance so you know which teams' layers spend the most.
 
