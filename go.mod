@@ -12,6 +12,7 @@ require (
 	github.com/hashicorp/terraform-json v0.15.0
 	github.com/lithammer/shortuuid/v3 v3.0.7
 	github.com/pkg/errors v0.9.1
+	github.com/posthog/posthog-go v0.0.0-20230801140217-d607812dee69
 	github.com/spf13/cobra v1.7.0
 	github.com/stretchr/testify v1.8.0
 	github.com/zclconf/go-cty v1.13.0
