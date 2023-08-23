@@ -292,6 +292,14 @@ If you wish to bundle the Layerform wrapper itself, the GPL license will take ca
 
 <br>
 
+## Usage telemetry
+
+As of 22nd of August, 2023, we've introduced telemetry to the CLI so we can understand how engineers are using the product and improve it accordingly.
+
+To _disable_ telemetry, set the `LF_TELEMETRY_DISABLED` environment variable to `1`.
+
+<br>
+
 ## Issues & Support
 
 You can find Layerform's users and maintainers in [GitHub Discussions](https://github.com/ergomake/layerform/discussions). There you can ask how to set up Layerform, ask us about the roadmap, and discuss any other related topics.
