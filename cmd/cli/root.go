@@ -16,16 +16,11 @@ var rootCmd = &cobra.Command{
 
 Please read our documentation at https://docs.layerform.dev for more information.
 `,
-	PersistentPreRun: func(cmd *cobra.Command, _ []string) {
-		telemetry.Push(
-			telemetry.EventRunCommand,
-			map[string]interface{}{"command": cmd.CalledAs()},
-		)
-	},
 }
 
 func Execute() {
 	telemetry.Init()
+	telemetry.RegisterCommand()
 	defer telemetry.Close()
 
 	if err := rootCmd.Execute(); err != nil {

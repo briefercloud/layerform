@@ -71,6 +71,18 @@ func Push(event Event, properties map[string]interface{}) {
 	}
 }
 
+func RegisterCommand() {
+	command := ""
+	if len(os.Args) > 1 {
+		command = os.Args[1]
+	}
+
+	Push(
+		EventRunCommand,
+		map[string]interface{}{"command": command},
+	)
+}
+
 func getDistinctId() string {
 	id := uuid.NewString()
 
