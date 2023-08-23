@@ -18,6 +18,10 @@ Please read our documentation at https://docs.layerform.dev for more information
 `,
 }
 
+func SetVersionInfo(version, commit, date string) {
+	rootCmd.Version = fmt.Sprintf("%s (Built on %s from Git SHA %s)", version, date, commit)
+}
+
 func Execute() {
 	telemetry.Init()
 	telemetry.RegisterCommand()
