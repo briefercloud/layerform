@@ -280,7 +280,7 @@ The way the Layerform CLI creates new layers on top of the correct existing laye
 
 Our main goal with Layerform was to make it as easy as possible for engineers to create and share different parts of their infrastructure. That way, we'd empower teams to create their own environments without burdening their organization with unnecessary costs or complex configuration files.
 
-When developing Layerform, we also determined it should support virtually _any_ type of infrastructure, including infrastructure for serverless applications. That's why we decided to create a wrapper on top of a comunity fork of Terraform, which supports Kubernetes/Helm, and already has established providers for all major public clouds.
+When developing Layerform, we also determined it should support virtually _any_ type of infrastructure, including infrastructure for serverless applications. That's why we decided to create a wrapper on top of a community fork of Terraform, which supports Kubernetes/Helm, and already has established providers for all major public clouds.
 
 Third, we decided Layerform should be simple and intuitive. Engineers shouldn't have to learn new proprietary languages or configuration formats to use Layerform. Whenever possible, we should allow them to reuse their existing configurations. Layerform concepts are the only thing engineers will need to learn about. Everything else should be "just Terraform".
 
