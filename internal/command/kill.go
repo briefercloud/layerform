@@ -15,6 +15,7 @@ import (
 	"github.com/ergomake/layerform/internal/layers"
 	"github.com/ergomake/layerform/internal/layerstate"
 	"github.com/ergomake/layerform/internal/terraform"
+	"github.com/ergomake/layerform/internal/tfclient"
 )
 
 type killCommand struct {
@@ -111,7 +112,7 @@ func (c *killCommand) Run(ctx context.Context, layerName, stateName string, vars
 		}
 	}
 
-	tf, err := tfexec.NewTerraform(layerDir, tfpath)
+	tf, err := tfclient.New(layerDir, tfpath)
 	if err != nil {
 		return errors.Wrap(err, "fail to get terraform client")
 	}
@@ -219,7 +220,7 @@ func (c *killCommand) getLayerAddresses(
 		return nil, "", errors.Wrap(err, "fail to write terraform state to work directory")
 	}
 
-	tf, err := tfexec.NewTerraform(layerWorkdir, tfpath)
+	tf, err := tfclient.New(layerWorkdir, tfpath)
 	if err != nil {
 		return nil, "", errors.Wrap(err, "fail to get terraform client")
 	}

@@ -10,6 +10,5 @@ import (
 
 func main() {
 	cli.SetVersionInfo(versioninfo.Version, versioninfo.Revision, versioninfo.LastCommit.Format(time.RFC3339))
-
 	cli.Execute()
 }

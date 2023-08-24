@@ -15,6 +15,7 @@ import (
 	"github.com/ergomake/layerform/internal/layers"
 	"github.com/ergomake/layerform/internal/layerstate"
 	"github.com/ergomake/layerform/internal/terraform"
+	"github.com/ergomake/layerform/internal/tfclient"
 )
 
 type spawnCommand struct {
@@ -103,7 +104,7 @@ func mergeTFState(ctx context.Context, tfpath, basePath, dest string, states ...
 
 		diff := getStateDiff(aState, bState)
 
-		tf, err := tfexec.NewTerraform(dir, tfpath)
+		tf, err := tfclient.New(dir, tfpath)
 		if err != nil {
 			return errors.Wrap(err, "fail to create terraform client")
 		}
@@ -186,7 +187,7 @@ func (c *spawnCommand) spawnLayer(
 			return "", errors.Wrap(err, "fail to write layer to workdir")
 		}
 
-		tf, err := tfexec.NewTerraform(layerWorkdir, tfpath)
+		tf, err := tfclient.New(layerWorkdir, tfpath)
 		if err != nil {
 			return "", errors.Wrap(err, "fail to get terraform client")
 		}

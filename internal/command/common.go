@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"github.com/hashicorp/go-hclog"
-	"github.com/hashicorp/terraform-exec/tfexec"
 	tfjson "github.com/hashicorp/terraform-json"
 	"github.com/pkg/errors"
 
@@ -16,6 +15,7 @@ import (
 	"github.com/ergomake/layerform/internal/layers"
 	"github.com/ergomake/layerform/internal/pathutils"
 	"github.com/ergomake/layerform/internal/tags"
+	"github.com/ergomake/layerform/internal/tfclient"
 )
 
 func writeLayerToWorkdir(
@@ -89,7 +89,7 @@ func writeLayerToWorkdir(
 func getTFState(ctx context.Context, statePath string, tfpath string) (*tfjson.State, error) {
 	hclog.FromContext(ctx).Debug("Getting terraform state", "path", statePath)
 	dir := filepath.Dir(statePath)
-	tf, err := tfexec.NewTerraform(dir, tfpath)
+	tf, err := tfclient.New(dir, tfpath)
 	if err != nil {
 		return nil, errors.Wrap(err, "fail to create terraform client")
 	}
