@@ -31,6 +31,8 @@ All licenses on this list are guaranteed to adhere to [a fixed set of criteria](
 3. Users are free to redistribute the program
 4. Users are free to redistribute modified copies of the program
 
+> [The freedoms on the actual OSI page are different from these](https://opensource.org/osd/), but they overlap.
+
 These freedoms are not necessarily "good" or desirable. Still, they create legal certainty for the users of open-source software.
 
 These freedoms ensure that engineers can use and build upon other software without spending money to hire legal counsel.
