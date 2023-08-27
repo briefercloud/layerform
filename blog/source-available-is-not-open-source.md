@@ -2,13 +2,15 @@
 
 There are only two categories of software: open-source software and proprietary software. Any software that's not open-source is proprietary, regardless of whether its source code is available on GitHub.
 
+<br />
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="./img/source-available-is-not-open-source/open-source-dark.png">
-    <source media="(prefers-color-scheme: light)" srcset="./img/source-available-is-not-open-source/open-source.png">
-    <img alt="source-available sets" src="./img/source-available-is-not-open-source/open-source.png">
+    <source width="400px" media="(prefers-color-scheme: dark)" srcset="./img/source-available-is-not-open-source/open-source-dark.png">
+    <source width="400px" media="(prefers-color-scheme: light)" srcset="./img/source-available-is-not-open-source/open-source.png">
+    <img width="400px" alt="source-available sets" src="./img/source-available-is-not-open-source/open-source.png">
   </picture>
 </p>
+<br />
 
 When companies or individuals try to misconstrue proprietary software as open source, I call that _open source washing_.
 
