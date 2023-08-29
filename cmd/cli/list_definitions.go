@@ -22,12 +22,12 @@ func init() {
 
 var listDefinitionsCmd = &cobra.Command{
 	Use:   "definitions",
-	Short: "List layer definitions",
+	Short: "List layers definitions",
 	Long: `List layers definitions.
 
 Prints a table of the most important information about layer definitions.`,
 
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(_ *cobra.Command, _ []string) error {
 		logger := hclog.Default()
 		logLevel := hclog.LevelFromString(os.Getenv("LF_LOG"))
 		if logLevel != hclog.NoLevel {
@@ -55,7 +55,7 @@ Prints a table of the most important information about layer definitions.`,
 			return errors.Wrap(err, "fail to print output")
 		}
 
-		layers = sortLayersByDepth(layers)
+		sortLayersByDepth(layers)
 
 		w := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
 		fmt.Fprintln(w, "NAME\tDEPENDENCIES")
@@ -69,31 +69,16 @@ Prints a table of the most important information about layer definitions.`,
 	},
 }
 
-func sortLayersByDepth(layers []*model.Layer) []*model.Layer {
+func sortLayersByDepth(layers []*model.Layer) {
 	byName := make(map[string]*model.Layer)
 	for _, l := range layers {
 		byName[l.Name] = l
 	}
 
-	depthArr := make([]int, len(layers))
-	for i, l := range layers {
-		depth := 0
-		deps := l.Dependencies
-		for len(deps) > 0 {
-			d := deps[0]
-			deps = deps[1:]
-			depth += 1
-
-			depDeps := byName[d].Dependencies
-			deps = append(deps, depDeps...)
-		}
-
-		depthArr[i] = depth
-	}
-
 	sort.SliceStable(layers, func(x, y int) bool {
-		return depthArr[x] < depthArr[y]
-	})
+		lx := layers[x]
+		ly := layers[y]
 
-	return layers
+		return computeDepth(lx, byName, 0) < computeDepth(ly, byName, 0)
+	})
 }

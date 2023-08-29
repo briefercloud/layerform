@@ -29,4 +29,5 @@ type Backend interface {
 	ListStatesByLayer(ctx context.Context, layerName string) ([]*State, error)
 	SaveState(ctx context.Context, state *State) error
 	DeleteState(ctx context.Context, layerName, stateName string) error
+	ListStates(ctx context.Context) ([]*State, error)
 }
