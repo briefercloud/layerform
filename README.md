@@ -40,7 +40,7 @@
 
 <br>
 
-**After HashiCorp's announcement that they're not using the MPL license anymore, we'll be building on top of a community-supported fork.**
+**After HashiCorp's announcement that they're not using the MPL license anymore, we'll be building on top of OpenTF.**
 
 <br>
 
