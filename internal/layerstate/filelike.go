@@ -92,3 +92,9 @@ func (flb *fileLikeBackend) ListStatesByLayer(ctx context.Context, layerName str
 
 	return result, nil
 }
+
+func (flb *fileLikeBackend) ListStates(ctx context.Context) ([]*State, error) {
+	hclog.FromContext(ctx).Debug("Listing all layers states")
+
+	return flb.model.States, nil
+}
