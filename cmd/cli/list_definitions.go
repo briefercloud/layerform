@@ -51,7 +51,7 @@ Prints a table of the most important information about layer definitions.`,
 		}
 
 		if len(layers) == 0 {
-			_, err := fmt.Println("No layer definitions are configured, provision layers by running \"layerform configure\"")
+			_, err := fmt.Println("No layer definitions configured, provision layers by running \"layerform configure\"")
 			return errors.Wrap(err, "fail to print output")
 		}
 

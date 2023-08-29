@@ -56,7 +56,7 @@ Prints a table of the most important information about layer instances.`,
 		}
 
 		if len(instances) == 0 {
-			_, err := fmt.Println("No layer instances are spawned, spawn layers by running \"layerform spawn\"")
+			_, err := fmt.Println("No layer instances spawned, spawn layers by running \"layerform spawn\"")
 			return errors.Wrap(err, "fail to print output")
 		}
 
