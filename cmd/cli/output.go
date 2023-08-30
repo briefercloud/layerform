@@ -14,20 +14,15 @@ import (
 )
 
 func init() {
-	killCmd.Flags().StringArray("var", []string{}, "a map of variables for the layer's Terraform files. I.e. 'foo=bar,baz=qux'")
-
-	rootCmd.AddCommand(killCmd)
+	rootCmd.AddCommand(outputCmd)
 }
 
-var killCmd = &cobra.Command{
-	Use:   "kill <layer> <instance>",
+var outputCmd = &cobra.Command{
+	Use:   "output <layer> <instance>",
 	Args:  cobra.MinimumNArgs(2),
-	Short: "destroys a layer instance",
-	Long: `The kill command destroys a layer instance.
-
-Please notice that the kill command cannot destroy a layer instance which has dependants. To delete a layer instance with dependants, you must first delete all of its dependants.
-    `,
-	RunE: func(cmd *cobra.Command, args []string) error {
+	Short: "reads all output variables from the provided layer instance",
+	Long:  `The output command reads all output variables from the given layer instance and prints them as json to standard output.`,
+	RunE: func(_ *cobra.Command, args []string) error {
 		logger := hclog.Default()
 		logLevel := hclog.LevelFromString(os.Getenv("LF_LOG"))
 		if logLevel != hclog.NoLevel {
@@ -38,11 +33,6 @@ Please notice that the kill command cannot destroy a layer instance which has de
 		cfg, err := lfconfig.Load("")
 		if err != nil {
 			return errors.Wrap(err, "fail to load config")
-		}
-
-		vars, err := cmd.Flags().GetStringArray("var")
-		if err != nil {
-			return errors.Wrap(err, "fail to get --var flag, this is a bug in layerform")
 		}
 
 		layersBackend, err := cfg.GetLayersBackend(ctx)
@@ -58,8 +48,8 @@ Please notice that the kill command cannot destroy a layer instance which has de
 		layerName := args[0]
 		stateName := args[1]
 
-		kill := command.NewKill(layersBackend, statesBackend)
+		output := command.NewOutput(layersBackend, statesBackend)
 
-		return kill.Run(ctx, layerName, stateName, vars)
+		return output.Run(ctx, layerName, stateName)
 	},
 }

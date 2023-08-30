@@ -5,5 +5,5 @@ output "aws_region" {
 
 output "bucket" {
   value       = aws_s3_bucket.eks_bucket
-  description = "AWS Region"
+  description = "AWS S3 Bucket"
 }

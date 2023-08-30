@@ -201,37 +201,6 @@ func (c *killCommand) Run(ctx context.Context, layerName, stateName string, vars
 	return nil
 }
 
-func (c *killCommand) computeStateByLayer(ctx context.Context, layer *model.Layer, state *layerstate.State) (map[string]string, error) {
-	stateByLayer := map[string]string{}
-	stateByLayer[layer.Name] = state.StateName
-	for _, dep := range layer.Dependencies {
-		depLayer, err := c.layersBackend.GetLayer(ctx, dep)
-		if err != nil {
-			return nil, errors.Wrap(err, "fail to get layer")
-		}
-
-		depStateName := state.GetDependencyStateName(dep)
-
-		depState, err := c.statesBackend.GetState(ctx, dep, depStateName)
-		if err != nil {
-			return nil, errors.Wrap(err, "fail to get state")
-		}
-
-		depDepStates, err := c.computeStateByLayer(ctx, depLayer, depState)
-		if err != nil {
-			return nil, errors.Wrap(err, "fail to compute state by layer")
-		}
-
-		for k, v := range depDepStates {
-			stateByLayer[k] = v
-		}
-
-		stateByLayer[dep] = depStateName
-	}
-
-	return stateByLayer, nil
-}
-
 func (c *killCommand) getLayerAddresses(
 	ctx context.Context,
 	layer *model.Layer,
@@ -241,7 +210,7 @@ func (c *killCommand) getLayerAddresses(
 	logger := hclog.FromContext(ctx)
 	logger.Debug("Getting layer addresses", "layer", layer.Name, "state", state.StateName)
 
-	stateByLayer, err := c.computeStateByLayer(ctx, layer, state)
+	stateByLayer, err := computeStateByLayer(ctx, c.layersBackend, c.statesBackend, layer, state)
 	if err != nil {
 		return nil, "", errors.Wrap(err, "fail to compute state by layer state")
 	}
@@ -311,4 +280,41 @@ func (c *killCommand) hasDependants(ctx context.Context, layerName, stateName st
 	}
 
 	return false, nil
+}
+
+func computeStateByLayer(
+	ctx context.Context,
+	layersBackend layers.Backend,
+	statesBackend layerstate.Backend,
+	layer *model.Layer,
+	state *layerstate.State,
+) (map[string]string, error) {
+	stateByLayer := map[string]string{}
+	stateByLayer[layer.Name] = state.StateName
+	for _, dep := range layer.Dependencies {
+		depLayer, err := layersBackend.GetLayer(ctx, dep)
+		if err != nil {
+			return nil, errors.Wrap(err, "fail to get layer")
+		}
+
+		depStateName := state.GetDependencyStateName(dep)
+
+		depState, err := statesBackend.GetState(ctx, dep, depStateName)
+		if err != nil {
+			return nil, errors.Wrap(err, "fail to get state")
+		}
+
+		depDepStates, err := computeStateByLayer(ctx, layersBackend, statesBackend, depLayer, depState)
+		if err != nil {
+			return nil, errors.Wrap(err, "fail to compute state by layer")
+		}
+
+		for k, v := range depDepStates {
+			stateByLayer[k] = v
+		}
+
+		stateByLayer[dep] = depStateName
+	}
+
+	return stateByLayer, nil
 }
