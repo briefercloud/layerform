@@ -216,7 +216,7 @@ func (c *spawnCommand) spawnLayer(
 			return "", errors.Wrap(err, "fail to create empty terraform state")
 		}
 
-		s.FinalMSG = fmt.Sprintf("✓ Instace \"%s\" of layer \"%s\" ready\n", stateName, layerName)
+		s.FinalMSG = fmt.Sprintf("✓ Instance \"%s\" of layer \"%s\" ready\n", stateName, layerName)
 		s.Stop()
 
 		depStates := []string{}
@@ -304,7 +304,6 @@ func (c *spawnCommand) spawnLayer(
 			60*time.Millisecond,
 			spinner.WithWriter(os.Stdout),
 			spinner.WithSuffix(fmt.Sprintf(" %s instace \"%s\" of layer \"%s\"\n", verb, stateName, layerName)),
-			spinner.WithFinalMSG(fmt.Sprintf("✓ Instace \"%s\" of layer \"%s\" %s\n", stateName, layerName, verbPast)),
 		)
 		s.Start()
 
@@ -315,6 +314,7 @@ func (c *spawnCommand) spawnLayer(
 			return "", errors.Wrap(err, "fail to terraform apply")
 		}
 
+		s.FinalMSG = fmt.Sprintf("✓ Instace \"%s\" of layer \"%s\" %s\n", stateName, layerName, verbPast)
 		s.Stop()
 
 		nextStateBytes, err := os.ReadFile(statePath)
