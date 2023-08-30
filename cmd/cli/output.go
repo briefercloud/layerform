@@ -14,6 +14,7 @@ import (
 )
 
 func init() {
+	outputCmd.Flags().String("template", "", "path to a mustache template file to render the output into")
 	rootCmd.AddCommand(outputCmd)
 }
 
@@ -22,7 +23,7 @@ var outputCmd = &cobra.Command{
 	Args:  cobra.MinimumNArgs(2),
 	Short: "reads all output variables from the provided layer instance",
 	Long:  `The output command reads all output variables from the given layer instance and prints them as json to standard output.`,
-	RunE: func(_ *cobra.Command, args []string) error {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		logger := hclog.Default()
 		logLevel := hclog.LevelFromString(os.Getenv("LF_LOG"))
 		if logLevel != hclog.NoLevel {
@@ -50,6 +51,11 @@ var outputCmd = &cobra.Command{
 
 		output := command.NewOutput(layersBackend, statesBackend)
 
-		return output.Run(ctx, layerName, stateName)
+		template, err := cmd.Flags().GetString("template")
+		if err != nil {
+			return errors.Wrap(err, "fail to get --template flag, this is a bug in layerform")
+		}
+
+		return output.Run(ctx, layerName, stateName, template)
 	},
 }

@@ -3,11 +3,15 @@ package command
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"os"
 	"path"
 
 	"github.com/hashicorp/go-hclog"
+	"github.com/hashicorp/terraform-exec/tfexec"
 	"github.com/pkg/errors"
+
+	"github.com/cbroglie/mustache"
 
 	"github.com/ergomake/layerform/internal/layers"
 	"github.com/ergomake/layerform/internal/layerstate"
@@ -24,7 +28,7 @@ func NewOutput(layersBackend layers.Backend, statesBackend layerstate.Backend) *
 	return &outputCommand{layersBackend, statesBackend}
 }
 
-func (c *outputCommand) Run(ctx context.Context, layerName, stateName string) error {
+func (c *outputCommand) Run(ctx context.Context, layerName, stateName, template string) error {
 	logger := hclog.FromContext(ctx)
 
 	layer, err := c.layersBackend.GetLayer(ctx, layerName)
@@ -96,8 +100,39 @@ func (c *outputCommand) Run(ctx context.Context, layerName, stateName string) er
 		return errors.Wrap(err, "fail to terraform output")
 	}
 
+	if template != "" {
+		context, err := prepareOutputForTemplate(output)
+		if err != nil {
+			return errors.Wrap(err, "fail to prepare output for template")
+		}
+
+		mustache.AllowMissingVariables = false
+		result, err := mustache.RenderFile(template, context)
+		if err != nil {
+			return errors.Wrapf(err, "fail to render template %s", template)
+		}
+
+		fmt.Fprint(os.Stdout, result)
+		return nil
+	}
+
 	encoder := json.NewEncoder(os.Stdout)
 	encoder.SetIndent("", "  ")
 	err = encoder.Encode(output)
 	return errors.Wrap(err, "fail to encode output to json")
+}
+
+func prepareOutputForTemplate(output map[string]tfexec.OutputMeta) (map[string]interface{}, error) {
+	var context map[string]interface{}
+	bs, err := json.Marshal(output)
+	if err != nil {
+		return nil, errors.Wrap(err, "fail to marshal output to json")
+	}
+
+	err = json.Unmarshal(bs, &context)
+	if err != nil {
+		return nil, errors.Wrap(err, "fail to unmarshal output from context")
+	}
+
+	return context, nil
 }
