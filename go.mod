@@ -6,6 +6,7 @@ require (
 	github.com/aws/aws-sdk-go v1.44.320
 	github.com/briandowns/spinner v1.23.0
 	github.com/carlmjohnson/versioninfo v0.22.5
+	github.com/cbroglie/mustache v1.4.0
 	github.com/google/uuid v1.3.0
 	github.com/hashicorp/go-hclog v1.5.0
 	github.com/hashicorp/go-version v1.6.0
