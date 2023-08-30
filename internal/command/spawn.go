@@ -303,7 +303,7 @@ func (c *spawnCommand) spawnLayer(
 			spinner.CharSets[14],
 			60*time.Millisecond,
 			spinner.WithWriter(os.Stdout),
-			spinner.WithSuffix(fmt.Sprintf(" %s instace \"%s\" of layer \"%s\"\n", verb, stateName, layerName)),
+			spinner.WithSuffix(fmt.Sprintf(" %s instance \"%s\" of layer \"%s\"\n", verb, stateName, layerName)),
 		)
 		s.Start()
 
@@ -314,7 +314,7 @@ func (c *spawnCommand) spawnLayer(
 			return "", errors.Wrap(err, "fail to terraform apply")
 		}
 
-		s.FinalMSG = fmt.Sprintf("✓ Instace \"%s\" of layer \"%s\" %s\n", stateName, layerName, verbPast)
+		s.FinalMSG = fmt.Sprintf("✓ Instance \"%s\" of layer \"%s\" %s\n", stateName, layerName, verbPast)
 		s.Stop()
 
 		nextStateBytes, err := os.ReadFile(statePath)

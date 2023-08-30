@@ -157,7 +157,7 @@ func (c *killCommand) Run(ctx context.Context, layerName, stateName string, vars
 		"layer", layer.Name, "state", stateName, "targets", destroyOptions,
 	)
 
-	s.FinalMSG = fmt.Sprintf("✓ Instace \"%s\" of layer \"%s\" is ready to be killed\n", stateName, layerName)
+	s.FinalMSG = fmt.Sprintf("✓ Instance \"%s\" of layer \"%s\" is ready to be killed\n", stateName, layerName)
 	s.Stop()
 
 	var answer string
@@ -195,7 +195,7 @@ func (c *killCommand) Run(ctx context.Context, layerName, stateName string, vars
 		return errors.Wrap(err, "fail to delete state")
 	}
 
-	s.FinalMSG = fmt.Sprintf("✓ Instace \"%s\" of layer \"%s\" killed\n", stateName, layerName)
+	s.FinalMSG = fmt.Sprintf("✓ Instance \"%s\" of layer \"%s\" killed\n", stateName, layerName)
 	s.Stop()
 
 	return nil
