@@ -64,6 +64,58 @@ func (_c *FileLike_Load_Call) RunAndReturn(run func(context.Context, interface{}
 	return _c
 }
 
+// Path provides a mock function with given fields: ctx
+func (_m *FileLike) Path(ctx context.Context) (string, error) {
+	ret := _m.Called(ctx)
+
+	var r0 string
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context) (string, error)); ok {
+		return rf(ctx)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context) string); ok {
+		r0 = rf(ctx)
+	} else {
+		r0 = ret.Get(0).(string)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = rf(ctx)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// FileLike_Path_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Path'
+type FileLike_Path_Call struct {
+	*mock.Call
+}
+
+// Path is a helper method to define mock.On call
+//   - ctx context.Context
+func (_e *FileLike_Expecter) Path(ctx interface{}) *FileLike_Path_Call {
+	return &FileLike_Path_Call{Call: _e.mock.On("Path", ctx)}
+}
+
+func (_c *FileLike_Path_Call) Run(run func(ctx context.Context)) *FileLike_Path_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context))
+	})
+	return _c
+}
+
+func (_c *FileLike_Path_Call) Return(_a0 string, _a1 error) *FileLike_Path_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *FileLike_Path_Call) RunAndReturn(run func(context.Context) (string, error)) *FileLike_Path_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // Save provides a mock function with given fields: ctx, v
 func (_m *FileLike) Save(ctx context.Context, v interface{}) error {
 	ret := _m.Called(ctx, v)

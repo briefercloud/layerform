@@ -2,8 +2,11 @@ package cli
 
 import (
 	"context"
+	"fmt"
 	"os"
+	"time"
 
+	"github.com/briandowns/spinner"
 	"github.com/hashicorp/go-hclog"
 	"github.com/spf13/cobra"
 
@@ -70,6 +73,19 @@ Here's an example layer definition configurations:
 			return errors.Wrap(err, "fail to get --file flag, this is a bug in layerform")
 		}
 
+		s := spinner.New(
+			spinner.CharSets[14],
+			60*time.Millisecond,
+			spinner.WithWriter(os.Stdout),
+			spinner.WithSuffix(
+				fmt.Sprintf(
+					" Loading layer definitions from \"%s\"\n",
+					fpath,
+				),
+			),
+		)
+		s.Start()
+
 		layerfile, err := layerfile.FromFile(fpath)
 		if err != nil {
 			return errors.Wrap(err, "fail to read layerform layers definitions from file")
@@ -80,12 +96,58 @@ Here's an example layer definition configurations:
 			return errors.Wrap(err, "fail to load layers from layerform layers definitions file")
 		}
 
+		if len(layers) == 0 {
+			s.Stop()
+			return errors.Errorf("No layers are defined at \"%s\"\n", fpath)
+		}
+
+		s.FinalMSG = fmt.Sprintf(
+			"✓ %d %s loaded from \"%s\"\n",
+			len(layers),
+			pluralize("layer", len(layers)),
+			fpath,
+		)
+		s.Stop()
+
 		layersBackend, err := cfg.GetLayersBackend(ctx)
 		if err != nil {
 			return errors.Wrap(err, "fail to get layers backend")
 		}
 
+		s = spinner.New(
+			spinner.CharSets[14],
+			60*time.Millisecond,
+			spinner.WithWriter(os.Stdout),
+			spinner.WithSuffix(" Saving layer definitions\n"),
+		)
+		s.Start()
+
+		location, err := layersBackend.Location(ctx)
+		if err != nil {
+			return errors.Wrap(err, "fail to get layers backend location")
+		}
+
 		err = layersBackend.UpdateLayers(ctx, layers)
-		return errors.Wrap(err, "fail to update layers")
+		if err != nil {
+			return errors.Wrap(err, "fail to update layers")
+		}
+
+		s.FinalMSG = fmt.Sprintf(
+			"✓ %d %s saved to \"%s\"\n",
+			len(layers),
+			pluralize("layer", len(layers)),
+			location,
+		)
+		s.Stop()
+
+		return nil
 	},
+}
+
+func pluralize(s string, n int) string {
+	if n == 1 {
+		return s
+	}
+
+	return s + "s"
 }

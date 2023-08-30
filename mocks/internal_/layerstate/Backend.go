@@ -122,6 +122,60 @@ func (_c *Backend_GetState_Call) RunAndReturn(run func(context.Context, string, 
 	return _c
 }
 
+// ListStates provides a mock function with given fields: ctx
+func (_m *Backend) ListStates(ctx context.Context) ([]*layerstate.State, error) {
+	ret := _m.Called(ctx)
+
+	var r0 []*layerstate.State
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context) ([]*layerstate.State, error)); ok {
+		return rf(ctx)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context) []*layerstate.State); ok {
+		r0 = rf(ctx)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]*layerstate.State)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = rf(ctx)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// Backend_ListStates_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ListStates'
+type Backend_ListStates_Call struct {
+	*mock.Call
+}
+
+// ListStates is a helper method to define mock.On call
+//   - ctx context.Context
+func (_e *Backend_Expecter) ListStates(ctx interface{}) *Backend_ListStates_Call {
+	return &Backend_ListStates_Call{Call: _e.mock.On("ListStates", ctx)}
+}
+
+func (_c *Backend_ListStates_Call) Run(run func(ctx context.Context)) *Backend_ListStates_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context))
+	})
+	return _c
+}
+
+func (_c *Backend_ListStates_Call) Return(_a0 []*layerstate.State, _a1 error) *Backend_ListStates_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *Backend_ListStates_Call) RunAndReturn(run func(context.Context) ([]*layerstate.State, error)) *Backend_ListStates_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // ListStatesByLayer provides a mock function with given fields: ctx, layerName
 func (_m *Backend) ListStatesByLayer(ctx context.Context, layerName string) ([]*layerstate.State, error) {
 	ret := _m.Called(ctx, layerName)

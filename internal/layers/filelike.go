@@ -87,3 +87,7 @@ func (flb *fileLikeBackend) UpdateLayers(ctx context.Context, layers []*model.La
 
 	return flb.storage.Save(ctx, flb.model)
 }
+
+func (flb *fileLikeBackend) Location(ctx context.Context) (string, error) {
+	return flb.storage.Path(ctx)
+}

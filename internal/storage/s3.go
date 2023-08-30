@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -34,6 +35,10 @@ func NewS3Backend(bucket, key, region string) (*s3Storage, error) {
 		bucket: bucket,
 		key:    key,
 	}, nil
+}
+
+func (s3b *s3Storage) Path(_ context.Context) (string, error) {
+	return fmt.Sprintf("s3://%s/%s", s3b.bucket, s3b.key), nil
 }
 
 func (s3b *s3Storage) Load(ctx context.Context, v any) error {
