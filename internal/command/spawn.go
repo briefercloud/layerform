@@ -6,11 +6,14 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"time"
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/terraform-exec/tfexec"
 	tfjson "github.com/hashicorp/terraform-json"
 	"github.com/pkg/errors"
+
+	"github.com/briandowns/spinner"
 
 	"github.com/ergomake/layerform/internal/layers"
 	"github.com/ergomake/layerform/internal/layerstate"
@@ -192,17 +195,29 @@ func (c *spawnCommand) spawnLayer(
 			return "", errors.Wrap(err, "fail to get terraform client")
 		}
 
+		s := spinner.New(
+			spinner.CharSets[14],
+			60*time.Millisecond,
+			spinner.WithWriter(os.Stdout),
+			spinner.WithSuffix(fmt.Sprintf(" Preparing instance \"%s\" of layer \"%s\"\n", stateName, layerName)),
+		)
+		s.Start()
 		logger.Debug("Running terraform init")
 		err = tf.Init(ctx)
 		if err != nil {
+			s.Stop()
 			return "", errors.Wrap(err, "fail to terraform init")
 		}
 
 		statePath := path.Join(layerWorkdir, "terraform.tfstate")
 		err = os.WriteFile(statePath, []byte{}, 0644)
 		if err != nil {
+			s.Stop()
 			return "", errors.Wrap(err, "fail to create empty terraform state")
 		}
+
+		s.FinalMSG = fmt.Sprintf("✓ Instace \"%s\" of layer \"%s\" ready\n", stateName, layerName)
+		s.Stop()
 
 		depStates := []string{}
 		for _, dep := range layer.Dependencies {
@@ -278,11 +293,29 @@ func (c *spawnCommand) spawnLayer(
 			applyOptions = append(applyOptions, tfexec.Var(v))
 		}
 
+		verb := "Spawning"
+		verbPast := "spawned"
+		if state != nil {
+			verb = "Refreshing"
+			verbPast = "refreshed"
+		}
+		s = spinner.New(
+			spinner.CharSets[14],
+			60*time.Millisecond,
+			spinner.WithWriter(os.Stdout),
+			spinner.WithSuffix(fmt.Sprintf(" %s instace \"%s\" of layer \"%s\"\n", verb, stateName, layerName)),
+			spinner.WithFinalMSG(fmt.Sprintf("✓ Instace \"%s\" of layer \"%s\" %s\n", stateName, layerName, verbPast)),
+		)
+		s.Start()
+
 		logger.Debug("Running terraform apply")
 		err = tf.Apply(ctx, applyOptions...)
 		if err != nil {
+			s.Stop()
 			return "", errors.Wrap(err, "fail to terraform apply")
 		}
+
+		s.Stop()
 
 		nextStateBytes, err := os.ReadFile(statePath)
 		if err != nil {

@@ -6,7 +6,9 @@ import (
 	"os"
 	"path"
 	"strings"
+	"time"
 
+	"github.com/briandowns/spinner"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/terraform-exec/tfexec"
 	"github.com/pkg/errors"
@@ -52,11 +54,27 @@ func (c *killCommand) Run(ctx context.Context, layerName, stateName string, vars
 		return errors.Wrap(err, "fail to get layer state")
 	}
 
+	s := spinner.New(
+		spinner.CharSets[14],
+		60*time.Millisecond,
+		spinner.WithWriter(os.Stdout),
+		spinner.WithSuffix(
+			fmt.Sprintf(
+				" Preparing to kill instance \"%s\" of layer \"%s\"\n",
+				stateName,
+				layerName,
+			),
+		),
+	)
+	s.Start()
+
 	hasDependants, err := c.hasDependants(ctx, layerName, stateName)
 	if err != nil {
+		s.Stop()
 		return errors.Wrap(err, "fail to check if layer has dependants")
 	}
 	if hasDependants {
+		s.Stop()
 		return errors.New("can't kill this layer because other layers depend on it")
 	}
 
@@ -72,7 +90,6 @@ func (c *killCommand) Run(ctx context.Context, layerName, stateName string, vars
 	if err != nil {
 		return errors.Wrap(err, "fail to create work directory")
 	}
-	fmt.Println(workdir)
 	defer os.RemoveAll(workdir)
 
 	layerDir := path.Join(workdir, layerName)
@@ -140,8 +157,11 @@ func (c *killCommand) Run(ctx context.Context, layerName, stateName string, vars
 		"layer", layer.Name, "state", stateName, "targets", destroyOptions,
 	)
 
+	s.FinalMSG = fmt.Sprintf("✓ Instace \"%s\" of layer \"%s\" is ready to be killed\n", stateName, layerName)
+	s.Stop()
+
 	var answer string
-	fmt.Printf("Deleting %s.%s. This can't be undone. Are you sure? [yes/no]: ", layerName, stateName)
+	fmt.Print("Are you sure? This can't be undone. [yes/no]: ")
 	_, err = fmt.Scan(&answer)
 	if err != nil {
 		return errors.Wrap(err, "fail to read asnwer")
@@ -150,6 +170,20 @@ func (c *killCommand) Run(ctx context.Context, layerName, stateName string, vars
 	if strings.ToLower(strings.TrimSpace(answer)) != "yes" {
 		return nil
 	}
+
+	s = spinner.New(
+		spinner.CharSets[14],
+		60*time.Millisecond,
+		spinner.WithWriter(os.Stdout),
+		spinner.WithSuffix(
+			fmt.Sprintf(
+				" Killing instance \"%s\" of layer \"%s\"\n",
+				stateName,
+				layerName,
+			),
+		),
+	)
+	s.Start()
 
 	err = tf.Destroy(ctx, destroyOptions...)
 	if err != nil {
@@ -160,6 +194,9 @@ func (c *killCommand) Run(ctx context.Context, layerName, stateName string, vars
 	if err != nil {
 		return errors.Wrap(err, "fail to delete state")
 	}
+
+	s.FinalMSG = fmt.Sprintf("✓ Instace \"%s\" of layer \"%s\" killed\n", stateName, layerName)
+	s.Stop()
 
 	return nil
 }

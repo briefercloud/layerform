@@ -19,6 +19,10 @@ func NewFileStorage(fpath string) *fileStorage {
 	return &fileStorage{fpath}
 }
 
+func (fls *fileStorage) Path(_ context.Context) (string, error) {
+	return fls.fpath, nil
+}
+
 func (fls *fileStorage) Load(ctx context.Context, v any) error {
 	hclog.FromContext(ctx).Debug("Reading layers file", "path", fls.fpath)
 

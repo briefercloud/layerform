@@ -4,6 +4,7 @@ go 1.20
 
 require (
 	github.com/aws/aws-sdk-go v1.44.320
+	github.com/briandowns/spinner v1.23.0
 	github.com/carlmjohnson/versioninfo v0.22.5
 	github.com/google/uuid v1.3.0
 	github.com/hashicorp/go-hclog v1.5.0
@@ -40,5 +41,6 @@ require (
 	github.com/stretchr/objx v0.4.0 // indirect
 	golang.org/x/mod v0.7.0 // indirect
 	golang.org/x/sys v0.4.0 // indirect
+	golang.org/x/term v0.4.0 // indirect
 	golang.org/x/text v0.6.0 // indirect
 )
