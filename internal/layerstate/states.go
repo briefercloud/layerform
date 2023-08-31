@@ -6,6 +6,7 @@ import (
 )
 
 type State struct {
+	LayerSHA          []byte            `json:"layerSHA"`
 	LayerName         string            `json:"layerName"`
 	StateName         string            `json:"stateName"`
 	DependenciesState map[string]string `json:"dependenciesState"`
