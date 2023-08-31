@@ -10,6 +10,10 @@ import (
 )
 
 func AddTagsToFile(filePath string, tagsToAdd map[string]string) error {
+	if os.Getenv("LF_ENABLE_TAGS") == "" {
+		return nil
+	}
+
 	mapVal := map[string]cty.Value{}
 	for k, v := range tagsToAdd {
 		mapVal[k] = cty.StringVal(v)
