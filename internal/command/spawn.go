@@ -203,8 +203,8 @@ func (c *spawnCommand) spawnLayer(
 			spinner.WithSuffix(fmt.Sprintf(" Preparing instance \"%s\" of layer \"%s\"\n", stateName, layerName)),
 		)
 		s.Start()
-		logger.Debug("Running terraform init")
-		err = tf.Init(ctx)
+
+		err = tf.Init(ctx, layer.SHA)
 		if err != nil {
 			s.Stop()
 			return "", errors.Wrap(err, "fail to terraform init")
