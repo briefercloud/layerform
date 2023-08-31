@@ -14,7 +14,7 @@ There are only two categories of software: [free software and proprietary softwa
 
 Similarly, software is either open-source or not open-source. There's no "half-open source".
 
-When companies or individuals try to misconstrue non-open-source software as open-source, I call that _open-source washing_.
+When companies or individuals try to misconstrue non-open-source software as open-source, I call that _open-source washing_. As a note, there's nothing wrong with software not being open-source — I just want to be accurate with the terminology.
 
 In this post, I'll elucidate the differences between open-source and source-available software and explain why "open-source washing" is harmful.
 
