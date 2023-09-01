@@ -231,8 +231,7 @@ func (c *killCommand) getLayerAddresses(
 		return nil, "", errors.Wrap(err, "fail to get terraform client")
 	}
 
-	logger.Debug("Running terraform init", "layer", layer.Name, "state", state.StateName)
-	err = tf.Init(ctx)
+	err = tf.Init(ctx, layer.SHA)
 	if err != nil {
 		return nil, "", errors.Wrap(err, "fail to terraform init")
 	}

@@ -90,11 +90,6 @@ func (c *outputCommand) Run(ctx context.Context, layerName, stateName, template 
 		return errors.Wrap(err, "fail to get terraform client")
 	}
 
-	logger.Debug(
-		"Running terraform output",
-		"layer", layer.Name, "state", stateName,
-	)
-
 	output, err := tf.Output(ctx)
 	if err != nil {
 		return errors.Wrap(err, "fail to terraform output")

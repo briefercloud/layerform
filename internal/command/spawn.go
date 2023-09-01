@@ -1,6 +1,7 @@
 package command
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"os"
@@ -95,7 +96,7 @@ func mergeTFState(ctx context.Context, tfpath, basePath, dest string, states ...
 
 	aState, err := getTFState(ctx, basePath, tfpath)
 	if err != nil {
-		return errors.Wrap(err, "fail to get tf state")
+		return errors.Wrap(err, "fail to get base tf state")
 	}
 
 	addedAddress := make(map[string]struct{})
@@ -202,8 +203,8 @@ func (c *spawnCommand) spawnLayer(
 			spinner.WithSuffix(fmt.Sprintf(" Preparing instance \"%s\" of layer \"%s\"\n", stateName, layerName)),
 		)
 		s.Start()
-		logger.Debug("Running terraform init")
-		err = tf.Init(ctx)
+
+		err = tf.Init(ctx, layer.SHA)
 		if err != nil {
 			s.Stop()
 			return "", errors.Wrap(err, "fail to terraform init")
@@ -307,22 +308,30 @@ func (c *spawnCommand) spawnLayer(
 		)
 		s.Start()
 
-		logger.Debug("Running terraform apply")
-		err = tf.Apply(ctx, applyOptions...)
-		if err != nil {
+		var nextStateBytes []byte
+		if state == nil || !bytes.Equal(layer.SHA, state.LayerSHA) {
+			logger.Debug("Running terraform apply")
+			err = tf.Apply(ctx, applyOptions...)
+			if err != nil {
+				s.Stop()
+				return "", errors.Wrap(err, "fail to terraform apply")
+			}
+
+			nextStateBytes, err = os.ReadFile(statePath)
+			if err != nil {
+				return "", errors.Wrap(err, "fail to read next state")
+			}
+
+			s.FinalMSG = fmt.Sprintf("✓ Instance \"%s\" of layer \"%s\" %s\n", stateName, layerName, verbPast)
 			s.Stop()
-			return "", errors.Wrap(err, "fail to terraform apply")
-		}
-
-		s.FinalMSG = fmt.Sprintf("✓ Instance \"%s\" of layer \"%s\" %s\n", stateName, layerName, verbPast)
-		s.Stop()
-
-		nextStateBytes, err := os.ReadFile(statePath)
-		if err != nil {
-			return "", errors.Wrap(err, "fail to read next state")
+		} else {
+			nextStateBytes = state.Bytes
+			s.FinalMSG = fmt.Sprintf("✓ Instance \"%s\" of layer \"%s\" cached\n", stateName, layerName)
+			s.Stop()
 		}
 
 		state = &layerstate.State{
+			LayerSHA:          layer.SHA,
 			LayerName:         layerName,
 			StateName:         stateName,
 			DependenciesState: thisLayerDepStates,

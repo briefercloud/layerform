@@ -64,11 +64,18 @@ func (lf *layerfile) ToLayers() ([]*model.Layer, error) {
 			}
 		}
 
-		modelLayers[i] = &model.Layer{
+		layer := &model.Layer{
 			Name:         l.Name,
 			Files:        files,
 			Dependencies: l.Dependencies,
 		}
+		sha, err := model.LayerSHA(layer)
+		if err != nil {
+			return nil, errors.Wrapf(err, "fail to compute sha1 of layer %s", l.Name)
+		}
+		layer.SHA = sha
+
+		modelLayers[i] = layer
 	}
 
 	return modelLayers, nil
