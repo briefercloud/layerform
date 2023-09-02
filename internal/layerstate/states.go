@@ -5,12 +5,20 @@ import (
 	"errors"
 )
 
+type InstanceStatus string
+
+const (
+	InstanceStatusAlive  InstanceStatus = InstanceStatus("alive")
+	InstanceStatusFaulty InstanceStatus = InstanceStatus("faulty")
+)
+
 type State struct {
 	LayerSHA          []byte            `json:"layerSHA"`
 	LayerName         string            `json:"layerName"`
 	StateName         string            `json:"stateName"`
 	DependenciesState map[string]string `json:"dependenciesState"`
 	Bytes             []byte            `json:"bytes"`
+	Status            InstanceStatus    `json:"status"`
 }
 
 const DEFAULT_LAYER_STATE_NAME = "default"
