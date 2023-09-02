@@ -7,9 +7,9 @@ For that, you could write a few `.tf` files and run `terraform apply` to provisi
 <br />
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="./img/breaking-terraform-into-layers/single-cluster-dark.png">
-    <source media="(prefers-color-scheme: light)" srcset="./img/breaking-terraform-into-layers/single-cluster.png">
-    <img alt="" src="./img/breaking-terraform-into-layers/single-cluster.png">
+    <source width="250px" media="(prefers-color-scheme: dark)" srcset="./img/breaking-terraform-into-layers/single-cluster-dark.png">
+    <source width="250px" media="(prefers-color-scheme: light)" srcset="./img/breaking-terraform-into-layers/single-cluster.png">
+    <img alt="" width="250px" src="./img/breaking-terraform-into-layers/single-cluster.png">
   </picture>
 </p>
 <br />
@@ -21,9 +21,9 @@ The problem with this approach is that it will cause you to replicate your _enti
 <br />
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="./img/breaking-terraform-into-layers/multi-cluster-dark.png">
-    <source media="(prefers-color-scheme: light)" srcset="./img/breaking-terraform-into-layers/multi-cluster.png">
-    <img width="400px" alt="" src="./img/breaking-terraform-into-layers/multi-cluster.png">
+    <source width="800px" media="(prefers-color-scheme: dark)" srcset="./img/breaking-terraform-into-layers/multi-cluster-dark.png">
+    <source width="800px" media="(prefers-color-scheme: light)" srcset="./img/breaking-terraform-into-layers/multi-cluster.png">
+    <img width="800px" alt="" src="./img/breaking-terraform-into-layers/multi-cluster.png">
   </picture>
 </p>
 <br />
@@ -33,9 +33,9 @@ A much better alternative would be to reuse a single Kubernetes cluster and spin
 <br />
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="./img/breaking-terraform-into-layers/multi-layers-dark.png">
-    <source media="(prefers-color-scheme: light)" srcset="./img/breaking-terraform-into-layers/multi-layers.png">
-    <img alt="" src="./img/breaking-terraform-into-layers/multi-layers.png">
+    <source width="900px" media="(prefers-color-scheme: dark)" srcset="./img/breaking-terraform-into-layers/multi-layers-dark.png">
+    <source width="900px" media="(prefers-color-scheme: light)" srcset="./img/breaking-terraform-into-layers/multi-layers.png">
+    <img width="900px" alt="" src="./img/breaking-terraform-into-layers/multi-layers.png">
   </picture>
 </p>
 <br />
@@ -45,9 +45,9 @@ That's why [Layerform](https://github.com/ergomake/layerform) exists. Layerform 
 <br />
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="./img/breaking-terraform-into-layers/serverless-layers-dark.png">
-    <source media="(prefers-color-scheme: light)" srcset="./img/breaking-terraform-into-layers/serverless-layers.png">
-    <img alt="" src="./img/breaking-terraform-into-layers/serverless-layers.png">
+    <source width="400px" media="(prefers-color-scheme: dark)" srcset="./img/breaking-terraform-into-layers/serverless-layers-dark.png">
+    <source width="400px" media="(prefers-color-scheme: light)" srcset="./img/breaking-terraform-into-layers/serverless-layers.png">
+    <img width="400px" alt="" src="./img/breaking-terraform-into-layers/serverless-layers.png">
   </picture>
 </p>
 <br />
@@ -90,9 +90,9 @@ After defining layers this way, you can spin up an EKS cluster independently by 
 <br />
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="./img/breaking-terraform-into-layers/single-layer-dark.png">
-    <source media="(prefers-color-scheme: light)" srcset="./img/breaking-terraform-into-layers/single-layer.png">
-    <img alt="" src="./img/breaking-terraform-into-layers/single-layer.png">
+    <source width="250px" media="(prefers-color-scheme: dark)" srcset="./img/breaking-terraform-into-layers/single-layer-dark.png">
+    <source width="250px" media="(prefers-color-scheme: light)" srcset="./img/breaking-terraform-into-layers/single-layer.png">
+    <img width="250px" alt="" src="./img/breaking-terraform-into-layers/single-layer.png">
   </picture>
 </p>
 <br />
@@ -102,9 +102,9 @@ Then, each engineer can create their own instances of the `elastic_stack` and re
 <br />
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="./img/breaking-terraform-into-layers/multi-devs-dark.png">
-    <source media="(prefers-color-scheme: light)" srcset="./img/breaking-terraform-into-layers/multi-devs.png">
-    <img alt="" src="./img/breaking-terraform-into-layers/multi-devs.png">
+    <source width="400px" media="(prefers-color-scheme: dark)" srcset="./img/breaking-terraform-into-layers/multi-devs-dark.png">
+    <source width="400px" media="(prefers-color-scheme: light)" srcset="./img/breaking-terraform-into-layers/multi-devs.png">
+    <img width="400px" alt="" src="./img/breaking-terraform-into-layers/multi-devs.png">
   </picture>
 </p>
 <br />
@@ -122,9 +122,9 @@ If someone needs a new cluster, they can recreate the whole stack by passing the
 <br />
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="./img/breaking-terraform-into-layers/multi-stack-dark.png">
-    <source media="(prefers-color-scheme: light)" srcset="./img/breaking-terraform-into-layers/multi-stack.png">
-    <img alt="" src="./img/breaking-terraform-into-layers/multi-stack.png">
+    <source width="600px" media="(prefers-color-scheme: dark)" srcset="./img/breaking-terraform-into-layers/multi-stack-dark.png">
+    <source width="600px" media="(prefers-color-scheme: light)" srcset="./img/breaking-terraform-into-layers/multi-stack.png">
+    <img width="600px" alt="" src="./img/breaking-terraform-into-layers/multi-stack.png">
   </picture>
 </p>
 <br />
@@ -144,9 +144,9 @@ When done with their layers, engineers can kill their layer instances without da
 <br />
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="./img/breaking-terraform-into-layers/layerform-kill-dark.png">
-    <source media="(prefers-color-scheme: light)" srcset="./img/breaking-terraform-into-layers/layerform-kill.png">
-    <img alt="" src="./img/breaking-terraform-into-layers/layerform-kill.png">
+    <source width="600px" media="(prefers-color-scheme: dark)" srcset="./img/breaking-terraform-into-layers/layerform-kill-dark.png">
+    <source width="600px" media="(prefers-color-scheme: light)" srcset="./img/breaking-terraform-into-layers/layerform-kill.png">
+    <img width="600px" alt="" src="./img/breaking-terraform-into-layers/layerform-kill.png">
   </picture>
 </p>
 <br />
@@ -164,9 +164,9 @@ Additionally, when systems are large or depend on serverless components, enginee
 <br />
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="./img/breaking-terraform-into-layers/bottleneck-dark.png">
-    <source media="(prefers-color-scheme: light)" srcset="./img/breaking-terraform-into-layers/bottleneck.png">
-    <img alt="" src="./img/breaking-terraform-into-layers/bottleneck.png">
+    <source width="600px" media="(prefers-color-scheme: dark)" srcset="./img/breaking-terraform-into-layers/bottleneck-dark.png">
+    <source width="600px" media="(prefers-color-scheme: light)" srcset="./img/breaking-terraform-into-layers/bottleneck.png">
+    <img width="600px" alt="" src="./img/breaking-terraform-into-layers/bottleneck.png">
   </picture>
 </p>
 <br />
@@ -176,9 +176,9 @@ Layers help teams solve this problem by enabling each engineer to spin up their 
 <br />
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="./img/breaking-terraform-into-layers/no-bottleneck-dark.png">
-    <source media="(prefers-color-scheme: light)" srcset="./img/breaking-terraform-into-layers/no-bottleneck.png">
-    <img alt="" src="./img/breaking-terraform-into-layers/no-bottleneck.png">
+    <source width="600px" media="(prefers-color-scheme: dark)" srcset="./img/breaking-terraform-into-layers/no-bottleneck-dark.png">
+    <source width="600px" media="(prefers-color-scheme: light)" srcset="./img/breaking-terraform-into-layers/no-bottleneck.png">
+    <img width="600px" alt="" src="./img/breaking-terraform-into-layers/no-bottleneck.png">
   </picture>
 </p>
 <br />
@@ -246,9 +246,9 @@ Once an engineer creates a layer instance, Layerform syncs it with a remote stat
 <br />
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="./img/breaking-terraform-into-layers/remote-list-dark.png">
-    <source media="(prefers-color-scheme: light)" srcset="./img/breaking-terraform-into-layers/remote-list.png">
-    <img alt="" src="./img/breaking-terraform-into-layers/remote-list.png">
+    <source width="600px" media="(prefers-color-scheme: dark)" srcset="./img/breaking-terraform-into-layers/remote-list-dark.png">
+    <source width="600px" media="(prefers-color-scheme: light)" srcset="./img/breaking-terraform-into-layers/remote-list.png">
+    <img width="600px" alt="" src="./img/breaking-terraform-into-layers/remote-list.png">
   </picture>
 </p>
 <br />
