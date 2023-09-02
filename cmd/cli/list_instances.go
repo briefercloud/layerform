@@ -73,7 +73,7 @@ Prints a table of the most important information about layer instances.`,
 		sortInstancesByDepth(instances, layersByName)
 
 		w := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-		fmt.Fprintln(w, "INSTANCE NAME\tLAYER NAME\tDEPENDENCIES")
+		fmt.Fprintln(w, "INSTANCE NAME\tLAYER NAME\tDEPENDENCIES\tSTATUS")
 		for _, instance := range instances {
 			layer := layersByName[instance.LayerName]
 			deps := ""
@@ -86,7 +86,7 @@ Prints a table of the most important information about layer instances.`,
 				deps += dep + "=" + depInstName
 			}
 
-			fmt.Fprintln(w, instance.StateName+"\t"+instance.LayerName+"\t"+deps)
+			fmt.Fprintln(w, instance.StateName+"\t"+instance.LayerName+"\t"+deps+"\t"+string(instance.Status))
 		}
 		err = w.Flush()
 
