@@ -121,6 +121,12 @@ func (c *client) Apply(ctx context.Context, opts ...tfexec.ApplyOption) error {
 	return c.tf.Apply(ctx, opts...)
 }
 
+func (c *client) Validate(ctx context.Context) (*tfjson.ValidateOutput, error) {
+	hclog.FromContext(ctx).Debug("Running terraform validate")
+
+	return c.tf.Validate(ctx)
+}
+
 func copyFile(sourcePath, destPath string) error {
 	sourceFile, err := os.Open(sourcePath)
 	if err != nil {

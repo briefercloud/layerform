@@ -6,9 +6,10 @@ import (
 	"os"
 	"path"
 	"strings"
-	"time"
 
-	"github.com/briandowns/spinner"
+	"github.com/chelnak/ysmrr"
+	"github.com/chelnak/ysmrr/pkg/animations"
+	"github.com/chelnak/ysmrr/pkg/colors"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/terraform-exec/tfexec"
 	"github.com/pkg/errors"
@@ -45,7 +46,7 @@ func (c *killCommand) Run(ctx context.Context, layerName, stateName string, vars
 	if err != nil {
 		if errors.Is(err, layerstate.ErrStateNotFound) {
 			return errors.Errorf(
-				"state %s not found for layer %s\n",
+				"state %s not found for layer %s",
 				stateName,
 				layer.Name,
 			)
@@ -54,32 +55,36 @@ func (c *killCommand) Run(ctx context.Context, layerName, stateName string, vars
 		return errors.Wrap(err, "fail to get layer state")
 	}
 
-	s := spinner.New(
-		spinner.CharSets[14],
-		60*time.Millisecond,
-		spinner.WithWriter(os.Stdout),
-		spinner.WithSuffix(
-			fmt.Sprintf(
-				" Preparing to kill instance \"%s\" of layer \"%s\"\n",
-				stateName,
-				layerName,
-			),
+	sm := ysmrr.NewSpinnerManager(
+		ysmrr.WithAnimation(animations.Dots),
+		ysmrr.WithSpinnerColor(colors.FgHiBlue),
+	)
+	sm.Start()
+	s := sm.AddSpinner(
+		fmt.Sprintf(
+			"Preparing to kill instance \"%s\" of layer \"%s\"",
+			stateName,
+			layerName,
 		),
 	)
-	s.Start()
 
 	hasDependants, err := c.hasDependants(ctx, layerName, stateName)
 	if err != nil {
-		s.Stop()
+		s.Error()
+		sm.Stop()
 		return errors.Wrap(err, "fail to check if layer has dependants")
 	}
+
 	if hasDependants {
-		s.Stop()
+		s.Error()
+		sm.Stop()
 		return errors.New("can't kill this layer because other layers depend on it")
 	}
 
 	tfpath, err := terraform.GetTFPath(ctx)
 	if err != nil {
+		s.Error()
+		sm.Stop()
 		return errors.Wrap(err, "fail to get terraform path")
 	}
 	logger.Debug("Using terraform from", "tfpath", tfpath)
@@ -88,6 +93,8 @@ func (c *killCommand) Run(ctx context.Context, layerName, stateName string, vars
 	logger.Debug("Creating a temporary work directory")
 	workdir, err := os.MkdirTemp("", "")
 	if err != nil {
+		s.Error()
+		sm.Stop()
 		return errors.Wrap(err, "fail to create work directory")
 	}
 	defer os.RemoveAll(workdir)
@@ -95,6 +102,8 @@ func (c *killCommand) Run(ctx context.Context, layerName, stateName string, vars
 	layerDir := path.Join(workdir, layerName)
 	layerAddrs, layerDir, err := c.getLayerAddresses(ctx, layer, state, layerDir, tfpath)
 	if err != nil {
+		s.Error()
+		sm.Stop()
 		return errors.Wrap(err, "fail to get layer addresses")
 	}
 
@@ -106,21 +115,29 @@ func (c *killCommand) Run(ctx context.Context, layerName, stateName string, vars
 	for _, dep := range layer.Dependencies {
 		depLayer, err := c.layersBackend.GetLayer(ctx, dep)
 		if err != nil {
+			s.Error()
+			sm.Stop()
 			return errors.Wrap(err, "fail to get dependency layer")
 		}
 
 		if depLayer == nil {
+			s.Error()
+			sm.Stop()
 			return errors.Wrap(err, "dependency layer not found")
 		}
 
 		depState, err := c.statesBackend.GetState(ctx, depLayer.Name, state.GetDependencyStateName(dep))
 		if err != nil {
+			s.Error()
+			sm.Stop()
 			return errors.Wrap(err, "fail to get dependency state")
 		}
 
 		depDir := path.Join(workdir, dep)
 		depAddrs, _, err := c.getLayerAddresses(ctx, depLayer, depState, depDir, tfpath)
 		if err != nil {
+			s.Error()
+			sm.Stop()
 			return errors.Wrap(err, "fail to get dependency layer addresses")
 		}
 
@@ -131,12 +148,17 @@ func (c *killCommand) Run(ctx context.Context, layerName, stateName string, vars
 
 	tf, err := tfclient.New(layerDir, tfpath)
 	if err != nil {
+		s.Error()
+		sm.Stop()
 		return errors.Wrap(err, "fail to get terraform client")
 	}
 
 	logger.Debug("Looking for variable definitions in .tfvars files")
 	varFiles, err := findTFVarFiles()
 	if err != nil {
+
+		s.Error()
+		sm.Stop()
 		return errors.Wrap(err, "fail to find .tfvars files")
 	}
 	logger.Debug(fmt.Sprintf("Found %d var files", len(varFiles)), "varFiles", varFiles)
@@ -157,8 +179,8 @@ func (c *killCommand) Run(ctx context.Context, layerName, stateName string, vars
 		"layer", layer.Name, "state", stateName, "targets", destroyOptions,
 	)
 
-	s.FinalMSG = fmt.Sprintf("✓ Instance \"%s\" of layer \"%s\" is ready to be killed\n", stateName, layerName)
-	s.Stop()
+	s.Complete()
+	sm.Stop()
 
 	var answer string
 	fmt.Print("Are you sure? This can't be undone. [yes/no]: ")
@@ -171,32 +193,36 @@ func (c *killCommand) Run(ctx context.Context, layerName, stateName string, vars
 		return nil
 	}
 
-	s = spinner.New(
-		spinner.CharSets[14],
-		60*time.Millisecond,
-		spinner.WithWriter(os.Stdout),
-		spinner.WithSuffix(
-			fmt.Sprintf(
-				" Killing instance \"%s\" of layer \"%s\"\n",
-				stateName,
-				layerName,
-			),
+	sm = ysmrr.NewSpinnerManager(
+		ysmrr.WithAnimation(animations.Dots),
+		ysmrr.WithSpinnerColor(colors.FgHiBlue),
+	)
+	sm.Start()
+
+	s = sm.AddSpinner(
+		fmt.Sprintf(
+			"Killing instance \"%s\" of layer \"%s\"",
+			stateName,
+			layerName,
 		),
 	)
-	s.Start()
 
 	err = tf.Destroy(ctx, destroyOptions...)
 	if err != nil {
+		s.Error()
+		sm.Stop()
 		return errors.Wrap(err, "fail to terraform destroy")
 	}
 
 	err = c.statesBackend.DeleteState(ctx, layerName, stateName)
 	if err != nil {
+		s.Error()
+		sm.Stop()
 		return errors.Wrap(err, "fail to delete state")
 	}
 
-	s.FinalMSG = fmt.Sprintf("✓ Instance \"%s\" of layer \"%s\" killed\n", stateName, layerName)
-	s.Stop()
+	s.Complete()
+	sm.Stop()
 
 	return nil
 }
