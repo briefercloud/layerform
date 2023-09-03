@@ -60,3 +60,5 @@ terraform.rc
 *.lfstate
 *.lfstate.*
 
+# releases
+dist/
