@@ -2,6 +2,7 @@ package cli
 
 import (
 	"context"
+	"fmt"
 	"os"
 
 	"github.com/hashicorp/go-hclog"
@@ -27,7 +28,7 @@ var killCmd = &cobra.Command{
 
 Please notice that the kill command cannot destroy a layer instance which has dependants. To delete a layer instance with dependants, you must first delete all of its dependants.
     `,
-	RunE: func(cmd *cobra.Command, args []string) error {
+	Run: func(cmd *cobra.Command, args []string) {
 		logger := hclog.Default()
 		logLevel := hclog.LevelFromString(os.Getenv("LF_LOG"))
 		if logLevel != hclog.NoLevel {
@@ -37,22 +38,30 @@ Please notice that the kill command cannot destroy a layer instance which has de
 
 		cfg, err := lfconfig.Load("")
 		if err != nil {
-			return errors.Wrap(err, "fail to load config")
+			fmt.Fprintf(os.Stderr, "%s\n", errors.Wrap(err, "fail to load config"))
+			os.Exit(1)
+			return
 		}
 
 		vars, err := cmd.Flags().GetStringArray("var")
 		if err != nil {
-			return errors.Wrap(err, "fail to get --var flag, this is a bug in layerform")
+			fmt.Fprintf(os.Stderr, "%s\n", errors.Wrap(err, "fail to get --var flag, this is a bug in layerform"))
+			os.Exit(1)
+			return
 		}
 
 		layersBackend, err := cfg.GetLayersBackend(ctx)
 		if err != nil {
-			return errors.Wrap(err, "fail to get layers backend")
+			fmt.Fprintf(os.Stderr, "%s\n", errors.Wrap(err, "fail to get layers backend"))
+			os.Exit(1)
+			return
 		}
 
 		statesBackend, err := cfg.GetStateBackend(ctx)
 		if err != nil {
-			return errors.Wrap(err, "fail to get state backend")
+			fmt.Fprintf(os.Stderr, "%s\n", errors.Wrap(err, "fail to get state backend"))
+			os.Exit(1)
+			return
 		}
 
 		layerName := args[0]
@@ -60,6 +69,10 @@ Please notice that the kill command cannot destroy a layer instance which has de
 
 		kill := command.NewKill(layersBackend, statesBackend)
 
-		return kill.Run(ctx, layerName, stateName, vars)
+		err = kill.Run(ctx, layerName, stateName, vars)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "%s\n", err)
+			os.Exit(1)
+		}
 	},
 }

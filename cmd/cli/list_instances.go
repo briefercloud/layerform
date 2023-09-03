@@ -27,7 +27,7 @@ var listInstancesCmd = &cobra.Command{
 
 Prints a table of the most important information about layer instances.`,
 
-	RunE: func(_ *cobra.Command, _ []string) error {
+	Run: func(_ *cobra.Command, _ []string) {
 		logger := hclog.Default()
 		logLevel := hclog.LevelFromString(os.Getenv("LF_LOG"))
 		if logLevel != hclog.NoLevel {
@@ -37,32 +37,42 @@ Prints a table of the most important information about layer instances.`,
 
 		cfg, err := lfconfig.Load("")
 		if err != nil {
-			return errors.Wrap(err, "fail to load config")
+			fmt.Fprintf(os.Stderr, "%s\n", errors.Wrap(err, "fail to load config"))
+			os.Exit(1)
+			return
 		}
 
 		layersBackend, err := cfg.GetLayersBackend(ctx)
 		if err != nil {
-			return errors.Wrap(err, "fail to get layers backend")
+			fmt.Fprintf(os.Stderr, "%s\n", errors.Wrap(err, "fail to get layers backend"))
+			os.Exit(1)
+			return
 		}
 
 		instancesBackend, err := cfg.GetStateBackend(ctx)
 		if err != nil {
-			return errors.Wrap(err, "fail to get layers instances backend")
+			fmt.Fprintf(os.Stderr, "%s\n", errors.Wrap(err, "fail to get layers instances backend"))
+			os.Exit(1)
+			return
 		}
 
 		instances, err := instancesBackend.ListStates(ctx)
 		if err != nil {
-			return errors.Wrap(err, "fail to list layer instances")
+			fmt.Fprintf(os.Stderr, "%s\n", errors.Wrap(err, "fail to list layer instances"))
+			os.Exit(1)
+			return
 		}
 
 		if len(instances) == 0 {
-			_, err := fmt.Println("No layer instances spawned, spawn layers by running \"layerform spawn\"")
-			return errors.Wrap(err, "fail to print output")
+			fmt.Fprintln(os.Stdout, "No layer instances spawned, spawn layers by running \"layerform spawn\"")
+			return
 		}
 
 		layers, err := layersBackend.ListLayers(ctx)
 		if err != nil {
-			return errors.Wrap(err, "fail to list layer definitions")
+			fmt.Fprintf(os.Stderr, "%s\n", errors.Wrap(err, "fail to list layer definitions"))
+			os.Exit(1)
+			return
 		}
 
 		layersByName := make(map[string]*model.Layer)
@@ -90,7 +100,10 @@ Prints a table of the most important information about layer instances.`,
 		}
 		err = w.Flush()
 
-		return errors.Wrap(err, "fail to print output")
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "%s\n", errors.Wrap(err, "fail to print output"))
+			os.Exit(1)
+		}
 	},
 }
 

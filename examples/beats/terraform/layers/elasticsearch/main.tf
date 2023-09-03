@@ -16,7 +16,7 @@ provider "aws" {
 }
 
 locals {
-  region        = var.aws_region
+  region               = var.aws_region
   elasticsearch_folder = "elasticsearch-${random_string.suffix.id}"
 }
 
