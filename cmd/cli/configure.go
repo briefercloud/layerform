@@ -2,6 +2,7 @@ package cli
 
 import (
 	"context"
+	"fmt"
 	"os"
 
 	"github.com/hashicorp/go-hclog"
@@ -52,7 +53,7 @@ Here's an example layer definition configurations:
   ]
 }
 `,
-	RunE: func(cmd *cobra.Command, _ []string) error {
+	Run: func(cmd *cobra.Command, _ []string) {
 		logger := hclog.Default()
 		logLevel := hclog.LevelFromString(os.Getenv("LF_LOG"))
 		if logLevel != hclog.NoLevel {
@@ -62,26 +63,38 @@ Here's an example layer definition configurations:
 
 		cfg, err := lfconfig.Load("")
 		if err != nil {
-			return errors.Wrap(err, "fail to load config")
+			fmt.Fprintf(os.Stderr, "%s\n", errors.Wrap(err, "fail to load config"))
+			os.Exit(1)
+			return
 		}
 
 		fpath, err := cmd.Flags().GetString("file")
 		if err != nil {
-			return errors.Wrap(err, "fail to get --file flag, this is a bug in layerform")
+			fmt.Fprintf(os.Stderr, "%s\n", errors.Wrap(err, "fail to get --file flag, this is a bug in layerform"))
+			os.Exit(1)
+			return
 		}
 
 		layersBackend, err := cfg.GetLayersBackend(ctx)
 		if err != nil {
-			return errors.Wrap(err, "fail to get layers backend")
+			fmt.Fprintf(os.Stderr, "%s\n", errors.Wrap(err, "fail to get layers backend"))
+			os.Exit(1)
+			return
 		}
 
 		statesBackend, err := cfg.GetStateBackend(ctx)
 		if err != nil {
-			return errors.Wrap(err, "fail to get state backend")
+			fmt.Fprintf(os.Stderr, "%s\n", errors.Wrap(err, "fail to get state backend"))
+			os.Exit(1)
+			return
 		}
 
 		configure := command.NewConfigure(layersBackend, statesBackend)
 
-		return configure.Run(ctx, fpath)
+		err = configure.Run(ctx, fpath)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "%s\n", err)
+			os.Exit(1)
+		}
 	},
 }

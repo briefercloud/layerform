@@ -2,6 +2,7 @@ package cli
 
 import (
 	"context"
+	"fmt"
 	"os"
 
 	"github.com/hashicorp/go-hclog"
@@ -30,7 +31,7 @@ Whenever a desired ID is not provided, Layerform will generate a random UUID for
 If an instance with the same ID already exists for the layer definition, Layerform will return an error.
     `,
 	Args: cobra.MinimumNArgs(1),
-	RunE: func(cmd *cobra.Command, args []string) error {
+	Run: func(cmd *cobra.Command, args []string) {
 		logger := hclog.Default()
 		logLevel := hclog.LevelFromString(os.Getenv("LF_LOG"))
 		if logLevel != hclog.NoLevel {
@@ -40,27 +41,37 @@ If an instance with the same ID already exists for the layer definition, Layerfo
 
 		cfg, err := lfconfig.Load("")
 		if err != nil {
-			return errors.Wrap(err, "fail to load config")
+			fmt.Fprintf(os.Stderr, "%s\n", errors.Wrap(err, "fail to load config"))
+			os.Exit(1)
+			return
 		}
 
 		vars, err := cmd.Flags().GetStringArray("var")
 		if err != nil {
-			return errors.Wrap(err, "fail to get --var flag, this is a bug in layerform")
+			fmt.Fprintf(os.Stderr, "%s\n", errors.Wrap(err, "fail to get --var flag, this is a bug in layerform"))
+			os.Exit(1)
+			return
 		}
 
 		dependenciesState, err := cmd.Flags().GetStringToString("base")
 		if err != nil {
-			return errors.Wrap(err, "fail to get --base flag, this is a bug in layerform")
+			fmt.Fprintf(os.Stderr, "%s\n", errors.Wrap(err, "fail to get --base flag, this is a bug in layerform"))
+			os.Exit(1)
+			return
 		}
 
 		layersBackend, err := cfg.GetLayersBackend(ctx)
 		if err != nil {
-			return errors.Wrap(err, "fail to get layers backend")
+			fmt.Fprintf(os.Stderr, "%s\n", errors.Wrap(err, "fail to get layers backend"))
+			os.Exit(1)
+			return
 		}
 
 		statesBackend, err := cfg.GetStateBackend(ctx)
 		if err != nil {
-			return errors.Wrap(err, "fail to get state backend")
+			fmt.Fprintf(os.Stderr, "%s\n", errors.Wrap(err, "fail to get state backend"))
+			os.Exit(1)
+			return
 		}
 
 		layerName := args[0]
@@ -71,6 +82,10 @@ If an instance with the same ID already exists for the layer definition, Layerfo
 
 		spawn := command.NewSpawn(layersBackend, statesBackend)
 
-		return spawn.Run(ctx, layerName, stateName, dependenciesState, vars)
+		err = spawn.Run(ctx, layerName, stateName, dependenciesState, vars)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "%s\n", err)
+			os.Exit(1)
+		}
 	},
 }

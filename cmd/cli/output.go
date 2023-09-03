@@ -2,6 +2,7 @@ package cli
 
 import (
 	"context"
+	"fmt"
 	"os"
 
 	"github.com/hashicorp/go-hclog"
@@ -23,7 +24,7 @@ var outputCmd = &cobra.Command{
 	Args:  cobra.MinimumNArgs(2),
 	Short: "reads all output variables from the provided layer instance",
 	Long:  `The output command reads all output variables from the given layer instance and prints them as json to standard output.`,
-	RunE: func(cmd *cobra.Command, args []string) error {
+	Run: func(cmd *cobra.Command, args []string) {
 		logger := hclog.Default()
 		logLevel := hclog.LevelFromString(os.Getenv("LF_LOG"))
 		if logLevel != hclog.NoLevel {
@@ -33,17 +34,23 @@ var outputCmd = &cobra.Command{
 
 		cfg, err := lfconfig.Load("")
 		if err != nil {
-			return errors.Wrap(err, "fail to load config")
+			fmt.Fprintf(os.Stderr, "%s\n", errors.Wrap(err, "fail to load config"))
+			os.Exit(1)
+			return
 		}
 
 		layersBackend, err := cfg.GetLayersBackend(ctx)
 		if err != nil {
-			return errors.Wrap(err, "fail to get layers backend")
+			fmt.Fprintf(os.Stderr, "%s\n", errors.Wrap(err, "fail to get layers backend"))
+			os.Exit(1)
+			return
 		}
 
 		statesBackend, err := cfg.GetStateBackend(ctx)
 		if err != nil {
-			return errors.Wrap(err, "fail to get state backend")
+			fmt.Fprintf(os.Stderr, "%s\n", errors.Wrap(err, "fail to get state backend"))
+			os.Exit(1)
+			return
 		}
 
 		layerName := args[0]
@@ -53,9 +60,14 @@ var outputCmd = &cobra.Command{
 
 		template, err := cmd.Flags().GetString("template")
 		if err != nil {
-			return errors.Wrap(err, "fail to get --template flag, this is a bug in layerform")
+			fmt.Fprintf(os.Stderr, "%s\n", errors.Wrap(err, "fail to get --template flag, this is a bug in layerform"))
+			os.Exit(1)
+			return
 		}
 
-		return output.Run(ctx, layerName, stateName, template)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "%s\n", output.Run(ctx, layerName, stateName, template))
+			os.Exit(1)
+		}
 	},
 }
