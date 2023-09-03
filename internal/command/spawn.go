@@ -7,14 +7,14 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"time"
 
+	"github.com/chelnak/ysmrr"
+	"github.com/chelnak/ysmrr/pkg/animations"
+	"github.com/chelnak/ysmrr/pkg/colors"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/terraform-exec/tfexec"
 	tfjson "github.com/hashicorp/terraform-json"
 	"github.com/pkg/errors"
-
-	"github.com/briandowns/spinner"
 
 	"github.com/ergomake/layerform/internal/layers"
 	"github.com/ergomake/layerform/internal/layerstate"
@@ -154,6 +154,12 @@ func (c *spawnCommand) spawnLayer(
 
 	visited := make(map[string]string)
 
+	sm := ysmrr.NewSpinnerManager(
+		ysmrr.WithAnimation(animations.Dots),
+		ysmrr.WithSpinnerColor(colors.FgHiBlue),
+	)
+	sm.Start()
+
 	var inner func(layerName, stateName, layerWorkdir string) (string, error)
 	inner = func(layerName, stateName, layerWorkdir string) (string, error) {
 		logger = logger.With("layer", layerName, "state", stateName, "layerWorkdir", layerWorkdir)
@@ -186,6 +192,8 @@ func (c *spawnCommand) spawnLayer(
 			stateByLayer[k] = v
 		}
 
+		s := sm.AddSpinner(fmt.Sprintf("Preparing instance \"%s\" of layer \"%s\"", stateName, layerName))
+
 		layerWorkdir, err = writeLayerToWorkdir(ctx, c.layersBackend, layerWorkdir, layer, stateByLayer)
 		if err != nil {
 			return "", errors.Wrap(err, "fail to write layer to workdir")
@@ -196,29 +204,18 @@ func (c *spawnCommand) spawnLayer(
 			return "", errors.Wrap(err, "fail to get terraform client")
 		}
 
-		s := spinner.New(
-			spinner.CharSets[14],
-			60*time.Millisecond,
-			spinner.WithWriter(os.Stdout),
-			spinner.WithSuffix(fmt.Sprintf(" Preparing instance \"%s\" of layer \"%s\"\n", stateName, layerName)),
-		)
-		s.Start()
-
 		err = tf.Init(ctx, layer.SHA)
 		if err != nil {
-			s.Stop()
+			s.Error()
 			return "", errors.Wrap(err, "fail to terraform init")
 		}
 
 		statePath := path.Join(layerWorkdir, "terraform.tfstate")
 		err = os.WriteFile(statePath, []byte{}, 0644)
 		if err != nil {
-			s.Stop()
+			s.Error()
 			return "", errors.Wrap(err, "fail to create empty terraform state")
 		}
-
-		s.FinalMSG = fmt.Sprintf("✓ Instance \"%s\" of layer \"%s\" ready\n", stateName, layerName)
-		s.Stop()
 
 		depStates := []string{}
 		for _, dep := range layer.Dependencies {
@@ -233,6 +230,7 @@ func (c *spawnCommand) spawnLayer(
 
 			depState, err := inner(dep, depStateName, layerWorkdir)
 			if err != nil {
+				s.Error()
 				return "", errors.Wrap(err, "fail to launch dependency layer")
 			}
 
@@ -243,6 +241,7 @@ func (c *spawnCommand) spawnLayer(
 		if err == nil {
 			err := os.WriteFile(statePath, state.Bytes, 0644)
 			if err != nil {
+				s.Error()
 				return "", errors.Wrap(err, "fail to write layer state to layer work dir")
 			}
 
@@ -250,12 +249,14 @@ func (c *spawnCommand) spawnLayer(
 		}
 
 		if err != nil && !errors.Is(err, layerstate.ErrStateNotFound) {
+			s.Error()
 			return "", errors.Wrap(err, "fail to get layer state")
 		}
 
 		if len(depStates) > 1 {
 			destFile, err := os.CreateTemp("", "")
 			if err != nil {
+				s.Error()
 				return "", errors.Wrap(err, "fail to create temp file to use as output of merged state")
 			}
 			defer destFile.Close()
@@ -265,19 +266,24 @@ func (c *spawnCommand) spawnLayer(
 			rest := depStates[1:]
 			err = mergeTFState(ctx, tfpath, base, destFile.Name(), rest...)
 			if err != nil {
+				s.Error()
 				return "", errors.Wrap(err, "fail to merge states")
 			}
 
 			err = copyFile(destFile.Name(), statePath)
 			if err != nil {
+				s.Error()
 				return "", errors.Wrap(err, "fail to copy merged state into state path")
 			}
 		} else if len(depStates) > 0 {
 			err = copyFile(depStates[0], statePath)
 			if err != nil {
+				s.Error()
 				return "", errors.Wrap(err, "fail to copy base state into state path")
 			}
 		}
+
+		s.Complete()
 
 		logger.Debug("Looking for variable definitions in .tfvars files")
 		varFiles, err := findTFVarFiles()
@@ -295,18 +301,10 @@ func (c *spawnCommand) spawnLayer(
 		}
 
 		verb := "Spawning"
-		verbPast := "spawned"
 		if state != nil {
 			verb = "Refreshing"
-			verbPast = "refreshed"
 		}
-		s = spinner.New(
-			spinner.CharSets[14],
-			60*time.Millisecond,
-			spinner.WithWriter(os.Stdout),
-			spinner.WithSuffix(fmt.Sprintf(" %s instance \"%s\" of layer \"%s\"\n", verb, stateName, layerName)),
-		)
-		s.Start()
+		s = sm.AddSpinner(fmt.Sprintf("%s instance \"%s\" of layer \"%s\"", verb, stateName, layerName))
 
 		var nextStateBytes []byte
 		if state == nil || !bytes.Equal(layer.SHA, state.LayerSHA) {
@@ -314,7 +312,6 @@ func (c *spawnCommand) spawnLayer(
 			err = tf.Apply(ctx, applyOptions...)
 			if err != nil {
 				originalErr := err
-				s.Stop()
 
 				nextStateBytes, err = os.ReadFile(statePath)
 				if err != nil {
@@ -334,20 +331,20 @@ func (c *spawnCommand) spawnLayer(
 					return "", errors.Wrap(err, "fail to save state of failed instance")
 				}
 
+				s.Error()
 				return "", errors.Wrap(originalErr, "fail to terraform apply")
 			}
 
 			nextStateBytes, err = os.ReadFile(statePath)
 			if err != nil {
+				s.Error()
 				return "", errors.Wrap(err, "fail to read next state")
 			}
 
-			s.FinalMSG = fmt.Sprintf("✓ Instance \"%s\" of layer \"%s\" %s\n", stateName, layerName, verbPast)
-			s.Stop()
+			s.Complete()
 		} else {
 			nextStateBytes = state.Bytes
-			s.FinalMSG = fmt.Sprintf("✓ Instance \"%s\" of layer \"%s\" cached\n", stateName, layerName)
-			s.Stop()
+			s.Complete()
 		}
 
 		state = &layerstate.State{
@@ -369,5 +366,7 @@ func (c *spawnCommand) spawnLayer(
 
 	layerWorkdir := path.Join(workdir, layerName)
 	_, err := inner(layerName, stateName, layerWorkdir)
+
+	sm.Stop()
 	return err
 }
