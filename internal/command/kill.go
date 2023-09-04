@@ -229,8 +229,8 @@ func (c *killCommand) Run(ctx context.Context, layerName, instanceName string, v
 
 func (c *killCommand) getLayerAddresses(
 	ctx context.Context,
-	layer *data.Definition,
-	instance *data.Instance,
+	layer *data.LayerDefinition,
+	instance *data.LayerInstance,
 	layerDir, tfpath string,
 ) ([]string, string, error) {
 	logger := hclog.FromContext(ctx)
@@ -311,8 +311,8 @@ func computeInstanceByLayer(
 	ctx context.Context,
 	definitionsBackend layerdefinitions.Backend,
 	instancesBackend layerinstances.Backend,
-	layer *data.Definition,
-	instance *data.Instance,
+	layer *data.LayerDefinition,
+	instance *data.LayerInstance,
 ) (map[string]string, error) {
 	instanceByLayer := map[string]string{}
 	instanceByLayer[layer.Name] = instance.InstanceName

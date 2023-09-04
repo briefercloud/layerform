@@ -10,8 +10,8 @@ import (
 	"github.com/ergomake/layerform/pkg/data"
 )
 
-func setup(ls []*data.Definition) *fileLikeBackend {
-	layers := make(map[string]*data.Definition)
+func setup(ls []*data.LayerDefinition) *fileLikeBackend {
+	layers := make(map[string]*data.LayerDefinition)
 	for _, layer := range ls {
 		layers[layer.Name] = layer
 	}
@@ -26,7 +26,7 @@ func setup(ls []*data.Definition) *fileLikeBackend {
 }
 
 func TestFileLikeBackendGetLayer(t *testing.T) {
-	layers := []*data.Definition{
+	layers := []*data.LayerDefinition{
 		{Name: "layer1"},
 		{Name: "layer2"},
 	}
@@ -45,11 +45,11 @@ func TestFileLikeBackendGetLayer(t *testing.T) {
 }
 
 func TestFileLikeBackend_ResolveDependencies(t *testing.T) {
-	layer1 := &data.Definition{Name: "layer1", Dependencies: []string{"layer2"}}
-	layer2 := &data.Definition{Name: "layer2", Dependencies: []string{"layer3"}}
-	layer3 := &data.Definition{Name: "layer3", Dependencies: []string{"layer4"}}
+	layer1 := &data.LayerDefinition{Name: "layer1", Dependencies: []string{"layer2"}}
+	layer2 := &data.LayerDefinition{Name: "layer2", Dependencies: []string{"layer3"}}
+	layer3 := &data.LayerDefinition{Name: "layer3", Dependencies: []string{"layer4"}}
 
-	stateBackend := setup([]*data.Definition{layer1, layer2, layer3})
+	stateBackend := setup([]*data.LayerDefinition{layer1, layer2, layer3})
 
 	t.Run("single dependency", func(t *testing.T) {
 		dependencies, err := stateBackend.ResolveDependencies(context.Background(), layer1)
@@ -64,7 +64,7 @@ func TestFileLikeBackend_ResolveDependencies(t *testing.T) {
 	})
 
 	t.Run("multiple dependencies", func(t *testing.T) {
-		layer4 := &data.Definition{Name: "layer4", Dependencies: []string{"layer2", "layer3"}}
+		layer4 := &data.LayerDefinition{Name: "layer4", Dependencies: []string{"layer2", "layer3"}}
 		dependencies, err := stateBackend.ResolveDependencies(context.Background(), layer4)
 		require.NoError(t, err)
 		assert.Len(t, dependencies, 2)
@@ -74,11 +74,11 @@ func TestFileLikeBackend_ResolveDependencies(t *testing.T) {
 }
 
 func TestFileLikeBackend_ListLayers(t *testing.T) {
-	layer1 := &data.Definition{Name: "layer1"}
-	layer2 := &data.Definition{Name: "layer2"}
-	layer3 := &data.Definition{Name: "layer3"}
+	layer1 := &data.LayerDefinition{Name: "layer1"}
+	layer2 := &data.LayerDefinition{Name: "layer2"}
+	layer3 := &data.LayerDefinition{Name: "layer3"}
 
-	stateBackend := setup([]*data.Definition{layer1, layer2, layer3})
+	stateBackend := setup([]*data.LayerDefinition{layer1, layer2, layer3})
 
 	t.Run("list all layers", func(t *testing.T) {
 		list, err := stateBackend.ListLayers(context.Background())
@@ -90,7 +90,7 @@ func TestFileLikeBackend_ListLayers(t *testing.T) {
 	})
 
 	t.Run("empty list", func(t *testing.T) {
-		emptyBackend := setup([]*data.Definition{})
+		emptyBackend := setup([]*data.LayerDefinition{})
 		list, err := emptyBackend.ListLayers(context.Background())
 		assert.NoError(t, err)
 		assert.Empty(t, list)

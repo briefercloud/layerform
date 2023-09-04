@@ -96,7 +96,7 @@ func (c *configureCommand) Run(ctx context.Context, fpath string) error {
 	errs := make([]validationErr, len(ls))
 	for i, l := range ls {
 		wg.Add(1)
-		go func(i int, l *data.Definition) {
+		go func(i int, l *data.LayerDefinition) {
 			defer wg.Done()
 
 			s := sm.AddSpinner(fmt.Sprintf("Validating layer %s", l.Name))

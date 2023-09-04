@@ -26,7 +26,7 @@ func (e *ergomake) Location(ctx context.Context) (string, error) {
 	return e.baseURL, nil
 }
 
-func (e *ergomake) GetLayer(ctx context.Context, name string) (*data.Definition, error) {
+func (e *ergomake) GetLayer(ctx context.Context, name string) (*data.LayerDefinition, error) {
 	url := fmt.Sprintf("%s/v1/definitions/%s", e.baseURL, name)
 
 	client := &http.Client{}
@@ -45,7 +45,7 @@ func (e *ergomake) GetLayer(ctx context.Context, name string) (*data.Definition,
 		return nil, errors.Errorf("HTTP request to %s failed with status code %d", url, resp.StatusCode)
 	}
 
-	var layer data.Definition
+	var layer data.LayerDefinition
 	err = json.NewDecoder(resp.Body).Decode(&layer)
 	if err != nil {
 		return nil, errors.Wrap(err, "fail to decode layer JSON response")
@@ -54,7 +54,7 @@ func (e *ergomake) GetLayer(ctx context.Context, name string) (*data.Definition,
 	return &layer, nil
 }
 
-func (e *ergomake) ListLayers(ctx context.Context) ([]*data.Definition, error) {
+func (e *ergomake) ListLayers(ctx context.Context) ([]*data.LayerDefinition, error) {
 	url := fmt.Sprintf("%s/v1/definitions", e.baseURL)
 
 	client := &http.Client{}
@@ -73,7 +73,7 @@ func (e *ergomake) ListLayers(ctx context.Context) ([]*data.Definition, error) {
 		return nil, errors.Errorf("HTTP request to %s failed with status code %d", url, resp.StatusCode)
 	}
 
-	var layers []*data.Definition
+	var layers []*data.LayerDefinition
 	err = json.NewDecoder(resp.Body).Decode(&layers)
 	if err != nil {
 		return nil, errors.Wrap(err, "fail to decode layers JSON response")
@@ -82,8 +82,8 @@ func (e *ergomake) ListLayers(ctx context.Context) ([]*data.Definition, error) {
 	return layers, nil
 }
 
-func (e *ergomake) ResolveDependencies(ctx context.Context, layer *data.Definition) ([]*data.Definition, error) {
-	var resolvedLayers []*data.Definition
+func (e *ergomake) ResolveDependencies(ctx context.Context, layer *data.LayerDefinition) ([]*data.LayerDefinition, error) {
+	var resolvedLayers []*data.LayerDefinition
 
 	for _, dependencyName := range layer.Dependencies {
 		dependencyLayer, err := e.GetLayer(ctx, dependencyName)
@@ -97,7 +97,7 @@ func (e *ergomake) ResolveDependencies(ctx context.Context, layer *data.Definiti
 	return resolvedLayers, nil
 }
 
-func (e *ergomake) UpdateLayers(ctx context.Context, layers []*data.Definition) error {
+func (e *ergomake) UpdateLayers(ctx context.Context, layers []*data.LayerDefinition) error {
 	dataBytes, err := json.Marshal(layers)
 	if err != nil {
 		return errors.Wrap(err, "fail to marshal layers to json")

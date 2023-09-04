@@ -10,13 +10,13 @@ import (
 )
 
 type inMemoryBackend struct {
-	layers map[string]*data.Definition
+	layers map[string]*data.LayerDefinition
 }
 
 var _ Backend = &inMemoryBackend{}
 
-func NewInMemoryBackend(layersArr []*data.Definition) *inMemoryBackend {
-	layers := map[string]*data.Definition{}
+func NewInMemoryBackend(layersArr []*data.LayerDefinition) *inMemoryBackend {
+	layers := map[string]*data.LayerDefinition{}
 	for _, l := range layersArr {
 		layers[l.Name] = l
 	}
@@ -24,15 +24,15 @@ func NewInMemoryBackend(layersArr []*data.Definition) *inMemoryBackend {
 	return &inMemoryBackend{layers}
 }
 
-func (imb *inMemoryBackend) GetLayer(ctx context.Context, name string) (*data.Definition, error) {
+func (imb *inMemoryBackend) GetLayer(ctx context.Context, name string) (*data.LayerDefinition, error) {
 	hclog.FromContext(ctx).Debug("Getting layer", "layer", name)
 
 	return imb.layers[name], nil
 }
 
-func (imb *inMemoryBackend) ResolveDependencies(ctx context.Context, layer *data.Definition) ([]*data.Definition, error) {
+func (imb *inMemoryBackend) ResolveDependencies(ctx context.Context, layer *data.LayerDefinition) ([]*data.LayerDefinition, error) {
 	hclog.FromContext(ctx).Debug("Resolving layer dependencies", "layer", layer.Name)
-	layers := make([]*data.Definition, len(layer.Dependencies))
+	layers := make([]*data.LayerDefinition, len(layer.Dependencies))
 	for i, d := range layer.Dependencies {
 		depLayer, err := imb.GetLayer(ctx, d)
 		if err != nil {
@@ -50,9 +50,9 @@ func (imb *inMemoryBackend) ResolveDependencies(ctx context.Context, layer *data
 	return layers, nil
 }
 
-func (imb *inMemoryBackend) ListLayers(ctx context.Context) ([]*data.Definition, error) {
+func (imb *inMemoryBackend) ListLayers(ctx context.Context) ([]*data.LayerDefinition, error) {
 	hclog.FromContext(ctx).Debug("Listing layers")
-	layers := make([]*data.Definition, 0)
+	layers := make([]*data.LayerDefinition, 0)
 	for _, l := range imb.layers {
 		layers = append(layers, l)
 	}
@@ -60,10 +60,10 @@ func (imb *inMemoryBackend) ListLayers(ctx context.Context) ([]*data.Definition,
 	return layers, nil
 }
 
-func (imb *inMemoryBackend) UpdateLayers(ctx context.Context, layers []*data.Definition) error {
+func (imb *inMemoryBackend) UpdateLayers(ctx context.Context, layers []*data.LayerDefinition) error {
 	hclog.FromContext(ctx).Debug("Updating layers")
 
-	imb.layers = make(map[string]*data.Definition)
+	imb.layers = make(map[string]*data.LayerDefinition)
 	for _, l := range layers {
 		imb.layers[l.Name] = l
 	}

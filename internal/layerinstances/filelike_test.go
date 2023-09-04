@@ -18,13 +18,13 @@ func TestFileLikeModelUnmarshalJSON(t *testing.T) {
 	t.Run("support v0", func(t *testing.T) {
 		v0 := &fileLikeModelV0{
 			Version: 0,
-			States: []*data.InstanceV0{{
+			States: []*data.LayerInstanceV0{{
 				LayerSHA:          []byte("layerSHA"),
 				LayerName:         "layer1",
 				StateName:         "instance1",
 				DependenciesState: map[string]string{"layer2": "instance2"},
 				Bytes:             []byte("some bytes"),
-				Status:            data.InstanceStatusAlive,
+				Status:            data.LayerInstanceStatusAlive,
 			}},
 		}
 
@@ -37,13 +37,13 @@ func TestFileLikeModelUnmarshalJSON(t *testing.T) {
 
 		expected := fileLikeModel{
 			Version: CURRENT_FILE_LIKE_MODEL_VERSION,
-			Instances: []*data.Instance{{
+			Instances: []*data.LayerInstance{{
 				DefinitionSHA:        []byte("layerSHA"),
 				DefinitionName:       "layer1",
 				InstanceName:         "instance1",
 				DependenciesInstance: map[string]string{"layer2": "instance2"},
 				Bytes:                []byte("some bytes"),
-				Status:               data.InstanceStatusAlive,
+				Status:               data.LayerInstanceStatusAlive,
 				Version:              data.CURRENT_INSTANCE_VERSION,
 			}},
 		}
@@ -54,7 +54,7 @@ func TestFileLikeModelUnmarshalJSON(t *testing.T) {
 
 func TestFileLikeBackend_GetInstance(t *testing.T) {
 	t.Run("instance found", func(t *testing.T) {
-		instance := &data.Instance{
+		instance := &data.LayerInstance{
 			DefinitionName:       "layer1",
 			InstanceName:         "instance1",
 			DependenciesInstance: map[string]string{"base": "testBaseStae"},
@@ -64,7 +64,7 @@ func TestFileLikeBackend_GetInstance(t *testing.T) {
 		fb := &fileLikeBackend{
 			model: &fileLikeModel{
 				Version:   CURRENT_FILE_LIKE_MODEL_VERSION,
-				Instances: []*data.Instance{instance},
+				Instances: []*data.LayerInstance{instance},
 			},
 		}
 
@@ -76,7 +76,7 @@ func TestFileLikeBackend_GetInstance(t *testing.T) {
 	t.Run("instance not found", func(t *testing.T) {
 		fb := fileLikeBackend{
 			model: &fileLikeModel{
-				Instances: []*data.Instance{
+				Instances: []*data.LayerInstance{
 					{DefinitionName: "layer1", InstanceName: "instance1"},
 				},
 			},
@@ -89,7 +89,7 @@ func TestFileLikeBackend_GetInstance(t *testing.T) {
 
 func TestFileLikeBackend_SaveInstance(t *testing.T) {
 	t.Run("adds or update instance correctly", func(t *testing.T) {
-		instance := &data.Instance{
+		instance := &data.LayerInstance{
 			DefinitionName: "layer1",
 			InstanceName:   "instance1",
 			Bytes:          []byte("data1"),
@@ -97,7 +97,7 @@ func TestFileLikeBackend_SaveInstance(t *testing.T) {
 		storage := storageMock.NewFileLike(t)
 		storage.EXPECT().Save(
 			context.Background(),
-			&fileLikeModel{Version: CURRENT_FILE_LIKE_MODEL_VERSION, Instances: []*data.Instance{instance}},
+			&fileLikeModel{Version: CURRENT_FILE_LIKE_MODEL_VERSION, Instances: []*data.LayerInstance{instance}},
 		).Return(nil)
 
 		fb := &fileLikeBackend{
@@ -117,7 +117,7 @@ func TestFileLikeBackend_SaveInstance(t *testing.T) {
 	t.Run("fails when fails to save fileLike", func(t *testing.T) {
 		expectedErr := errors.New("rip")
 
-		instance := &data.Instance{
+		instance := &data.LayerInstance{
 			DefinitionName: "layer1",
 			InstanceName:   "instance1",
 			Bytes:          []byte("data1"),
@@ -125,7 +125,7 @@ func TestFileLikeBackend_SaveInstance(t *testing.T) {
 		storage := storageMock.NewFileLike(t)
 		storage.EXPECT().Save(
 			context.Background(),
-			&fileLikeModel{Version: CURRENT_FILE_LIKE_MODEL_VERSION, Instances: []*data.Instance{instance}},
+			&fileLikeModel{Version: CURRENT_FILE_LIKE_MODEL_VERSION, Instances: []*data.LayerInstance{instance}},
 		).Return(expectedErr)
 
 		fb := &fileLikeBackend{
@@ -145,13 +145,13 @@ func TestFileLikeBackend_SaveInstance(t *testing.T) {
 
 func TestFileLikeBackend_DeleteInstance(t *testing.T) {
 	setup := func() *fileLikeBackend {
-		instance1 := &data.Instance{
+		instance1 := &data.LayerInstance{
 			DefinitionName: "layer1",
 			InstanceName:   "instance1",
 			Bytes:          []byte("data1"),
 		}
 
-		instance2 := &data.Instance{
+		instance2 := &data.LayerInstance{
 			DefinitionName: "layer2",
 			InstanceName:   "instance2",
 			Bytes:          []byte("data2"),
@@ -160,7 +160,7 @@ func TestFileLikeBackend_DeleteInstance(t *testing.T) {
 		return &fileLikeBackend{
 			model: &fileLikeModel{
 				Version:   CURRENT_FILE_LIKE_MODEL_VERSION,
-				Instances: []*data.Instance{instance1, instance2},
+				Instances: []*data.LayerInstance{instance1, instance2},
 			},
 		}
 	}
@@ -173,7 +173,7 @@ func TestFileLikeBackend_DeleteInstance(t *testing.T) {
 		storage.EXPECT().
 			Save(
 				mock.Anything,
-				&fileLikeModel{Version: CURRENT_FILE_LIKE_MODEL_VERSION, Instances: []*data.Instance{flb.model.Instances[1]}},
+				&fileLikeModel{Version: CURRENT_FILE_LIKE_MODEL_VERSION, Instances: []*data.LayerInstance{flb.model.Instances[1]}},
 			).
 			Return(nil)
 
@@ -204,19 +204,19 @@ func TestFileLikeBackend_DeleteInstance(t *testing.T) {
 }
 
 func TestFileLikeBackend_ListInstancesByLayer(t *testing.T) {
-	instance1 := &data.Instance{
+	instance1 := &data.LayerInstance{
 		DefinitionName: "layer1",
 		InstanceName:   "instance1",
 		Bytes:          []byte("data1"),
 	}
 
-	instance2 := &data.Instance{
+	instance2 := &data.LayerInstance{
 		DefinitionName: "layer2",
 		InstanceName:   "instance2",
 		Bytes:          []byte("data2"),
 	}
 
-	instance3 := &data.Instance{
+	instance3 := &data.LayerInstance{
 		DefinitionName: "layer1",
 		InstanceName:   "instance3",
 		Bytes:          []byte("data3"),
@@ -225,7 +225,7 @@ func TestFileLikeBackend_ListInstancesByLayer(t *testing.T) {
 	flb := fileLikeBackend{
 		model: &fileLikeModel{
 			Version:   CURRENT_FILE_LIKE_MODEL_VERSION,
-			Instances: []*data.Instance{instance1, instance2, instance3},
+			Instances: []*data.LayerInstance{instance1, instance2, instance3},
 		},
 	}
 

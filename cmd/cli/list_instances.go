@@ -74,7 +74,7 @@ Prints a table of the most important information about layer instances.`,
 			return
 		}
 
-		layersByName := make(map[string]*data.Definition)
+		layersByName := make(map[string]*data.LayerDefinition)
 		for _, l := range layers {
 			layersByName[l.Name] = l
 		}
@@ -106,7 +106,7 @@ Prints a table of the most important information about layer instances.`,
 	},
 }
 
-func computeDepth(layer *data.Definition, layers map[string]*data.Definition, level int) int {
+func computeDepth(layer *data.LayerDefinition, layers map[string]*data.LayerDefinition, level int) int {
 	depth := level
 	for _, d := range layer.Dependencies {
 		dDepth := computeDepth(layers[d], layers, level+1)
@@ -118,7 +118,7 @@ func computeDepth(layer *data.Definition, layers map[string]*data.Definition, le
 	return depth
 }
 
-func sortInstancesByDepth(instances []*data.Instance, layers map[string]*data.Definition) {
+func sortInstancesByDepth(instances []*data.LayerInstance, layers map[string]*data.LayerDefinition) {
 	sort.SliceStable(instances, func(x, y int) bool {
 		instX := instances[x]
 		layerX := layers[instX.DefinitionName]

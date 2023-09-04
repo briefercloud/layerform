@@ -13,8 +13,8 @@ import (
 const bloblayersVersion = 0
 
 type fileLikeModel struct {
-	Version uint                        `json:"version"`
-	Layers  map[string]*data.Definition `json:"layers"`
+	Version uint                             `json:"version"`
+	Layers  map[string]*data.LayerDefinition `json:"layers"`
 }
 
 type fileLikeBackend struct {
@@ -36,7 +36,7 @@ func NewFileLikeBackend(ctx context.Context, storage storage.FileLike) (*fileLik
 	return &fileLikeBackend{data: &filelayers, storage: storage}, nil
 }
 
-func (flb *fileLikeBackend) GetLayer(ctx context.Context, name string) (*data.Definition, error) {
+func (flb *fileLikeBackend) GetLayer(ctx context.Context, name string) (*data.LayerDefinition, error) {
 	hclog.FromContext(ctx).Debug("Getting layer", "layer", name)
 
 	layer, ok := flb.data.Layers[name]
@@ -47,9 +47,9 @@ func (flb *fileLikeBackend) GetLayer(ctx context.Context, name string) (*data.De
 	return layer, nil
 }
 
-func (flb *fileLikeBackend) ResolveDependencies(ctx context.Context, layer *data.Definition) ([]*data.Definition, error) {
+func (flb *fileLikeBackend) ResolveDependencies(ctx context.Context, layer *data.LayerDefinition) ([]*data.LayerDefinition, error) {
 	hclog.FromContext(ctx).Debug("Resolving layer dependencies", "layer", layer.Name)
-	layers := make([]*data.Definition, len(layer.Dependencies))
+	layers := make([]*data.LayerDefinition, len(layer.Dependencies))
 	for i, d := range layer.Dependencies {
 		depLayer, err := flb.GetLayer(ctx, d)
 		if err != nil {
@@ -67,9 +67,9 @@ func (flb *fileLikeBackend) ResolveDependencies(ctx context.Context, layer *data
 	return layers, nil
 }
 
-func (flb *fileLikeBackend) ListLayers(ctx context.Context) ([]*data.Definition, error) {
+func (flb *fileLikeBackend) ListLayers(ctx context.Context) ([]*data.LayerDefinition, error) {
 	hclog.FromContext(ctx).Debug("Listing layers")
-	layers := make([]*data.Definition, 0)
+	layers := make([]*data.LayerDefinition, 0)
 	for _, l := range flb.data.Layers {
 		layers = append(layers, l)
 	}
@@ -77,10 +77,10 @@ func (flb *fileLikeBackend) ListLayers(ctx context.Context) ([]*data.Definition,
 	return layers, nil
 }
 
-func (flb *fileLikeBackend) UpdateLayers(ctx context.Context, layers []*data.Definition) error {
+func (flb *fileLikeBackend) UpdateLayers(ctx context.Context, layers []*data.LayerDefinition) error {
 	hclog.FromContext(ctx).Debug("Updating layers")
 
-	flb.data.Layers = make(map[string]*data.Definition)
+	flb.data.Layers = make(map[string]*data.LayerDefinition)
 	for _, l := range layers {
 		flb.data.Layers[l.Name] = l
 	}

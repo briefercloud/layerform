@@ -6,11 +6,11 @@ import (
 	"github.com/pkg/errors"
 )
 
-type InstanceStatus string
+type LayerInstanceStatus string
 
 const (
-	InstanceStatusAlive  InstanceStatus = InstanceStatus("alive")
-	InstanceStatusFaulty InstanceStatus = InstanceStatus("faulty")
+	LayerInstanceStatusAlive  LayerInstanceStatus = LayerInstanceStatus("alive")
+	LayerInstanceStatusFaulty LayerInstanceStatus = LayerInstanceStatus("faulty")
 )
 
 const DEFAULT_LAYER_INSTANCE_NAME = "default"
@@ -21,17 +21,17 @@ type version struct {
 
 const CURRENT_INSTANCE_VERSION = 1
 
-type InstanceV0 struct {
-	LayerSHA          []byte            `json:"layerSHA"`
-	LayerName         string            `json:"layerName"`
-	StateName         string            `json:"stateName"`
-	DependenciesState map[string]string `json:"dependenciesState"`
-	Bytes             []byte            `json:"bytes"`
-	Status            InstanceStatus    `json:"status"`
+type LayerInstanceV0 struct {
+	LayerSHA          []byte              `json:"layerSHA"`
+	LayerName         string              `json:"layerName"`
+	StateName         string              `json:"stateName"`
+	DependenciesState map[string]string   `json:"dependenciesState"`
+	Bytes             []byte              `json:"bytes"`
+	Status            LayerInstanceStatus `json:"status"`
 }
 
-func (v0 *InstanceV0) ToInstance() *Instance {
-	return &Instance{
+func (v0 *LayerInstanceV0) ToLayerInstance() *LayerInstance {
+	return &LayerInstance{
 		DefinitionSHA:        v0.LayerSHA,
 		DefinitionName:       v0.LayerName,
 		InstanceName:         v0.StateName,
@@ -42,17 +42,17 @@ func (v0 *InstanceV0) ToInstance() *Instance {
 	}
 }
 
-type Instance struct {
-	DefinitionSHA        []byte            `json:"definitionSHA"`
-	DefinitionName       string            `json:"definitionName"`
-	InstanceName         string            `json:"instanceName"`
-	DependenciesInstance map[string]string `json:"dependenciesInstance"`
-	Bytes                []byte            `json:"bytes"`
-	Status               InstanceStatus    `json:"status"`
-	Version              uint              `json:"version"`
+type LayerInstance struct {
+	DefinitionSHA        []byte              `json:"definitionSHA"`
+	DefinitionName       string              `json:"definitionName"`
+	InstanceName         string              `json:"instanceName"`
+	DependenciesInstance map[string]string   `json:"dependenciesInstance"`
+	Bytes                []byte              `json:"bytes"`
+	Status               LayerInstanceStatus `json:"status"`
+	Version              uint                `json:"version"`
 }
 
-func (i *Instance) UnmarshalJSON(b []byte) error {
+func (i *LayerInstance) UnmarshalJSON(b []byte) error {
 	i.Version = CURRENT_INSTANCE_VERSION
 
 	var v version
@@ -70,7 +70,7 @@ func (i *Instance) UnmarshalJSON(b []byte) error {
 	}
 
 	if v.Version == 0 {
-		var v0 InstanceV0
+		var v0 LayerInstanceV0
 		err := json.Unmarshal(b, &v0)
 		if err != nil {
 			return err
@@ -88,7 +88,7 @@ func (i *Instance) UnmarshalJSON(b []byte) error {
 	return errors.Errorf("got unexpected version %d of layer instance", v.Version)
 }
 
-func (s *Instance) GetDependencyInstanceName(dep string) string {
+func (s *LayerInstance) GetDependencyInstanceName(dep string) string {
 	if name, ok := s.DependenciesInstance[dep]; ok {
 		return name
 	}

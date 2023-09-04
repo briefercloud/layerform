@@ -68,19 +68,19 @@ func (_c *Backend_DeleteState_Call) RunAndReturn(run func(context.Context, strin
 }
 
 // GetState provides a mock function with given fields: ctx, layerName, stateName
-func (_m *Backend) GetState(ctx context.Context, layerName string, stateName string) (*data.Instance, error) {
+func (_m *Backend) GetState(ctx context.Context, layerName string, stateName string) (*data.LayerInstance, error) {
 	ret := _m.Called(ctx, layerName, stateName)
 
-	var r0 *data.Instance
+	var r0 *data.LayerInstance
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, string) (*data.Instance, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, string, string) (*data.LayerInstance, error)); ok {
 		return rf(ctx, layerName, stateName)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, string, string) *data.Instance); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, string, string) *data.LayerInstance); ok {
 		r0 = rf(ctx, layerName, stateName)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*data.Instance)
+			r0 = ret.Get(0).(*data.LayerInstance)
 		}
 	}
 
@@ -113,30 +113,30 @@ func (_c *Backend_GetState_Call) Run(run func(ctx context.Context, layerName str
 	return _c
 }
 
-func (_c *Backend_GetState_Call) Return(_a0 *data.Instance, _a1 error) *Backend_GetState_Call {
+func (_c *Backend_GetState_Call) Return(_a0 *data.LayerInstance, _a1 error) *Backend_GetState_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *Backend_GetState_Call) RunAndReturn(run func(context.Context, string, string) (*data.Instance, error)) *Backend_GetState_Call {
+func (_c *Backend_GetState_Call) RunAndReturn(run func(context.Context, string, string) (*data.LayerInstance, error)) *Backend_GetState_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
 // ListStates provides a mock function with given fields: ctx
-func (_m *Backend) ListStates(ctx context.Context) ([]*data.Instance, error) {
+func (_m *Backend) ListStates(ctx context.Context) ([]*data.LayerInstance, error) {
 	ret := _m.Called(ctx)
 
-	var r0 []*data.Instance
+	var r0 []*data.LayerInstance
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context) ([]*data.Instance, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context) ([]*data.LayerInstance, error)); ok {
 		return rf(ctx)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context) []*data.Instance); ok {
+	if rf, ok := ret.Get(0).(func(context.Context) []*data.LayerInstance); ok {
 		r0 = rf(ctx)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]*data.Instance)
+			r0 = ret.Get(0).([]*data.LayerInstance)
 		}
 	}
 
@@ -167,30 +167,30 @@ func (_c *Backend_ListStates_Call) Run(run func(ctx context.Context)) *Backend_L
 	return _c
 }
 
-func (_c *Backend_ListStates_Call) Return(_a0 []*data.Instance, _a1 error) *Backend_ListStates_Call {
+func (_c *Backend_ListStates_Call) Return(_a0 []*data.LayerInstance, _a1 error) *Backend_ListStates_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *Backend_ListStates_Call) RunAndReturn(run func(context.Context) ([]*data.Instance, error)) *Backend_ListStates_Call {
+func (_c *Backend_ListStates_Call) RunAndReturn(run func(context.Context) ([]*data.LayerInstance, error)) *Backend_ListStates_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
 // ListStatesByLayer provides a mock function with given fields: ctx, layerName
-func (_m *Backend) ListStatesByLayer(ctx context.Context, layerName string) ([]*data.Instance, error) {
+func (_m *Backend) ListStatesByLayer(ctx context.Context, layerName string) ([]*data.LayerInstance, error) {
 	ret := _m.Called(ctx, layerName)
 
-	var r0 []*data.Instance
+	var r0 []*data.LayerInstance
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string) ([]*data.Instance, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, string) ([]*data.LayerInstance, error)); ok {
 		return rf(ctx, layerName)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, string) []*data.Instance); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, string) []*data.LayerInstance); ok {
 		r0 = rf(ctx, layerName)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]*data.Instance)
+			r0 = ret.Get(0).([]*data.LayerInstance)
 		}
 	}
 
@@ -222,22 +222,22 @@ func (_c *Backend_ListStatesByLayer_Call) Run(run func(ctx context.Context, laye
 	return _c
 }
 
-func (_c *Backend_ListStatesByLayer_Call) Return(_a0 []*data.Instance, _a1 error) *Backend_ListStatesByLayer_Call {
+func (_c *Backend_ListStatesByLayer_Call) Return(_a0 []*data.LayerInstance, _a1 error) *Backend_ListStatesByLayer_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *Backend_ListStatesByLayer_Call) RunAndReturn(run func(context.Context, string) ([]*data.Instance, error)) *Backend_ListStatesByLayer_Call {
+func (_c *Backend_ListStatesByLayer_Call) RunAndReturn(run func(context.Context, string) ([]*data.LayerInstance, error)) *Backend_ListStatesByLayer_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
 // SaveState provides a mock function with given fields: ctx, state
-func (_m *Backend) SaveState(ctx context.Context, state *data.Instance) error {
+func (_m *Backend) SaveState(ctx context.Context, state *data.LayerInstance) error {
 	ret := _m.Called(ctx, state)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, *data.Instance) error); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, *data.LayerInstance) error); ok {
 		r0 = rf(ctx, state)
 	} else {
 		r0 = ret.Error(0)
@@ -258,9 +258,9 @@ func (_e *Backend_Expecter) SaveState(ctx interface{}, state interface{}) *Backe
 	return &Backend_SaveState_Call{Call: _e.mock.On("SaveState", ctx, state)}
 }
 
-func (_c *Backend_SaveState_Call) Run(run func(ctx context.Context, state *data.Instance)) *Backend_SaveState_Call {
+func (_c *Backend_SaveState_Call) Run(run func(ctx context.Context, state *data.LayerInstance)) *Backend_SaveState_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(*data.Instance))
+		run(args[0].(context.Context), args[1].(*data.LayerInstance))
 	})
 	return _c
 }
@@ -270,7 +270,7 @@ func (_c *Backend_SaveState_Call) Return(_a0 error) *Backend_SaveState_Call {
 	return _c
 }
 
-func (_c *Backend_SaveState_Call) RunAndReturn(run func(context.Context, *data.Instance) error) *Backend_SaveState_Call {
+func (_c *Backend_SaveState_Call) RunAndReturn(run func(context.Context, *data.LayerInstance) error) *Backend_SaveState_Call {
 	_c.Call.Return(run)
 	return _c
 }

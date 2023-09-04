@@ -22,14 +22,14 @@ func writeLayerToWorkdir(
 	ctx context.Context,
 	definitionsBackend layerdefinitions.Backend,
 	layerWorkdir string,
-	layer *data.Definition,
+	layer *data.LayerDefinition,
 	instanceByLayer map[string]string,
 ) (string, error) {
 	logger := hclog.FromContext(ctx).With("layer", layer.Name, "layerWorkdir", layerWorkdir)
 	logger.Debug("Writting layer to workdir")
 
-	var inner func(*data.Definition) ([]string, error)
-	inner = func(layer *data.Definition) ([]string, error) {
+	var inner func(*data.LayerDefinition) ([]string, error)
+	inner = func(layer *data.LayerDefinition) ([]string, error) {
 		fpaths := make([]string, 0)
 		for _, dep := range layer.Dependencies {
 			logger.Debug("Writting dependency to workdir", "dependency", dep)

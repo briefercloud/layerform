@@ -81,8 +81,8 @@ Prints a table of the most important information about layer definitions.`,
 	},
 }
 
-func sortLayersByDepth(layers []*data.Definition) {
-	byName := make(map[string]*data.Definition)
+func sortLayersByDepth(layers []*data.LayerDefinition) {
+	byName := make(map[string]*data.LayerDefinition)
 	for _, l := range layers {
 		byName[l.Name] = l
 	}

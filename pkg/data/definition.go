@@ -5,19 +5,19 @@ import (
 	"sort"
 )
 
-type Definition struct {
+type LayerDefinition struct {
 	SHA          []byte           `json:"sha"`
 	Name         string           `json:"name"`
-	Files        []DefinitionFile `json:"files"`
+	Files        []LayerDefinitionFile `json:"files"`
 	Dependencies []string         `json:"dependencies"`
 }
 
-type DefinitionFile struct {
+type LayerDefinitionFile struct {
 	Path    string `json:"path"`
 	Content []byte `json:"content"`
 }
 
-func DefinitionSHA(l *Definition) ([]byte, error) {
+func LayerDefinitionSHA(l *LayerDefinition) ([]byte, error) {
 	hasher := sha1.New()
 	for _, f := range l.Files {
 		_, err := hasher.Write([]byte("path:" + f.Path + "\n"))

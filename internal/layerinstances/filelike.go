@@ -18,12 +18,12 @@ type version struct {
 const CURRENT_FILE_LIKE_MODEL_VERSION = 1
 
 type fileLikeModelV0 struct {
-	Version uint               `json:"version"`
-	States  []*data.InstanceV0 `json:"states"`
+	Version uint                    `json:"version"`
+	States  []*data.LayerInstanceV0 `json:"states"`
 }
 type fileLikeModel struct {
-	Version   uint             `json:"version"`
-	Instances []*data.Instance `json:"instances"`
+	Version   uint                  `json:"version"`
+	Instances []*data.LayerInstance `json:"instances"`
 }
 
 func (f *fileLikeModel) UnmarshalJSON(b []byte) error {
@@ -50,9 +50,9 @@ func (f *fileLikeModel) UnmarshalJSON(b []byte) error {
 			return err
 		}
 
-		f.Instances = make([]*data.Instance, len(v0.States))
+		f.Instances = make([]*data.LayerInstance, len(v0.States))
 		for i, s := range v0.States {
-			f.Instances[i] = s.ToInstance()
+			f.Instances[i] = s.ToLayerInstance()
 		}
 
 		return nil
@@ -81,7 +81,7 @@ func NewFileLikeBackend(ctx context.Context, storage storage.FileLike) (*fileLik
 	return &fileLikeBackend{model: &finstance, storage: storage}, nil
 }
 
-func (flb *fileLikeBackend) GetInstance(ctx context.Context, layerName, instanceName string) (*data.Instance, error) {
+func (flb *fileLikeBackend) GetInstance(ctx context.Context, layerName, instanceName string) (*data.LayerInstance, error) {
 	hclog.FromContext(ctx).Debug("Getting layer instance", "layer", layerName, "instance", instanceName)
 
 	for _, instance := range flb.model.Instances {
@@ -93,10 +93,10 @@ func (flb *fileLikeBackend) GetInstance(ctx context.Context, layerName, instance
 	return nil, errors.Wrapf(ErrInstanceNotFound, "instance %s for layer %s not found", instanceName, layerName)
 }
 
-func (flb *fileLikeBackend) SaveInstance(ctx context.Context, instance *data.Instance) error {
+func (flb *fileLikeBackend) SaveInstance(ctx context.Context, instance *data.LayerInstance) error {
 	hclog.FromContext(ctx).Debug("Saving layer instance", "layer", instance.DefinitionName, "instance", instance.InstanceName)
 
-	nextInstances := []*data.Instance{}
+	nextInstances := []*data.LayerInstance{}
 	for _, s := range flb.model.Instances {
 		if s.DefinitionName != instance.DefinitionName || s.InstanceName != instance.InstanceName {
 			nextInstances = append(nextInstances, s)
@@ -113,7 +113,7 @@ func (flb *fileLikeBackend) SaveInstance(ctx context.Context, instance *data.Ins
 func (flb *fileLikeBackend) DeleteInstance(ctx context.Context, layerName, instanceName string) error {
 	hclog.FromContext(ctx).Debug("Deleting layer instance", "layer", layerName, "instance", instanceName)
 
-	nextInstances := []*data.Instance{}
+	nextInstances := []*data.LayerInstance{}
 	for _, s := range flb.model.Instances {
 		if s.DefinitionName != layerName || s.InstanceName != instanceName {
 			nextInstances = append(nextInstances, s)
@@ -125,10 +125,10 @@ func (flb *fileLikeBackend) DeleteInstance(ctx context.Context, layerName, insta
 	return flb.storage.Save(ctx, flb.model)
 }
 
-func (flb *fileLikeBackend) ListInstancesByLayer(ctx context.Context, layerName string) ([]*data.Instance, error) {
+func (flb *fileLikeBackend) ListInstancesByLayer(ctx context.Context, layerName string) ([]*data.LayerInstance, error) {
 	hclog.FromContext(ctx).Debug("Listing instances by layer", "layer", layerName)
 
-	result := make([]*data.Instance, 0)
+	result := make([]*data.LayerInstance, 0)
 	for _, s := range flb.model.Instances {
 		if s.DefinitionName == layerName {
 			result = append(result, s)
@@ -138,7 +138,7 @@ func (flb *fileLikeBackend) ListInstancesByLayer(ctx context.Context, layerName 
 	return result, nil
 }
 
-func (flb *fileLikeBackend) ListInstances(ctx context.Context) ([]*data.Instance, error) {
+func (flb *fileLikeBackend) ListInstances(ctx context.Context) ([]*data.LayerInstance, error) {
 	hclog.FromContext(ctx).Debug("Listing all layers instances")
 
 	return flb.model.Instances, nil

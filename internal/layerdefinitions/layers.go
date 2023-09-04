@@ -11,9 +11,9 @@ import (
 var ErrNotFound = errors.New("layer not found")
 
 type Backend interface {
-	ListLayers(ctx context.Context) ([]*data.Definition, error)
-	GetLayer(ctx context.Context, name string) (*data.Definition, error)
-	ResolveDependencies(ctx context.Context, layer *data.Definition) ([]*data.Definition, error)
-	UpdateLayers(ctx context.Context, layers []*data.Definition) error
+	ListLayers(ctx context.Context) ([]*data.LayerDefinition, error)
+	GetLayer(ctx context.Context, name string) (*data.LayerDefinition, error)
+	ResolveDependencies(ctx context.Context, layer *data.LayerDefinition) ([]*data.LayerDefinition, error)
+	UpdateLayers(ctx context.Context, layers []*data.LayerDefinition) error
 	Location(ctx context.Context) (string, error)
 }

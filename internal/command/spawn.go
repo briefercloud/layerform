@@ -322,13 +322,13 @@ func (c *spawnCommand) spawnLayer(
 				// if this spawn attempt generated state, we should save it as faulty
 				// so user can fix it
 				if len(nextStateBytes) > 0 {
-					instance = &data.Instance{
+					instance = &data.LayerInstance{
 						DefinitionSHA:        layer.SHA,
 						DefinitionName:       layerName,
 						InstanceName:         instanceName,
 						DependenciesInstance: thisLayerDepInstances,
 						Bytes:                nextStateBytes,
-						Status:               data.InstanceStatusFaulty,
+						Status:               data.LayerInstanceStatusFaulty,
 					}
 					err = c.instancesBackend.SaveInstance(ctx, instance)
 					if err != nil {
@@ -352,13 +352,13 @@ func (c *spawnCommand) spawnLayer(
 			s.Complete()
 		}
 
-		instance = &data.Instance{
+		instance = &data.LayerInstance{
 			DefinitionSHA:        layer.SHA,
 			DefinitionName:       layerName,
 			InstanceName:         instanceName,
 			DependenciesInstance: thisLayerDepInstances,
 			Bytes:                nextStateBytes,
-			Status:               data.InstanceStatusAlive,
+			Status:               data.LayerInstanceStatusAlive,
 		}
 		err = c.instancesBackend.SaveInstance(ctx, instance)
 		if err != nil {
