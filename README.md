@@ -246,9 +246,7 @@ In addition to preventing failures, immutability defines clearer communication i
 
 ## How Layerform works
 
-Layerform has three major components. The `layerform-provider`, the Layerform Back-end, and Layerform CLI.
-
-> For now, we're only using the JSON file for configurations. The provider will be made publicly available soon.
+Layerform has two major components. The Layerform Back-end, and Layerform CLI.
 
 <p align="center">
   <picture>
@@ -258,13 +256,13 @@ Layerform has three major components. The `layerform-provider`, the Layerform Ba
   </picture>
 </p>
 
-The `layerform-provider` is used by Terraform to provision the Layerform Back-end with all the metadata for each layer, like its name and dependencies, and all the Terraform files associated with that layer.
+The Layerform CLI is used to provision the Layerform Back-end with all the metadata for each layer, like its name and dependencies, and all the Terraform files associated with that layer.
 
 The Layerform Back-end stores the data for each layer definition and stores the state for each instance of each layer so that new layers know which base state to use.
 
 > There can be multiple types of back-ends. The most common types of back-end are `local`, for storing data locally, and `s3`, for storing data on the cloud, in an S3 bucket.
 
-Finally, the Layerform CLI talks to the Layerform Back-end to fetch the files for the layer it wants to apply, and the state for the underlying layer.
+Finally, the Layerform CLI also talks to the Layerform Back-end to fetch the files for the layer it wants to apply, and the state for the underlying layer.
 
 The way the Layerform CLI creates new layers on top of the correct existing layers is by injecting the underlying layer's state when applying each layer.
 
