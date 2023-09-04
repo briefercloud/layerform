@@ -11,7 +11,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
-	"github.com/ergomake/layerform/internal/layerstate"
 	"github.com/ergomake/layerform/internal/lfconfig"
 	"github.com/ergomake/layerform/pkg/data"
 )
@@ -42,21 +41,21 @@ Prints a table of the most important information about layer instances.`,
 			return
 		}
 
-		layersBackend, err := cfg.GetLayersBackend(ctx)
+		layersBackend, err := cfg.GetDefinitionsBackend(ctx)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "%s\n", errors.Wrap(err, "fail to get layers backend"))
 			os.Exit(1)
 			return
 		}
 
-		instancesBackend, err := cfg.GetStateBackend(ctx)
+		instancesBackend, err := cfg.GetInstancesBackend(ctx)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "%s\n", errors.Wrap(err, "fail to get layers instances backend"))
 			os.Exit(1)
 			return
 		}
 
-		instances, err := instancesBackend.ListStates(ctx)
+		instances, err := instancesBackend.ListInstances(ctx)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "%s\n", errors.Wrap(err, "fail to list layer instances"))
 			os.Exit(1)
@@ -75,7 +74,7 @@ Prints a table of the most important information about layer instances.`,
 			return
 		}
 
-		layersByName := make(map[string]*data.Layer)
+		layersByName := make(map[string]*data.Definition)
 		for _, l := range layers {
 			layersByName[l.Name] = l
 		}
@@ -85,18 +84,18 @@ Prints a table of the most important information about layer instances.`,
 		w := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
 		fmt.Fprintln(w, "INSTANCE NAME\tLAYER NAME\tDEPENDENCIES\tSTATUS")
 		for _, instance := range instances {
-			layer := layersByName[instance.LayerName]
+			layer := layersByName[instance.DefinitionName]
 			deps := ""
 			for i, dep := range layer.Dependencies {
 				if i > 0 {
 					deps += ","
 				}
 
-				depInstName := instance.GetDependencyStateName(dep)
+				depInstName := instance.GetDependencyInstanceName(dep)
 				deps += dep + "=" + depInstName
 			}
 
-			fmt.Fprintln(w, instance.StateName+"\t"+instance.LayerName+"\t"+deps+"\t"+string(instance.Status))
+			fmt.Fprintln(w, instance.InstanceName+"\t"+instance.DefinitionName+"\t"+deps+"\t"+string(instance.Status))
 		}
 		err = w.Flush()
 
@@ -107,7 +106,7 @@ Prints a table of the most important information about layer instances.`,
 	},
 }
 
-func computeDepth(layer *data.Layer, layers map[string]*data.Layer, level int) int {
+func computeDepth(layer *data.Definition, layers map[string]*data.Definition, level int) int {
 	depth := level
 	for _, d := range layer.Dependencies {
 		dDepth := computeDepth(layers[d], layers, level+1)
@@ -119,14 +118,14 @@ func computeDepth(layer *data.Layer, layers map[string]*data.Layer, level int) i
 	return depth
 }
 
-func sortInstancesByDepth(instances []*layerstate.State, layers map[string]*data.Layer) {
+func sortInstancesByDepth(instances []*data.Instance, layers map[string]*data.Definition) {
 	sort.SliceStable(instances, func(x, y int) bool {
 		instX := instances[x]
-		layerX := layers[instX.LayerName]
+		layerX := layers[instX.DefinitionName]
 		depthX := computeDepth(layerX, layers, 0)
 
 		instY := instances[y]
-		layerY := layers[instY.LayerName]
+		layerY := layers[instY.DefinitionName]
 		depthY := computeDepth(layerY, layers, 0)
 
 		return depthX < depthY

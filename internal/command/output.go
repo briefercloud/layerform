@@ -13,25 +13,25 @@ import (
 
 	"github.com/cbroglie/mustache"
 
-	"github.com/ergomake/layerform/internal/layers"
-	"github.com/ergomake/layerform/internal/layerstate"
+	"github.com/ergomake/layerform/internal/layerdefinitions"
+	"github.com/ergomake/layerform/internal/layerinstances"
 	"github.com/ergomake/layerform/internal/terraform"
 	"github.com/ergomake/layerform/internal/tfclient"
 )
 
 type outputCommand struct {
-	layersBackend layers.Backend
-	statesBackend layerstate.Backend
+	definitionsBackend layerdefinitions.Backend
+	instancesBackend   layerinstances.Backend
 }
 
-func NewOutput(layersBackend layers.Backend, statesBackend layerstate.Backend) *outputCommand {
-	return &outputCommand{layersBackend, statesBackend}
+func NewOutput(definitionsBackend layerdefinitions.Backend, instancesBackend layerinstances.Backend) *outputCommand {
+	return &outputCommand{definitionsBackend, instancesBackend}
 }
 
-func (c *outputCommand) Run(ctx context.Context, layerName, stateName, template string) error {
+func (c *outputCommand) Run(ctx context.Context, layerName, instanceName, template string) error {
 	logger := hclog.FromContext(ctx)
 
-	layer, err := c.layersBackend.GetLayer(ctx, layerName)
+	layer, err := c.definitionsBackend.GetLayer(ctx, layerName)
 	if err != nil {
 		return errors.Wrap(err, "fail to get layer")
 	}
@@ -40,17 +40,17 @@ func (c *outputCommand) Run(ctx context.Context, layerName, stateName, template 
 		return errors.New("layer not found")
 	}
 
-	state, err := c.statesBackend.GetState(ctx, layer.Name, stateName)
+	instance, err := c.instancesBackend.GetInstance(ctx, layer.Name, instanceName)
 	if err != nil {
-		if errors.Is(err, layerstate.ErrStateNotFound) {
+		if errors.Is(err, layerinstances.ErrInstanceNotFound) {
 			return errors.Errorf(
-				"state %s not found for layer %s\n",
-				stateName,
+				"instance %s not found for layer %s\n",
+				instanceName,
 				layer.Name,
 			)
 		}
 
-		return errors.Wrap(err, "fail to get layer state")
+		return errors.Wrap(err, "fail to get layer instance")
 	}
 
 	tfpath, err := terraform.GetTFPath(ctx)
@@ -69,18 +69,18 @@ func (c *outputCommand) Run(ctx context.Context, layerName, stateName, template 
 
 	layerDir := path.Join(workdir, layerName)
 
-	stateByLayer, err := computeStateByLayer(ctx, c.layersBackend, c.statesBackend, layer, state)
+	instanceByLayer, err := computeInstanceByLayer(ctx, c.definitionsBackend, c.instancesBackend, layer, instance)
 	if err != nil {
-		return errors.Wrap(err, "fail to compute state by layer state")
+		return errors.Wrap(err, "fail to compute instance by layer instance")
 	}
 
-	layerWorkdir, err := writeLayerToWorkdir(ctx, c.layersBackend, layerDir, layer, stateByLayer)
+	layerWorkdir, err := writeLayerToWorkdir(ctx, c.definitionsBackend, layerDir, layer, instanceByLayer)
 	if err != nil {
 		return errors.Wrap(err, "fail to write layer to work directory")
 	}
 
 	statePath := path.Join(layerWorkdir, "terraform.tfstate")
-	err = os.WriteFile(statePath, state.Bytes, 0644)
+	err = os.WriteFile(statePath, instance.Bytes, 0644)
 	if err != nil {
 		return errors.Wrap(err, "fail to write terraform state to work directory")
 	}

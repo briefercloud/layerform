@@ -42,7 +42,7 @@ Prints a table of the most important information about layer definitions.`,
 			return
 		}
 
-		layersBackend, err := cfg.GetLayersBackend(ctx)
+		layersBackend, err := cfg.GetDefinitionsBackend(ctx)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "%s\n", errors.Wrap(err, "fail to get layers backend"))
 			os.Exit(1)
@@ -81,8 +81,8 @@ Prints a table of the most important information about layer definitions.`,
 	},
 }
 
-func sortLayersByDepth(layers []*data.Layer) {
-	byName := make(map[string]*data.Layer)
+func sortLayersByDepth(layers []*data.Definition) {
+	byName := make(map[string]*data.Definition)
 	for _, l := range layers {
 		byName[l.Name] = l
 	}

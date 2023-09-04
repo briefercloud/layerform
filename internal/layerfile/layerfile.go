@@ -34,12 +34,12 @@ func FromFile(sourceFilepath string) (*layerfile, error) {
 	return lf, errors.Wrapf(err, "fail to decode %s into layerfile", lf)
 }
 
-func (lf *layerfile) ToLayers() ([]*data.Layer, error) {
+func (lf *layerfile) ToLayers() ([]*data.Definition, error) {
 	dir := path.Dir(lf.sourceFilepath)
 
-	dataLayers := make([]*data.Layer, len(lf.Layers))
+	dataLayers := make([]*data.Definition, len(lf.Layers))
 	for i, l := range lf.Layers {
-		files := []data.LayerFile{}
+		files := []data.DefinitionFile{}
 		for _, f := range l.Files {
 			matches, err := filepath.Glob(path.Join(dir, f))
 			if err != nil {
@@ -57,19 +57,19 @@ func (lf *layerfile) ToLayers() ([]*data.Layer, error) {
 					return nil, errors.Wrap(err, "fail to extract relative path")
 				}
 
-				files = append(files, data.LayerFile{
+				files = append(files, data.DefinitionFile{
 					Path:    rel,
 					Content: content,
 				})
 			}
 		}
 
-		layer := &data.Layer{
+		layer := &data.Definition{
 			Name:         l.Name,
 			Files:        files,
 			Dependencies: l.Dependencies,
 		}
-		sha, err := data.LayerSHA(layer)
+		sha, err := data.DefinitionSHA(layer)
 		if err != nil {
 			return nil, errors.Wrapf(err, "fail to compute sha1 of layer %s", l.Name)
 		}

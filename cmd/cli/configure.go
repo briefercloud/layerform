@@ -75,21 +75,21 @@ Here's an example layer definition configurations:
 			return
 		}
 
-		layersBackend, err := cfg.GetLayersBackend(ctx)
+		layersBackend, err := cfg.GetDefinitionsBackend(ctx)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "%s\n", errors.Wrap(err, "fail to get layers backend"))
 			os.Exit(1)
 			return
 		}
 
-		statesBackend, err := cfg.GetStateBackend(ctx)
+		instancesBackend, err := cfg.GetInstancesBackend(ctx)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "%s\n", errors.Wrap(err, "fail to get state backend"))
+			fmt.Fprintf(os.Stderr, "%s\n", errors.Wrap(err, "fail to get instance backend"))
 			os.Exit(1)
 			return
 		}
 
-		configure := command.NewConfigure(layersBackend, statesBackend)
+		configure := command.NewConfigure(layersBackend, instancesBackend)
 
 		err = configure.Run(ctx, fpath)
 		if err != nil {

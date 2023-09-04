@@ -39,24 +39,24 @@ var outputCmd = &cobra.Command{
 			return
 		}
 
-		layersBackend, err := cfg.GetLayersBackend(ctx)
+		layersBackend, err := cfg.GetDefinitionsBackend(ctx)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "%s\n", errors.Wrap(err, "fail to get layers backend"))
 			os.Exit(1)
 			return
 		}
 
-		statesBackend, err := cfg.GetStateBackend(ctx)
+		instancesBackend, err := cfg.GetInstancesBackend(ctx)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "%s\n", errors.Wrap(err, "fail to get state backend"))
+			fmt.Fprintf(os.Stderr, "%s\n", errors.Wrap(err, "fail to get instance backend"))
 			os.Exit(1)
 			return
 		}
 
 		layerName := args[0]
-		stateName := args[1]
+		instanceName := args[1]
 
-		output := command.NewOutput(layersBackend, statesBackend)
+		output := command.NewOutput(layersBackend, instancesBackend)
 
 		template, err := cmd.Flags().GetString("template")
 		if err != nil {
@@ -65,9 +65,9 @@ var outputCmd = &cobra.Command{
 			return
 		}
 
-		err = output.Run(ctx, layerName, stateName, template)
+		err = output.Run(ctx, layerName, instanceName, template)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "%s\n", output.Run(ctx, layerName, stateName, template))
+			fmt.Fprintf(os.Stderr, "%s\n", output.Run(ctx, layerName, instanceName, template))
 			os.Exit(1)
 		}
 	},

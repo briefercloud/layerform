@@ -16,25 +16,26 @@ import (
 	tfjson "github.com/hashicorp/terraform-json"
 	"github.com/pkg/errors"
 
-	"github.com/ergomake/layerform/internal/layers"
-	"github.com/ergomake/layerform/internal/layerstate"
+	"github.com/ergomake/layerform/internal/layerdefinitions"
+	"github.com/ergomake/layerform/internal/layerinstances"
 	"github.com/ergomake/layerform/internal/terraform"
 	"github.com/ergomake/layerform/internal/tfclient"
+	"github.com/ergomake/layerform/pkg/data"
 )
 
 type spawnCommand struct {
-	layersBackend layers.Backend
-	statesBackend layerstate.Backend
+	definitionsBackend layerdefinitions.Backend
+	instancesBackend   layerinstances.Backend
 }
 
-func NewSpawn(layersBackend layers.Backend, statesBackend layerstate.Backend) *spawnCommand {
-	return &spawnCommand{layersBackend, statesBackend}
+func NewSpawn(definitionsBackend layerdefinitions.Backend, instancesBackend layerinstances.Backend) *spawnCommand {
+	return &spawnCommand{definitionsBackend, instancesBackend}
 }
 
 func (c *spawnCommand) Run(
 	ctx context.Context,
-	layerName, stateName string,
-	dependenciesState map[string]string,
+	layerName, instanceName string,
+	dependenciesInstance map[string]string,
 	vars []string,
 ) error {
 	logger := hclog.FromContext(ctx)
@@ -52,15 +53,15 @@ func (c *spawnCommand) Run(
 	}
 	defer os.RemoveAll(workdir)
 
-	_, err = c.statesBackend.GetState(ctx, layerName, stateName)
+	_, err = c.instancesBackend.GetInstance(ctx, layerName, instanceName)
 	if err == nil {
-		return errors.Errorf("layer %s already spawned with name %s", layerName, stateName)
+		return errors.Errorf("layer %s already spawned with name %s", layerName, instanceName)
 	}
-	if !errors.Is(err, layerstate.ErrStateNotFound) {
-		return errors.Wrap(err, "fail to get state")
+	if !errors.Is(err, layerinstances.ErrInstanceNotFound) {
+		return errors.Wrap(err, "fail to get instance")
 	}
 
-	err = c.spawnLayer(ctx, layerName, stateName, workdir, tfpath, dependenciesState, vars)
+	err = c.spawnLayer(ctx, layerName, instanceName, workdir, tfpath, dependenciesInstance, vars)
 	if err != nil {
 		return errors.Wrap(err, "fail to spawn layer")
 	}
@@ -145,8 +146,8 @@ func copyFile(src, dst string) error {
 
 func (c *spawnCommand) spawnLayer(
 	ctx context.Context,
-	layerName, stateName, workdir, tfpath string,
-	dependenciesState map[string]string,
+	layerName, instanceName, workdir, tfpath string,
+	dependenciesInstance map[string]string,
 	vars []string,
 ) error {
 	logger := hclog.FromContext(ctx)
@@ -160,12 +161,12 @@ func (c *spawnCommand) spawnLayer(
 	)
 	sm.Start()
 
-	var inner func(layerName, stateName, layerWorkdir string) (string, error)
-	inner = func(layerName, stateName, layerWorkdir string) (string, error) {
-		logger = logger.With("layer", layerName, "state", stateName, "layerWorkdir", layerWorkdir)
+	var inner func(layerName, instanceName, layerWorkdir string) (string, error)
+	inner = func(layerName, instanceName, layerWorkdir string) (string, error) {
+		logger = logger.With("layer", layerName, "instance", instanceName, "layerWorkdir", layerWorkdir)
 		logger.Debug("Spawning layer")
 
-		thisLayerDepStates := map[string]string{}
+		thisLayerDepInstances := map[string]string{}
 
 		if st, ok := visited[layerName]; ok {
 			logger.Debug("Layer already spawned before")
@@ -177,7 +178,7 @@ func (c *spawnCommand) spawnLayer(
 			return "", errors.Wrap(err, "fail to create sub work directory for layer")
 		}
 
-		layer, err := c.layersBackend.GetLayer(ctx, layerName)
+		layer, err := c.definitionsBackend.GetLayer(ctx, layerName)
 		if err != nil {
 			return "", errors.Wrap(err, "fail to get layer")
 		}
@@ -186,15 +187,15 @@ func (c *spawnCommand) spawnLayer(
 			return "", errors.New("layer not found")
 		}
 
-		stateByLayer := map[string]string{}
-		stateByLayer[layer.Name] = stateName
-		for k, v := range thisLayerDepStates {
-			stateByLayer[k] = v
+		instanceByLayer := map[string]string{}
+		instanceByLayer[layer.Name] = instanceName
+		for k, v := range thisLayerDepInstances {
+			instanceByLayer[k] = v
 		}
 
-		s := sm.AddSpinner(fmt.Sprintf("Preparing instance \"%s\" of layer \"%s\"", stateName, layerName))
+		s := sm.AddSpinner(fmt.Sprintf("Preparing instance \"%s\" of layer \"%s\"", instanceName, layerName))
 
-		layerWorkdir, err = writeLayerToWorkdir(ctx, c.layersBackend, layerWorkdir, layer, stateByLayer)
+		layerWorkdir, err = writeLayerToWorkdir(ctx, c.definitionsBackend, layerWorkdir, layer, instanceByLayer)
 		if err != nil {
 			return "", errors.Wrap(err, "fail to write layer to workdir")
 		}
@@ -221,14 +222,14 @@ func (c *spawnCommand) spawnLayer(
 		for _, dep := range layer.Dependencies {
 			layerWorkdir := path.Join(workdir, dep)
 
-			depStateName := dependenciesState[dep]
-			if depStateName == "" {
-				depStateName = layerstate.DEFAULT_LAYER_STATE_NAME
+			depInstanceName := dependenciesInstance[dep]
+			if depInstanceName == "" {
+				depInstanceName = data.DEFAULT_LAYER_INSTANCE_NAME
 			} else {
-				thisLayerDepStates[dep] = depStateName
+				thisLayerDepInstances[dep] = depInstanceName
 			}
 
-			depState, err := inner(dep, depStateName, layerWorkdir)
+			depState, err := inner(dep, depInstanceName, layerWorkdir)
 			if err != nil {
 				s.Error()
 				return "", errors.Wrap(err, "fail to launch dependency layer")
@@ -237,20 +238,20 @@ func (c *spawnCommand) spawnLayer(
 			depStates = append(depStates, depState)
 		}
 
-		state, err := c.statesBackend.GetState(ctx, layerName, stateName)
+		instance, err := c.instancesBackend.GetInstance(ctx, layerName, instanceName)
 		if err == nil {
-			err := os.WriteFile(statePath, state.Bytes, 0644)
+			err := os.WriteFile(statePath, instance.Bytes, 0644)
 			if err != nil {
 				s.Error()
-				return "", errors.Wrap(err, "fail to write layer state to layer work dir")
+				return "", errors.Wrap(err, "fail to write layer instance to layer work dir")
 			}
 
 			depStates = append(depStates, statePath)
 		}
 
-		if err != nil && !errors.Is(err, layerstate.ErrStateNotFound) {
+		if err != nil && !errors.Is(err, layerinstances.ErrInstanceNotFound) {
 			s.Error()
-			return "", errors.Wrap(err, "fail to get layer state")
+			return "", errors.Wrap(err, "fail to get layer instance")
 		}
 
 		if len(depStates) > 1 {
@@ -301,13 +302,13 @@ func (c *spawnCommand) spawnLayer(
 		}
 
 		verb := "Spawning"
-		if state != nil {
+		if instance != nil {
 			verb = "Refreshing"
 		}
-		s = sm.AddSpinner(fmt.Sprintf("%s instance \"%s\" of layer \"%s\"", verb, stateName, layerName))
+		s = sm.AddSpinner(fmt.Sprintf("%s instance \"%s\" of layer \"%s\"", verb, instanceName, layerName))
 
 		var nextStateBytes []byte
-		if state == nil || !bytes.Equal(layer.SHA, state.LayerSHA) {
+		if instance == nil || !bytes.Equal(layer.SHA, instance.DefinitionSHA) {
 			logger.Debug("Running terraform apply")
 			err = tf.Apply(ctx, applyOptions...)
 			if err != nil {
@@ -321,17 +322,17 @@ func (c *spawnCommand) spawnLayer(
 				// if this spawn attempt generated state, we should save it as faulty
 				// so user can fix it
 				if len(nextStateBytes) > 0 {
-					state = &layerstate.State{
-						LayerSHA:          layer.SHA,
-						LayerName:         layerName,
-						StateName:         stateName,
-						DependenciesState: thisLayerDepStates,
-						Bytes:             nextStateBytes,
-						Status:            layerstate.InstanceStatusFaulty,
+					instance = &data.Instance{
+						DefinitionSHA:        layer.SHA,
+						DefinitionName:       layerName,
+						InstanceName:         instanceName,
+						DependenciesInstance: thisLayerDepInstances,
+						Bytes:                nextStateBytes,
+						Status:               data.InstanceStatusFaulty,
 					}
-					err = c.statesBackend.SaveState(ctx, state)
+					err = c.instancesBackend.SaveInstance(ctx, instance)
 					if err != nil {
-						return "", errors.Wrap(err, "fail to save state of failed instance")
+						return "", errors.Wrap(err, "fail to save instance of failed instance")
 					}
 				}
 
@@ -347,21 +348,21 @@ func (c *spawnCommand) spawnLayer(
 
 			s.Complete()
 		} else {
-			nextStateBytes = state.Bytes
+			nextStateBytes = instance.Bytes
 			s.Complete()
 		}
 
-		state = &layerstate.State{
-			LayerSHA:          layer.SHA,
-			LayerName:         layerName,
-			StateName:         stateName,
-			DependenciesState: thisLayerDepStates,
-			Bytes:             nextStateBytes,
-			Status:            layerstate.InstanceStatusAlive,
+		instance = &data.Instance{
+			DefinitionSHA:        layer.SHA,
+			DefinitionName:       layerName,
+			InstanceName:         instanceName,
+			DependenciesInstance: thisLayerDepInstances,
+			Bytes:                nextStateBytes,
+			Status:               data.InstanceStatusAlive,
 		}
-		err = c.statesBackend.SaveState(ctx, state)
+		err = c.instancesBackend.SaveInstance(ctx, instance)
 		if err != nil {
-			return "", errors.Wrap(err, "fail to save state")
+			return "", errors.Wrap(err, "fail to save instance")
 		}
 
 		visited[layerName] = statePath
@@ -369,7 +370,7 @@ func (c *spawnCommand) spawnLayer(
 	}
 
 	layerWorkdir := path.Join(workdir, layerName)
-	_, err := inner(layerName, stateName, layerWorkdir)
+	_, err := inner(layerName, instanceName, layerWorkdir)
 
 	sm.Stop()
 	return err

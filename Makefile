@@ -15,7 +15,7 @@ lint:
 tidy:
 	go mod tidy
 
-TESTS = ./internal/...
+TESTS = ./internal/... ./pkg/...
 .PHONY: test
 test:
 	go test -v -race $(TESTS)

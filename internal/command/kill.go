@@ -14,23 +14,23 @@ import (
 	"github.com/hashicorp/terraform-exec/tfexec"
 	"github.com/pkg/errors"
 
-	"github.com/ergomake/layerform/internal/layers"
-	"github.com/ergomake/layerform/internal/layerstate"
+	"github.com/ergomake/layerform/internal/layerdefinitions"
+	"github.com/ergomake/layerform/internal/layerinstances"
 	"github.com/ergomake/layerform/internal/terraform"
 	"github.com/ergomake/layerform/internal/tfclient"
 	"github.com/ergomake/layerform/pkg/data"
 )
 
 type killCommand struct {
-	layersBackend layers.Backend
-	statesBackend layerstate.Backend
+	layersBackend    layerdefinitions.Backend
+	instancesBackend layerinstances.Backend
 }
 
-func NewKill(layersBackend layers.Backend, statesBackend layerstate.Backend) *killCommand {
-	return &killCommand{layersBackend, statesBackend}
+func NewKill(definitionsBackend layerdefinitions.Backend, instancesBackend layerinstances.Backend) *killCommand {
+	return &killCommand{definitionsBackend, instancesBackend}
 }
 
-func (c *killCommand) Run(ctx context.Context, layerName, stateName string, vars []string) error {
+func (c *killCommand) Run(ctx context.Context, layerName, instanceName string, vars []string) error {
 	logger := hclog.FromContext(ctx)
 
 	layer, err := c.layersBackend.GetLayer(ctx, layerName)
@@ -42,17 +42,17 @@ func (c *killCommand) Run(ctx context.Context, layerName, stateName string, vars
 		return errors.New("layer not found")
 	}
 
-	state, err := c.statesBackend.GetState(ctx, layer.Name, stateName)
+	instance, err := c.instancesBackend.GetInstance(ctx, layer.Name, instanceName)
 	if err != nil {
-		if errors.Is(err, layerstate.ErrStateNotFound) {
+		if errors.Is(err, layerinstances.ErrInstanceNotFound) {
 			return errors.Errorf(
-				"state %s not found for layer %s",
-				stateName,
+				"instance %s not found for layer %s",
+				instanceName,
 				layer.Name,
 			)
 		}
 
-		return errors.Wrap(err, "fail to get layer state")
+		return errors.Wrap(err, "fail to get layer instance")
 	}
 
 	sm := ysmrr.NewSpinnerManager(
@@ -63,12 +63,12 @@ func (c *killCommand) Run(ctx context.Context, layerName, stateName string, vars
 	s := sm.AddSpinner(
 		fmt.Sprintf(
 			"Preparing to kill instance \"%s\" of layer \"%s\"",
-			stateName,
+			instanceName,
 			layerName,
 		),
 	)
 
-	hasDependants, err := c.hasDependants(ctx, layerName, stateName)
+	hasDependants, err := c.hasDependants(ctx, layerName, instanceName)
 	if err != nil {
 		s.Error()
 		sm.Stop()
@@ -100,7 +100,7 @@ func (c *killCommand) Run(ctx context.Context, layerName, stateName string, vars
 	defer os.RemoveAll(workdir)
 
 	layerDir := path.Join(workdir, layerName)
-	layerAddrs, layerDir, err := c.getLayerAddresses(ctx, layer, state, layerDir, tfpath)
+	layerAddrs, layerDir, err := c.getLayerAddresses(ctx, layer, instance, layerDir, tfpath)
 	if err != nil {
 		s.Error()
 		sm.Stop()
@@ -126,15 +126,15 @@ func (c *killCommand) Run(ctx context.Context, layerName, stateName string, vars
 			return errors.Wrap(err, "dependency layer not found")
 		}
 
-		depState, err := c.statesBackend.GetState(ctx, depLayer.Name, state.GetDependencyStateName(dep))
+		depInstance, err := c.instancesBackend.GetInstance(ctx, depLayer.Name, instance.GetDependencyInstanceName(dep))
 		if err != nil {
 			s.Error()
 			sm.Stop()
-			return errors.Wrap(err, "fail to get dependency state")
+			return errors.Wrap(err, "fail to get dependency instance")
 		}
 
 		depDir := path.Join(workdir, dep)
-		depAddrs, _, err := c.getLayerAddresses(ctx, depLayer, depState, depDir, tfpath)
+		depAddrs, _, err := c.getLayerAddresses(ctx, depLayer, depInstance, depDir, tfpath)
 		if err != nil {
 			s.Error()
 			sm.Stop()
@@ -176,7 +176,7 @@ func (c *killCommand) Run(ctx context.Context, layerName, stateName string, vars
 	}
 	logger.Debug(
 		"Running terraform destroy targetting layer specific addresses",
-		"layer", layer.Name, "state", stateName, "targets", destroyOptions,
+		"layer", layer.Name, "instance", instanceName, "targets", destroyOptions,
 	)
 
 	s.Complete()
@@ -202,7 +202,7 @@ func (c *killCommand) Run(ctx context.Context, layerName, stateName string, vars
 	s = sm.AddSpinner(
 		fmt.Sprintf(
 			"Killing instance \"%s\" of layer \"%s\"",
-			stateName,
+			instanceName,
 			layerName,
 		),
 	)
@@ -214,11 +214,11 @@ func (c *killCommand) Run(ctx context.Context, layerName, stateName string, vars
 		return errors.Wrap(err, "fail to terraform destroy")
 	}
 
-	err = c.statesBackend.DeleteState(ctx, layerName, stateName)
+	err = c.instancesBackend.DeleteInstance(ctx, layerName, instanceName)
 	if err != nil {
 		s.Error()
 		sm.Stop()
-		return errors.Wrap(err, "fail to delete state")
+		return errors.Wrap(err, "fail to delete instance")
 	}
 
 	s.Complete()
@@ -229,25 +229,25 @@ func (c *killCommand) Run(ctx context.Context, layerName, stateName string, vars
 
 func (c *killCommand) getLayerAddresses(
 	ctx context.Context,
-	layer *data.Layer,
-	state *layerstate.State,
+	layer *data.Definition,
+	instance *data.Instance,
 	layerDir, tfpath string,
 ) ([]string, string, error) {
 	logger := hclog.FromContext(ctx)
-	logger.Debug("Getting layer addresses", "layer", layer.Name, "state", state.StateName)
+	logger.Debug("Getting layer addresses", "layer", layer.Name, "instance", instance.InstanceName)
 
-	stateByLayer, err := computeStateByLayer(ctx, c.layersBackend, c.statesBackend, layer, state)
+	instanceByLayer, err := computeInstanceByLayer(ctx, c.layersBackend, c.instancesBackend, layer, instance)
 	if err != nil {
-		return nil, "", errors.Wrap(err, "fail to compute state by layer state")
+		return nil, "", errors.Wrap(err, "fail to compute instance by layer instance")
 	}
 
-	layerWorkdir, err := writeLayerToWorkdir(ctx, c.layersBackend, layerDir, layer, stateByLayer)
+	layerWorkdir, err := writeLayerToWorkdir(ctx, c.layersBackend, layerDir, layer, instanceByLayer)
 	if err != nil {
 		return nil, "", errors.Wrap(err, "fail to write layer to work directory")
 	}
 
 	statePath := path.Join(layerWorkdir, "terraform.tfstate")
-	err = os.WriteFile(statePath, state.Bytes, 0644)
+	err = os.WriteFile(statePath, instance.Bytes, 0644)
 	if err != nil {
 		return nil, "", errors.Wrap(err, "fail to write terraform state to work directory")
 	}
@@ -272,8 +272,8 @@ func (c *killCommand) getLayerAddresses(
 	return addresses, layerWorkdir, nil
 }
 
-func (c *killCommand) hasDependants(ctx context.Context, layerName, stateName string) (bool, error) {
-	hclog.FromContext(ctx).Debug("Checking if layer has dependants", "layer", layerName, "state", stateName)
+func (c *killCommand) hasDependants(ctx context.Context, layerName, instanceName string) (bool, error) {
+	hclog.FromContext(ctx).Debug("Checking if layer has dependants", "layer", layerName, "instance", instanceName)
 
 	layers, err := c.layersBackend.ListLayers(ctx)
 	if err != nil {
@@ -290,14 +290,14 @@ func (c *killCommand) hasDependants(ctx context.Context, layerName, stateName st
 		}
 
 		if isChild {
-			states, err := c.statesBackend.ListStatesByLayer(ctx, layer.Name)
+			instances, err := c.instancesBackend.ListInstancesByLayer(ctx, layer.Name)
 			if err != nil {
-				return false, errors.Wrap(err, "fail to list layer states")
+				return false, errors.Wrap(err, "fail to list layer instances")
 			}
 
-			for _, state := range states {
-				parentStateName := state.GetDependencyStateName(layerName)
-				if parentStateName == stateName {
+			for _, instance := range instances {
+				parentInstanceName := instance.GetDependencyInstanceName(layerName)
+				if parentInstanceName == instanceName {
 					return true, nil
 				}
 			}
@@ -307,39 +307,39 @@ func (c *killCommand) hasDependants(ctx context.Context, layerName, stateName st
 	return false, nil
 }
 
-func computeStateByLayer(
+func computeInstanceByLayer(
 	ctx context.Context,
-	layersBackend layers.Backend,
-	statesBackend layerstate.Backend,
-	layer *data.Layer,
-	state *layerstate.State,
+	definitionsBackend layerdefinitions.Backend,
+	instancesBackend layerinstances.Backend,
+	layer *data.Definition,
+	instance *data.Instance,
 ) (map[string]string, error) {
-	stateByLayer := map[string]string{}
-	stateByLayer[layer.Name] = state.StateName
+	instanceByLayer := map[string]string{}
+	instanceByLayer[layer.Name] = instance.InstanceName
 	for _, dep := range layer.Dependencies {
-		depLayer, err := layersBackend.GetLayer(ctx, dep)
+		depLayer, err := definitionsBackend.GetLayer(ctx, dep)
 		if err != nil {
 			return nil, errors.Wrap(err, "fail to get layer")
 		}
 
-		depStateName := state.GetDependencyStateName(dep)
+		depInstanceName := instance.GetDependencyInstanceName(dep)
 
-		depState, err := statesBackend.GetState(ctx, dep, depStateName)
+		depInstance, err := instancesBackend.GetInstance(ctx, dep, depInstanceName)
 		if err != nil {
-			return nil, errors.Wrap(err, "fail to get state")
+			return nil, errors.Wrap(err, "fail to get instance")
 		}
 
-		depDepStates, err := computeStateByLayer(ctx, layersBackend, statesBackend, depLayer, depState)
+		depDepInstances, err := computeInstanceByLayer(ctx, definitionsBackend, instancesBackend, depLayer, depInstance)
 		if err != nil {
-			return nil, errors.Wrap(err, "fail to compute state by layer")
+			return nil, errors.Wrap(err, "fail to compute instance by layer")
 		}
 
-		for k, v := range depDepStates {
-			stateByLayer[k] = v
+		for k, v := range depDepInstances {
+			instanceByLayer[k] = v
 		}
 
-		stateByLayer[dep] = depStateName
+		instanceByLayer[dep] = depInstanceName
 	}
 
-	return stateByLayer, nil
+	return instanceByLayer, nil
 }

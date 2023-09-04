@@ -50,26 +50,26 @@ Please notice that the kill command cannot destroy a layer instance which has de
 			return
 		}
 
-		layersBackend, err := cfg.GetLayersBackend(ctx)
+		layersBackend, err := cfg.GetDefinitionsBackend(ctx)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "%s\n", errors.Wrap(err, "fail to get layers backend"))
 			os.Exit(1)
 			return
 		}
 
-		statesBackend, err := cfg.GetStateBackend(ctx)
+		instancesBackend, err := cfg.GetInstancesBackend(ctx)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "%s\n", errors.Wrap(err, "fail to get state backend"))
+			fmt.Fprintf(os.Stderr, "%s\n", errors.Wrap(err, "fail to get instance backend"))
 			os.Exit(1)
 			return
 		}
 
 		layerName := args[0]
-		stateName := args[1]
+		instanceName := args[1]
 
-		kill := command.NewKill(layersBackend, statesBackend)
+		kill := command.NewKill(layersBackend, instancesBackend)
 
-		err = kill.Run(ctx, layerName, stateName, vars)
+		err = kill.Run(ctx, layerName, instanceName, vars)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "%s\n", err)
 			os.Exit(1)
