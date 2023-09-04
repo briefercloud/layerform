@@ -111,6 +111,7 @@ func (c *config) GetStateBackend(ctx context.Context) (layerstate.Backend, error
 	var blob storage.FileLike
 	switch current.Type {
 	case "local":
+	case "ergomake":
 		blob = storage.NewFileStorage(path.Join(c.getDir(), stateFileName))
 	case "s3":
 		b, err := storage.NewS3Backend(current.Bucket, stateFileName, current.Region)
@@ -129,6 +130,14 @@ func (c *config) GetLayersBackend(ctx context.Context) (layers.Backend, error) {
 	current := c.getCurrent()
 	var blob storage.FileLike
 	switch current.Type {
+	case "ergomake":
+		// TODO: hardcode production ergomake url here
+		baseURL := os.Getenv("LF_ERGOMAKE_URL")
+		if baseURL == "" {
+			return nil, errors.New("attempt to use ergomake backend but no LF_ERGOMAKE_URL in env")
+		}
+
+		return layers.NewErgomake(baseURL), nil
 	case "local":
 		blob = storage.NewFileStorage(path.Join(c.getDir(), definitionsFileName))
 	case "s3":
