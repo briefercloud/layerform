@@ -1,4 +1,4 @@
-package model
+package data
 
 import (
 	"crypto/sha1"

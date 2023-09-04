@@ -6,19 +6,19 @@ import (
 	"github.com/hashicorp/go-hclog"
 	"github.com/pkg/errors"
 
-	"github.com/ergomake/layerform/internal/data/model"
 	"github.com/ergomake/layerform/internal/storage"
+	"github.com/ergomake/layerform/pkg/data"
 )
 
 const bloblayersVersion = 0
 
 type fileLikeModel struct {
-	Version uint                    `json:"version"`
-	Layers  map[string]*model.Layer `json:"layers"`
+	Version uint                   `json:"version"`
+	Layers  map[string]*data.Layer `json:"layers"`
 }
 
 type fileLikeBackend struct {
-	model   *fileLikeModel
+	data    *fileLikeModel
 	storage storage.FileLike
 }
 
@@ -33,13 +33,13 @@ func NewFileLikeBackend(ctx context.Context, storage storage.FileLike) (*fileLik
 		return nil, errors.Wrap(err, "fail to read file")
 	}
 
-	return &fileLikeBackend{model: &filelayers, storage: storage}, nil
+	return &fileLikeBackend{data: &filelayers, storage: storage}, nil
 }
 
-func (flb *fileLikeBackend) GetLayer(ctx context.Context, name string) (*model.Layer, error) {
+func (flb *fileLikeBackend) GetLayer(ctx context.Context, name string) (*data.Layer, error) {
 	hclog.FromContext(ctx).Debug("Getting layer", "layer", name)
 
-	layer, ok := flb.model.Layers[name]
+	layer, ok := flb.data.Layers[name]
 	if !ok {
 		return nil, errors.Wrapf(ErrNotFound, "fail to get layer %s", name)
 	}
@@ -47,9 +47,9 @@ func (flb *fileLikeBackend) GetLayer(ctx context.Context, name string) (*model.L
 	return layer, nil
 }
 
-func (flb *fileLikeBackend) ResolveDependencies(ctx context.Context, layer *model.Layer) ([]*model.Layer, error) {
+func (flb *fileLikeBackend) ResolveDependencies(ctx context.Context, layer *data.Layer) ([]*data.Layer, error) {
 	hclog.FromContext(ctx).Debug("Resolving layer dependencies", "layer", layer.Name)
-	layers := make([]*model.Layer, len(layer.Dependencies))
+	layers := make([]*data.Layer, len(layer.Dependencies))
 	for i, d := range layer.Dependencies {
 		depLayer, err := flb.GetLayer(ctx, d)
 		if err != nil {
@@ -67,25 +67,25 @@ func (flb *fileLikeBackend) ResolveDependencies(ctx context.Context, layer *mode
 	return layers, nil
 }
 
-func (flb *fileLikeBackend) ListLayers(ctx context.Context) ([]*model.Layer, error) {
+func (flb *fileLikeBackend) ListLayers(ctx context.Context) ([]*data.Layer, error) {
 	hclog.FromContext(ctx).Debug("Listing layers")
-	layers := make([]*model.Layer, 0)
-	for _, l := range flb.model.Layers {
+	layers := make([]*data.Layer, 0)
+	for _, l := range flb.data.Layers {
 		layers = append(layers, l)
 	}
 
 	return layers, nil
 }
 
-func (flb *fileLikeBackend) UpdateLayers(ctx context.Context, layers []*model.Layer) error {
+func (flb *fileLikeBackend) UpdateLayers(ctx context.Context, layers []*data.Layer) error {
 	hclog.FromContext(ctx).Debug("Updating layers")
 
-	flb.model.Layers = make(map[string]*model.Layer)
+	flb.data.Layers = make(map[string]*data.Layer)
 	for _, l := range layers {
-		flb.model.Layers[l.Name] = l
+		flb.data.Layers[l.Name] = l
 	}
 
-	return flb.storage.Save(ctx, flb.model)
+	return flb.storage.Save(ctx, flb.data)
 }
 
 func (flb *fileLikeBackend) Location(ctx context.Context) (string, error) {

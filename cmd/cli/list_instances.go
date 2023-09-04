@@ -11,9 +11,9 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
-	"github.com/ergomake/layerform/internal/data/model"
 	"github.com/ergomake/layerform/internal/layerstate"
 	"github.com/ergomake/layerform/internal/lfconfig"
+	"github.com/ergomake/layerform/pkg/data"
 )
 
 func init() {
@@ -75,7 +75,7 @@ Prints a table of the most important information about layer instances.`,
 			return
 		}
 
-		layersByName := make(map[string]*model.Layer)
+		layersByName := make(map[string]*data.Layer)
 		for _, l := range layers {
 			layersByName[l.Name] = l
 		}
@@ -107,7 +107,7 @@ Prints a table of the most important information about layer instances.`,
 	},
 }
 
-func computeDepth(layer *model.Layer, layers map[string]*model.Layer, level int) int {
+func computeDepth(layer *data.Layer, layers map[string]*data.Layer, level int) int {
 	depth := level
 	for _, d := range layer.Dependencies {
 		dDepth := computeDepth(layers[d], layers, level+1)
@@ -119,7 +119,7 @@ func computeDepth(layer *model.Layer, layers map[string]*model.Layer, level int)
 	return depth
 }
 
-func sortInstancesByDepth(instances []*layerstate.State, layers map[string]*model.Layer) {
+func sortInstancesByDepth(instances []*layerstate.State, layers map[string]*data.Layer) {
 	sort.SliceStable(instances, func(x, y int) bool {
 		instX := instances[x]
 		layerX := layers[instX.LayerName]

@@ -14,11 +14,11 @@ import (
 	"github.com/hashicorp/terraform-exec/tfexec"
 	"github.com/pkg/errors"
 
-	"github.com/ergomake/layerform/internal/data/model"
 	"github.com/ergomake/layerform/internal/layers"
 	"github.com/ergomake/layerform/internal/layerstate"
 	"github.com/ergomake/layerform/internal/terraform"
 	"github.com/ergomake/layerform/internal/tfclient"
+	"github.com/ergomake/layerform/pkg/data"
 )
 
 type killCommand struct {
@@ -229,7 +229,7 @@ func (c *killCommand) Run(ctx context.Context, layerName, stateName string, vars
 
 func (c *killCommand) getLayerAddresses(
 	ctx context.Context,
-	layer *model.Layer,
+	layer *data.Layer,
 	state *layerstate.State,
 	layerDir, tfpath string,
 ) ([]string, string, error) {
@@ -311,7 +311,7 @@ func computeStateByLayer(
 	ctx context.Context,
 	layersBackend layers.Backend,
 	statesBackend layerstate.Backend,
-	layer *model.Layer,
+	layer *data.Layer,
 	state *layerstate.State,
 ) (map[string]string, error) {
 	stateByLayer := map[string]string{}
