@@ -12,8 +12,8 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
-	"github.com/ergomake/layerform/internal/data/model"
 	"github.com/ergomake/layerform/internal/lfconfig"
+	"github.com/ergomake/layerform/pkg/data"
 )
 
 func init() {
@@ -81,8 +81,8 @@ Prints a table of the most important information about layer definitions.`,
 	},
 }
 
-func sortLayersByDepth(layers []*model.Layer) {
-	byName := make(map[string]*model.Layer)
+func sortLayersByDepth(layers []*data.Layer) {
+	byName := make(map[string]*data.Layer)
 	for _, l := range layers {
 		byName[l.Name] = l
 	}

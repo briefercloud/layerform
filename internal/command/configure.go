@@ -16,12 +16,12 @@ import (
 	"github.com/pkg/errors"
 	"go.uber.org/multierr"
 
-	"github.com/ergomake/layerform/internal/data/model"
 	"github.com/ergomake/layerform/internal/layerfile"
 	"github.com/ergomake/layerform/internal/layers"
 	"github.com/ergomake/layerform/internal/layerstate"
 	"github.com/ergomake/layerform/internal/terraform"
 	"github.com/ergomake/layerform/internal/tfclient"
+	"github.com/ergomake/layerform/pkg/data"
 )
 
 type configureCommand struct {
@@ -96,7 +96,7 @@ func (c *configureCommand) Run(ctx context.Context, fpath string) error {
 	errs := make([]validationErr, len(ls))
 	for i, l := range ls {
 		wg.Add(1)
-		go func(i int, l *model.Layer) {
+		go func(i int, l *data.Layer) {
 			defer wg.Done()
 
 			s := sm.AddSpinner(fmt.Sprintf("Validating layer %s", l.Name))

@@ -8,7 +8,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/ergomake/layerform/internal/data/model"
+	"github.com/ergomake/layerform/pkg/data"
 )
 
 type layerfile struct {
@@ -34,12 +34,12 @@ func FromFile(sourceFilepath string) (*layerfile, error) {
 	return lf, errors.Wrapf(err, "fail to decode %s into layerfile", lf)
 }
 
-func (lf *layerfile) ToLayers() ([]*model.Layer, error) {
+func (lf *layerfile) ToLayers() ([]*data.Layer, error) {
 	dir := path.Dir(lf.sourceFilepath)
 
-	modelLayers := make([]*model.Layer, len(lf.Layers))
+	dataLayers := make([]*data.Layer, len(lf.Layers))
 	for i, l := range lf.Layers {
-		files := []model.LayerFile{}
+		files := []data.LayerFile{}
 		for _, f := range l.Files {
 			matches, err := filepath.Glob(path.Join(dir, f))
 			if err != nil {
@@ -57,26 +57,26 @@ func (lf *layerfile) ToLayers() ([]*model.Layer, error) {
 					return nil, errors.Wrap(err, "fail to extract relative path")
 				}
 
-				files = append(files, model.LayerFile{
+				files = append(files, data.LayerFile{
 					Path:    rel,
 					Content: content,
 				})
 			}
 		}
 
-		layer := &model.Layer{
+		layer := &data.Layer{
 			Name:         l.Name,
 			Files:        files,
 			Dependencies: l.Dependencies,
 		}
-		sha, err := model.LayerSHA(layer)
+		sha, err := data.LayerSHA(layer)
 		if err != nil {
 			return nil, errors.Wrapf(err, "fail to compute sha1 of layer %s", l.Name)
 		}
 		layer.SHA = sha
 
-		modelLayers[i] = layer
+		dataLayers[i] = layer
 	}
 
-	return modelLayers, nil
+	return dataLayers, nil
 }

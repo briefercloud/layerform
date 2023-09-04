@@ -11,25 +11,25 @@ import (
 	tfjson "github.com/hashicorp/terraform-json"
 	"github.com/pkg/errors"
 
-	"github.com/ergomake/layerform/internal/data/model"
 	"github.com/ergomake/layerform/internal/layers"
 	"github.com/ergomake/layerform/internal/pathutils"
 	"github.com/ergomake/layerform/internal/tags"
 	"github.com/ergomake/layerform/internal/tfclient"
+	"github.com/ergomake/layerform/pkg/data"
 )
 
 func writeLayerToWorkdir(
 	ctx context.Context,
 	layersBackend layers.Backend,
 	layerWorkdir string,
-	layer *model.Layer,
+	layer *data.Layer,
 	stateByLayer map[string]string,
 ) (string, error) {
 	logger := hclog.FromContext(ctx).With("layer", layer.Name, "layerWorkdir", layerWorkdir)
 	logger.Debug("Writting layer to workdir")
 
-	var inner func(*model.Layer) ([]string, error)
-	inner = func(layer *model.Layer) ([]string, error) {
+	var inner func(*data.Layer) ([]string, error)
+	inner = func(layer *data.Layer) ([]string, error) {
 		fpaths := make([]string, 0)
 		for _, dep := range layer.Dependencies {
 			logger.Debug("Writting dependency to workdir", "dependency", dep)
