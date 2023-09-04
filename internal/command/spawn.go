@@ -318,17 +318,21 @@ func (c *spawnCommand) spawnLayer(
 					return "", errors.Wrap(err, "fail to read next state")
 				}
 
-				state = &layerstate.State{
-					LayerSHA:          layer.SHA,
-					LayerName:         layerName,
-					StateName:         stateName,
-					DependenciesState: thisLayerDepStates,
-					Bytes:             nextStateBytes,
-					Status:            layerstate.InstanceStatusFaulty,
-				}
-				err = c.statesBackend.SaveState(ctx, state)
-				if err != nil {
-					return "", errors.Wrap(err, "fail to save state of failed instance")
+				// if this spawn attempt generated state, we should save it as faulty
+				// so user can fix it
+				if len(nextStateBytes) > 0 {
+					state = &layerstate.State{
+						LayerSHA:          layer.SHA,
+						LayerName:         layerName,
+						StateName:         stateName,
+						DependenciesState: thisLayerDepStates,
+						Bytes:             nextStateBytes,
+						Status:            layerstate.InstanceStatusFaulty,
+					}
+					err = c.statesBackend.SaveState(ctx, state)
+					if err != nil {
+						return "", errors.Wrap(err, "fail to save state of failed instance")
+					}
 				}
 
 				s.Error()
