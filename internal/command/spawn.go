@@ -312,6 +312,8 @@ func (c *spawnCommand) spawnLayer(
 			logger.Debug("Running terraform apply")
 			err = tf.Apply(ctx, applyOptions...)
 			if err != nil {
+				s.Error()
+
 				originalErr := err
 
 				nextStateBytes, err = os.ReadFile(statePath)
@@ -329,6 +331,7 @@ func (c *spawnCommand) spawnLayer(
 						DependenciesInstance: thisLayerDepInstances,
 						Bytes:                nextStateBytes,
 						Status:               data.LayerInstanceStatusFaulty,
+						Version:              data.CURRENT_INSTANCE_VERSION,
 					}
 					err = c.instancesBackend.SaveInstance(ctx, instance)
 					if err != nil {
@@ -336,7 +339,6 @@ func (c *spawnCommand) spawnLayer(
 					}
 				}
 
-				s.Error()
 				return "", errors.Wrap(originalErr, "fail to terraform apply")
 			}
 
@@ -346,10 +348,8 @@ func (c *spawnCommand) spawnLayer(
 				return "", errors.Wrap(err, "fail to read next state")
 			}
 
-			s.Complete()
 		} else {
 			nextStateBytes = instance.Bytes
-			s.Complete()
 		}
 
 		instance = &data.LayerInstance{
@@ -359,12 +359,15 @@ func (c *spawnCommand) spawnLayer(
 			DependenciesInstance: thisLayerDepInstances,
 			Bytes:                nextStateBytes,
 			Status:               data.LayerInstanceStatusAlive,
+			Version:              data.CURRENT_INSTANCE_VERSION,
 		}
 		err = c.instancesBackend.SaveInstance(ctx, instance)
 		if err != nil {
+			s.Error()
 			return "", errors.Wrap(err, "fail to save instance")
 		}
 
+		s.Complete()
 		visited[layerName] = statePath
 		return visited[layerName], nil
 	}
