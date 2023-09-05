@@ -62,7 +62,17 @@ func (i *LayerInstance) UnmarshalJSON(b []byte) error {
 	}
 
 	if v.Version == CURRENT_INSTANCE_VERSION {
-		return json.Unmarshal(b, i)
+		// need a type alias to avoid infinite recursion
+		type alias LayerInstance
+		var tmp alias
+
+		err := json.Unmarshal(b, &tmp)
+		if err != nil {
+			return err
+		}
+
+		*i = LayerInstance(tmp)
+		return nil
 	}
 
 	if v.Version > CURRENT_INSTANCE_VERSION {
@@ -76,12 +86,7 @@ func (i *LayerInstance) UnmarshalJSON(b []byte) error {
 			return err
 		}
 
-		i.DefinitionSHA = v0.LayerSHA
-		i.DefinitionName = v0.LayerName
-		i.InstanceName = v0.StateName
-		i.DependenciesInstance = v0.DependenciesState
-		i.Bytes = v0.Bytes
-		i.Status = v0.Status
+		*i = *v0.ToLayerInstance()
 		return nil
 	}
 

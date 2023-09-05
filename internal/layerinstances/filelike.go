@@ -36,7 +36,17 @@ func (f *fileLikeModel) UnmarshalJSON(b []byte) error {
 	}
 
 	if v.Version == CURRENT_FILE_LIKE_MODEL_VERSION {
-		return json.Unmarshal(b, f)
+		// need a type alias to avoid infinite recursion
+		type alias fileLikeModel
+		var tmp alias
+
+		err := json.Unmarshal(b, &tmp)
+		if err != nil {
+			return err
+		}
+
+		*f = fileLikeModel(tmp)
+		return nil
 	}
 
 	if v.Version > CURRENT_FILE_LIKE_MODEL_VERSION {

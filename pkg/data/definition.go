@@ -6,10 +6,10 @@ import (
 )
 
 type LayerDefinition struct {
-	SHA          []byte           `json:"sha"`
-	Name         string           `json:"name"`
+	SHA          []byte                `json:"sha"`
+	Name         string                `json:"name"`
 	Files        []LayerDefinitionFile `json:"files"`
-	Dependencies []string         `json:"dependencies"`
+	Dependencies []string              `json:"dependencies"`
 }
 
 type LayerDefinitionFile struct {
