@@ -65,6 +65,7 @@ var outputCmd = &cobra.Command{
 			return
 		}
 
+		err = output.Run(ctx, layerName, stateName, template)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "%s\n", output.Run(ctx, layerName, stateName, template))
 			os.Exit(1)
