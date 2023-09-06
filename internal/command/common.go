@@ -11,30 +11,30 @@ import (
 	tfjson "github.com/hashicorp/terraform-json"
 	"github.com/pkg/errors"
 
-	"github.com/ergomake/layerform/internal/data/model"
-	"github.com/ergomake/layerform/internal/layers"
+	"github.com/ergomake/layerform/internal/layerdefinitions"
 	"github.com/ergomake/layerform/internal/pathutils"
 	"github.com/ergomake/layerform/internal/tags"
 	"github.com/ergomake/layerform/internal/tfclient"
+	"github.com/ergomake/layerform/pkg/data"
 )
 
 func writeLayerToWorkdir(
 	ctx context.Context,
-	layersBackend layers.Backend,
+	definitionsBackend layerdefinitions.Backend,
 	layerWorkdir string,
-	layer *model.Layer,
-	stateByLayer map[string]string,
+	layer *data.LayerDefinition,
+	instanceByLayer map[string]string,
 ) (string, error) {
 	logger := hclog.FromContext(ctx).With("layer", layer.Name, "layerWorkdir", layerWorkdir)
 	logger.Debug("Writting layer to workdir")
 
-	var inner func(*model.Layer) ([]string, error)
-	inner = func(layer *model.Layer) ([]string, error) {
+	var inner func(*data.LayerDefinition) ([]string, error)
+	inner = func(layer *data.LayerDefinition) ([]string, error) {
 		fpaths := make([]string, 0)
 		for _, dep := range layer.Dependencies {
 			logger.Debug("Writting dependency to workdir", "dependency", dep)
 
-			layer, err := layersBackend.GetLayer(ctx, dep)
+			layer, err := definitionsBackend.GetLayer(ctx, dep)
 			if err != nil {
 				return nil, errors.Wrap(err, "fail to get layer")
 			}
@@ -47,7 +47,7 @@ func writeLayerToWorkdir(
 			fpaths = append(fpaths, depPaths...)
 		}
 
-		stateName := stateByLayer[layer.Name]
+		instanceName := instanceByLayer[layer.Name]
 
 		for _, f := range layer.Files {
 			fpaths = append(fpaths, f.Path)
@@ -67,7 +67,7 @@ func writeLayerToWorkdir(
 				fpath,
 				map[string]string{
 					"layerform_layer_name":     layer.Name,
-					"layerform_layer_instance": stateName,
+					"layerform_layer_instance": instanceName,
 				},
 			)
 			if err != nil {

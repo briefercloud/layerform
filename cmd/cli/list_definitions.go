@@ -12,8 +12,8 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
-	"github.com/ergomake/layerform/internal/data/model"
 	"github.com/ergomake/layerform/internal/lfconfig"
+	"github.com/ergomake/layerform/pkg/data"
 )
 
 func init() {
@@ -42,7 +42,7 @@ Prints a table of the most important information about layer definitions.`,
 			return
 		}
 
-		layersBackend, err := cfg.GetLayersBackend(ctx)
+		layersBackend, err := cfg.GetDefinitionsBackend(ctx)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "%s\n", errors.Wrap(err, "fail to get layers backend"))
 			os.Exit(1)
@@ -81,8 +81,8 @@ Prints a table of the most important information about layer definitions.`,
 	},
 }
 
-func sortLayersByDepth(layers []*model.Layer) {
-	byName := make(map[string]*model.Layer)
+func sortLayersByDepth(layers []*data.LayerDefinition) {
+	byName := make(map[string]*data.LayerDefinition)
 	for _, l := range layers {
 		byName[l.Name] = l
 	}

@@ -16,21 +16,21 @@ import (
 	"github.com/pkg/errors"
 	"go.uber.org/multierr"
 
-	"github.com/ergomake/layerform/internal/data/model"
+	"github.com/ergomake/layerform/internal/layerdefinitions"
 	"github.com/ergomake/layerform/internal/layerfile"
-	"github.com/ergomake/layerform/internal/layers"
-	"github.com/ergomake/layerform/internal/layerstate"
+	"github.com/ergomake/layerform/internal/layerinstances"
 	"github.com/ergomake/layerform/internal/terraform"
 	"github.com/ergomake/layerform/internal/tfclient"
+	"github.com/ergomake/layerform/pkg/data"
 )
 
 type configureCommand struct {
-	layersBackend layers.Backend
-	statesBackend layerstate.Backend
+	definitionssBackend layerdefinitions.Backend
+	instancesBackend    layerinstances.Backend
 }
 
-func NewConfigure(layersBackend layers.Backend, statesBackend layerstate.Backend) *configureCommand {
-	return &configureCommand{layersBackend, statesBackend}
+func NewConfigure(definitionsBackend layerdefinitions.Backend, instancesBackend layerinstances.Backend) *configureCommand {
+	return &configureCommand{definitionsBackend, instancesBackend}
 }
 
 func (c *configureCommand) Run(ctx context.Context, fpath string) error {
@@ -87,7 +87,7 @@ func (c *configureCommand) Run(ctx context.Context, fpath string) error {
 	}
 	defer os.RemoveAll(workdir)
 
-	inMemoryLayersBackend := layers.NewInMemoryBackend(ls)
+	inMemoryDefinitionsBackend := layerdefinitions.NewInMemoryBackend(ls)
 	var wg sync.WaitGroup
 	type validationErr struct {
 		err         error
@@ -96,14 +96,14 @@ func (c *configureCommand) Run(ctx context.Context, fpath string) error {
 	errs := make([]validationErr, len(ls))
 	for i, l := range ls {
 		wg.Add(1)
-		go func(i int, l *model.Layer) {
+		go func(i int, l *data.LayerDefinition) {
 			defer wg.Done()
 
 			s := sm.AddSpinner(fmt.Sprintf("Validating layer %s", l.Name))
 
 			layerWorkdir := path.Join(workdir, l.Name)
 
-			tfWorkdir, err := writeLayerToWorkdir(ctx, inMemoryLayersBackend, layerWorkdir, l, map[string]string{})
+			tfWorkdir, err := writeLayerToWorkdir(ctx, inMemoryDefinitionsBackend, layerWorkdir, l, map[string]string{})
 			if err != nil {
 				s.Error()
 				errs[i] = validationErr{
@@ -183,14 +183,14 @@ func (c *configureCommand) Run(ctx context.Context, fpath string) error {
 
 	savingSpinner := sm.AddSpinner("Saving layer definitions")
 
-	location, err := c.layersBackend.Location(ctx)
+	location, err := c.definitionssBackend.Location(ctx)
 	if err != nil {
 		savingSpinner.Error()
 		sm.Stop()
 		return errors.Wrap(err, "fail to get layers backend location")
 	}
 
-	err = c.layersBackend.UpdateLayers(ctx, ls)
+	err = c.definitionssBackend.UpdateLayers(ctx, ls)
 	if err != nil {
 		savingSpinner.Error()
 		sm.Stop()

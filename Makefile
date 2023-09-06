@@ -4,7 +4,7 @@ mocks:
 
 .PHONY: fmt
 fmt:
-	goimports -local=github.com/ergomake/layerform -w cmd internal
+	goimports -local=github.com/ergomake/layerform -w cmd internal pkg
 
 .PHONY: lint
 lint:
@@ -15,7 +15,7 @@ lint:
 tidy:
 	go mod tidy
 
-TESTS = ./internal/...
+TESTS = ./internal/... ./pkg/...
 .PHONY: test
 test:
 	go test -v -race $(TESTS)

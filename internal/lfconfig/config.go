@@ -8,8 +8,8 @@ import (
 	"github.com/pkg/errors"
 	"gopkg.in/yaml.v3"
 
-	"github.com/ergomake/layerform/internal/layers"
-	"github.com/ergomake/layerform/internal/layerstate"
+	"github.com/ergomake/layerform/internal/layerdefinitions"
+	"github.com/ergomake/layerform/internal/layerinstances"
 	"github.com/ergomake/layerform/internal/storage"
 )
 
@@ -106,12 +106,20 @@ func (c *config) getDir() string {
 
 const stateFileName = "layerform.lfstate"
 
-func (c *config) GetStateBackend(ctx context.Context) (layerstate.Backend, error) {
+func (c *config) GetInstancesBackend(ctx context.Context) (layerinstances.Backend, error) {
 	current := c.getCurrent()
 	var blob storage.FileLike
 	switch current.Type {
 	case "local":
 		blob = storage.NewFileStorage(path.Join(c.getDir(), stateFileName))
+	case "ergomake":
+		// TODO: hardcode production ergomake url here
+		baseURL := os.Getenv("LF_ERGOMAKE_URL")
+		if baseURL == "" {
+			return nil, errors.New("attempt to use ergomake backend but no LF_ERGOMAKE_URL in env")
+		}
+
+		return layerinstances.NewErgomake(baseURL), nil
 	case "s3":
 		b, err := storage.NewS3Backend(current.Bucket, stateFileName, current.Region)
 		if err != nil {
@@ -120,15 +128,23 @@ func (c *config) GetStateBackend(ctx context.Context) (layerstate.Backend, error
 		blob = b
 	}
 
-	return layerstate.NewFileLikeBackend(ctx, blob)
+	return layerinstances.NewFileLikeBackend(ctx, blob)
 }
 
 const definitionsFileName = "layerform.definitions.json"
 
-func (c *config) GetLayersBackend(ctx context.Context) (layers.Backend, error) {
+func (c *config) GetDefinitionsBackend(ctx context.Context) (layerdefinitions.Backend, error) {
 	current := c.getCurrent()
 	var blob storage.FileLike
 	switch current.Type {
+	case "ergomake":
+		// TODO: hardcode production ergomake url here
+		baseURL := os.Getenv("LF_ERGOMAKE_URL")
+		if baseURL == "" {
+			return nil, errors.New("attempt to use ergomake backend but no LF_ERGOMAKE_URL in env")
+		}
+
+		return layerdefinitions.NewErgomake(baseURL), nil
 	case "local":
 		blob = storage.NewFileStorage(path.Join(c.getDir(), definitionsFileName))
 	case "s3":
@@ -139,5 +155,5 @@ func (c *config) GetLayersBackend(ctx context.Context) (layers.Backend, error) {
 		blob = b
 	}
 
-	return layers.NewFileLikeBackend(ctx, blob)
+	return layerdefinitions.NewFileLikeBackend(ctx, blob)
 }
