@@ -1,0 +1,18 @@
+{
+  "layers": [
+    {
+      "name": "foo",
+      "files": ["foo.tf"]
+    },
+    {
+      "name"  : "bar",
+      "files": ["bar.tf"],
+      "dependencies": ["foo"]
+    },
+    {
+      "name"  : "baz",
+      "files": ["baz.tf"],
+      "dependencies": ["foo"]
+    }
+  ]
+}
