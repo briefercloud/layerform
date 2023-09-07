@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"os"
+	"path/filepath"
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/pkg/errors"
@@ -42,6 +43,10 @@ func (fls *fileStorage) Load(ctx context.Context, v any) error {
 
 func (fls *fileStorage) Save(ctx context.Context, v any) error {
 	hclog.FromContext(ctx).Debug("Writting layers to file", "path", fls.fpath)
+
+	if err := os.MkdirAll(filepath.Dir(fls.fpath), 0755); err != nil {
+		return errors.Wrap(err, "fail to create directory")
+	}
 
 	data, err := json.Marshal(v)
 	if err != nil {
