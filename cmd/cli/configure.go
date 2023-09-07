@@ -10,8 +10,8 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/ergomake/layerform/internal/command"
 	"github.com/ergomake/layerform/internal/lfconfig"
+	"github.com/ergomake/layerform/pkg/command"
 )
 
 func init() {

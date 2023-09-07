@@ -13,10 +13,10 @@ import (
 
 	"github.com/cbroglie/mustache"
 
-	"github.com/ergomake/layerform/internal/layerdefinitions"
-	"github.com/ergomake/layerform/internal/layerinstances"
 	"github.com/ergomake/layerform/internal/terraform"
 	"github.com/ergomake/layerform/internal/tfclient"
+	"github.com/ergomake/layerform/pkg/layerdefinitions"
+	"github.com/ergomake/layerform/pkg/layerinstances"
 )
 
 type outputCommand struct {
@@ -74,7 +74,7 @@ func (c *outputCommand) Run(ctx context.Context, layerName, instanceName, templa
 		return errors.Wrap(err, "fail to compute instance by layer instance")
 	}
 
-	layerWorkdir, err := writeLayerToWorkdir(ctx, c.definitionsBackend, layerDir, layer, instanceByLayer)
+	layerWorkdir, err := WriteLayerToWorkdir(ctx, c.definitionsBackend, layerDir, layer, instanceByLayer)
 	if err != nil {
 		return errors.Wrap(err, "fail to write layer to work directory")
 	}

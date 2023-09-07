@@ -16,12 +16,12 @@ import (
 	"github.com/pkg/errors"
 	"go.uber.org/multierr"
 
-	"github.com/ergomake/layerform/internal/layerdefinitions"
 	"github.com/ergomake/layerform/internal/layerfile"
-	"github.com/ergomake/layerform/internal/layerinstances"
 	"github.com/ergomake/layerform/internal/terraform"
 	"github.com/ergomake/layerform/internal/tfclient"
 	"github.com/ergomake/layerform/pkg/data"
+	"github.com/ergomake/layerform/pkg/layerdefinitions"
+	"github.com/ergomake/layerform/pkg/layerinstances"
 )
 
 type configureCommand struct {
@@ -103,7 +103,7 @@ func (c *configureCommand) Run(ctx context.Context, fpath string) error {
 
 			layerWorkdir := path.Join(workdir, l.Name)
 
-			tfWorkdir, err := writeLayerToWorkdir(ctx, inMemoryDefinitionsBackend, layerWorkdir, l, map[string]string{})
+			tfWorkdir, err := WriteLayerToWorkdir(ctx, inMemoryDefinitionsBackend, layerWorkdir, l, map[string]string{})
 			if err != nil {
 				s.Error()
 				errs[i] = validationErr{

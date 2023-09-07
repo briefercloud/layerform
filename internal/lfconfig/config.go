@@ -8,9 +8,10 @@ import (
 	"github.com/pkg/errors"
 	"gopkg.in/yaml.v3"
 
-	"github.com/ergomake/layerform/internal/layerdefinitions"
-	"github.com/ergomake/layerform/internal/layerinstances"
 	"github.com/ergomake/layerform/internal/storage"
+	"github.com/ergomake/layerform/pkg/command/spawn"
+	"github.com/ergomake/layerform/pkg/layerdefinitions"
+	"github.com/ergomake/layerform/pkg/layerinstances"
 )
 
 type configFile struct {
@@ -156,4 +157,34 @@ func (c *config) GetDefinitionsBackend(ctx context.Context) (layerdefinitions.Ba
 	}
 
 	return layerdefinitions.NewFileLikeBackend(ctx, blob)
+}
+
+func (c *config) GetSpawnCommand(ctx context.Context) (spawn.Spawn, error) {
+	t := c.getCurrent().Type
+
+	switch t {
+	case "ergomake":
+		// TODO: hardcode production ergomake url here
+		baseURL := os.Getenv("LF_ERGOMAKE_URL")
+		if baseURL == "" {
+			return nil, errors.New("attempt to use ergomake backend but no LF_ERGOMAKE_URL in env")
+		}
+
+		return spawn.NewErgomake(baseURL), nil
+	case "s3":
+	case "local":
+		layersBackend, err := c.GetDefinitionsBackend(ctx)
+		if err != nil {
+			return nil, errors.Wrap(err, "fail to get layers backend")
+		}
+
+		instancesBackend, err := c.GetInstancesBackend(ctx)
+		if err != nil {
+			return nil, errors.Wrap(err, "fail to get instance backend")
+		}
+
+		return spawn.NewLocal(layersBackend, instancesBackend), nil
+	}
+
+	return nil, errors.Errorf("fail to get spawn command unexpected context type %s", t)
 }

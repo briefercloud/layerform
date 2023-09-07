@@ -1,4 +1,4 @@
-package command
+package spawn
 
 import (
 	"bytes"
@@ -16,23 +16,26 @@ import (
 	tfjson "github.com/hashicorp/terraform-json"
 	"github.com/pkg/errors"
 
-	"github.com/ergomake/layerform/internal/layerdefinitions"
-	"github.com/ergomake/layerform/internal/layerinstances"
 	"github.com/ergomake/layerform/internal/terraform"
 	"github.com/ergomake/layerform/internal/tfclient"
+	"github.com/ergomake/layerform/pkg/command"
 	"github.com/ergomake/layerform/pkg/data"
+	"github.com/ergomake/layerform/pkg/layerdefinitions"
+	"github.com/ergomake/layerform/pkg/layerinstances"
 )
 
-type spawnCommand struct {
+type localSpawnCommand struct {
 	definitionsBackend layerdefinitions.Backend
 	instancesBackend   layerinstances.Backend
 }
 
-func NewSpawn(definitionsBackend layerdefinitions.Backend, instancesBackend layerinstances.Backend) *spawnCommand {
-	return &spawnCommand{definitionsBackend, instancesBackend}
+var _ Spawn = &localSpawnCommand{}
+
+func NewLocal(definitionsBackend layerdefinitions.Backend, instancesBackend layerinstances.Backend) *localSpawnCommand {
+	return &localSpawnCommand{definitionsBackend, instancesBackend}
 }
 
-func (c *spawnCommand) Run(
+func (c *localSpawnCommand) Run(
 	ctx context.Context,
 	layerName, instanceName string,
 	dependenciesInstance map[string]string,
@@ -70,14 +73,14 @@ func (c *spawnCommand) Run(
 }
 
 func getStateDiff(a *tfjson.State, b *tfjson.State) []string {
-	aAddrs := getStateModuleAddresses(a.Values.RootModule)
+	aAddrs := command.GetStateModuleAddresses(a.Values.RootModule)
 	resourceMap := make(map[string]struct{})
 	for _, addr := range aAddrs {
 		resourceMap[addr] = struct{}{}
 	}
 
 	diff := make([]string, 0)
-	for _, addr := range getStateModuleAddresses(b.Values.RootModule) {
+	for _, addr := range command.GetStateModuleAddresses(b.Values.RootModule) {
 		if _, found := resourceMap[addr]; !found {
 			diff = append(diff, addr)
 		}
@@ -95,14 +98,14 @@ func mergeTFState(ctx context.Context, tfpath, basePath, dest string, states ...
 		return errors.Wrap(err, "fail to copy file")
 	}
 
-	aState, err := getTFState(ctx, basePath, tfpath)
+	aState, err := command.GetTFState(ctx, basePath, tfpath)
 	if err != nil {
 		return errors.Wrap(err, "fail to get base tf state")
 	}
 
 	addedAddress := make(map[string]struct{})
 	for _, bPath := range states {
-		bState, err := getTFState(ctx, bPath, tfpath)
+		bState, err := command.GetTFState(ctx, bPath, tfpath)
 		if err != nil {
 			return errors.Wrap(err, "fail to get tf state")
 		}
@@ -144,7 +147,7 @@ func copyFile(src, dst string) error {
 	return nil
 }
 
-func (c *spawnCommand) spawnLayer(
+func (c *localSpawnCommand) spawnLayer(
 	ctx context.Context,
 	layerName, instanceName, workdir, tfpath string,
 	dependenciesInstance map[string]string,
@@ -195,7 +198,7 @@ func (c *spawnCommand) spawnLayer(
 
 		s := sm.AddSpinner(fmt.Sprintf("Preparing instance \"%s\" of layer \"%s\"", instanceName, layerName))
 
-		layerWorkdir, err = writeLayerToWorkdir(ctx, c.definitionsBackend, layerWorkdir, layer, instanceByLayer)
+		layerWorkdir, err = command.WriteLayerToWorkdir(ctx, c.definitionsBackend, layerWorkdir, layer, instanceByLayer)
 		if err != nil {
 			return "", errors.Wrap(err, "fail to write layer to workdir")
 		}
@@ -287,7 +290,7 @@ func (c *spawnCommand) spawnLayer(
 		s.Complete()
 
 		logger.Debug("Looking for variable definitions in .tfvars files")
-		varFiles, err := findTFVarFiles()
+		varFiles, err := command.FindTFVarFiles()
 		if err != nil {
 			return "", errors.Wrap(err, "fail to find .tfvars files")
 		}
