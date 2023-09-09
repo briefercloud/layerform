@@ -1,5 +1,5 @@
 locals {
-  dir = pathexpand("~/.layerform/examples/local/foo-${random_string.foo_suffix.result}/.keep")
+  dir = pathexpand("~/.layerform/examples/local/foo-${random_string.foo_suffix.result}")
 }
 
 resource "local_file" "foo" {
