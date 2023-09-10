@@ -4,14 +4,13 @@ import (
 	"context"
 	"fmt"
 	"os"
-
-	"github.com/hashicorp/go-hclog"
-	"github.com/lithammer/shortuuid/v3"
-	"github.com/spf13/cobra"
-
-	"github.com/pkg/errors"
+	"regexp"
 
 	"github.com/ergomake/layerform/internal/lfconfig"
+	"github.com/hashicorp/go-hclog"
+	"github.com/lithammer/shortuuid/v3"
+	"github.com/pkg/errors"
+	"github.com/spf13/cobra"
 )
 
 func init() {
@@ -19,6 +18,8 @@ func init() {
 	spawnCmd.Flags().StringArray("var", []string{}, "a map of variables for the layer's Terraform files. I.e. 'foo=bar,baz=qux'")
 	rootCmd.AddCommand(spawnCmd)
 }
+
+var alphanumericRegex = regexp.MustCompile("^[A-Za-z0-9][A-Za-z0-9_-]*[A-Za-z0-9]$")
 
 var spawnCmd = &cobra.Command{
 	Use:   "spawn <layer> [desired_id]",
@@ -69,6 +70,12 @@ If an instance with the same ID already exists for the layer definition, Layerfo
 		instanceName := shortuuid.New()
 		if len(args) > 1 {
 			instanceName = args[1]
+		}
+
+		if !alphanumericRegex.MatchString(instanceName) {
+			fmt.Fprintf(os.Stderr, "Invalid name: %s\n", instanceName)
+			fmt.Fprintln(os.Stderr, "Name must must start and end with an alphanumeric character and can include dashes and underscores in between.")
+			os.Exit(1)
 		}
 
 		err = spawn.Run(ctx, layerName, instanceName, dependenciesInstance, vars)
