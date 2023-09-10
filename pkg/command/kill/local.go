@@ -194,7 +194,7 @@ func (c *localKillCommand) Run(
 		fmt.Print("Are you sure? This can't be undone. [yes/no]: ")
 		_, err = fmt.Scan(&answer)
 		if err != nil {
-			return errors.Wrap(err, "fail to read asnwer")
+			return errors.Wrap(err, "fail to read answer")
 		}
 
 		if strings.ToLower(strings.TrimSpace(answer)) != "yes" {
