@@ -14,11 +14,11 @@ import (
 	"github.com/hashicorp/terraform-exec/tfexec"
 	"github.com/pkg/errors"
 
-	"github.com/ergomake/layerform/internal/layerdefinitions"
-	"github.com/ergomake/layerform/internal/layerinstances"
 	"github.com/ergomake/layerform/internal/terraform"
 	"github.com/ergomake/layerform/internal/tfclient"
 	"github.com/ergomake/layerform/pkg/data"
+	"github.com/ergomake/layerform/pkg/layerdefinitions"
+	"github.com/ergomake/layerform/pkg/layerinstances"
 )
 
 type killCommand struct {
@@ -154,7 +154,7 @@ func (c *killCommand) Run(ctx context.Context, layerName, instanceName string, v
 	}
 
 	logger.Debug("Looking for variable definitions in .tfvars files")
-	varFiles, err := findTFVarFiles()
+	varFiles, err := FindTFVarFiles()
 	if err != nil {
 
 		s.Error()
@@ -241,7 +241,7 @@ func (c *killCommand) getLayerAddresses(
 		return nil, "", errors.Wrap(err, "fail to compute instance by layer instance")
 	}
 
-	layerWorkdir, err := writeLayerToWorkdir(ctx, c.layersBackend, layerDir, layer, instanceByLayer)
+	layerWorkdir, err := WriteLayerToWorkdir(ctx, c.layersBackend, layerDir, layer, instanceByLayer)
 	if err != nil {
 		return nil, "", errors.Wrap(err, "fail to write layer to work directory")
 	}
@@ -262,12 +262,12 @@ func (c *killCommand) getLayerAddresses(
 		return nil, "", errors.Wrap(err, "fail to terraform init")
 	}
 
-	tfState, err := getTFState(ctx, statePath, tfpath)
+	tfState, err := GetTFState(ctx, statePath, tfpath)
 	if err != nil {
 		return nil, "", errors.Wrap(err, "fail to get terraform state")
 	}
 
-	addresses := getStateModuleAddresses(tfState.Values.RootModule)
+	addresses := GetStateModuleAddresses(tfState.Values.RootModule)
 
 	return addresses, layerWorkdir, nil
 }

@@ -11,7 +11,6 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/ergomake/layerform/internal/command"
 	"github.com/ergomake/layerform/internal/lfconfig"
 )
 
@@ -60,18 +59,10 @@ If an instance with the same ID already exists for the layer definition, Layerfo
 			return
 		}
 
-		layersBackend, err := cfg.GetDefinitionsBackend(ctx)
+		spawn, err := cfg.GetSpawnCommand(ctx)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "%s\n", errors.Wrap(err, "fail to get layers backend"))
+			fmt.Fprintf(os.Stderr, "%s\n", errors.Wrap(err, "fail to get spawn command"))
 			os.Exit(1)
-			return
-		}
-
-		instancesBackend, err := cfg.GetInstancesBackend(ctx)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "%s\n", errors.Wrap(err, "fail to get instance backend"))
-			os.Exit(1)
-			return
 		}
 
 		layerName := args[0]
@@ -79,8 +70,6 @@ If an instance with the same ID already exists for the layer definition, Layerfo
 		if len(args) > 1 {
 			instanceName = args[1]
 		}
-
-		spawn := command.NewSpawn(layersBackend, instancesBackend)
 
 		err = spawn.Run(ctx, layerName, instanceName, dependenciesInstance, vars)
 		if err != nil {

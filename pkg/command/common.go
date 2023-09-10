@@ -11,14 +11,14 @@ import (
 	tfjson "github.com/hashicorp/terraform-json"
 	"github.com/pkg/errors"
 
-	"github.com/ergomake/layerform/internal/layerdefinitions"
 	"github.com/ergomake/layerform/internal/pathutils"
 	"github.com/ergomake/layerform/internal/tags"
 	"github.com/ergomake/layerform/internal/tfclient"
 	"github.com/ergomake/layerform/pkg/data"
+	"github.com/ergomake/layerform/pkg/layerdefinitions"
 )
 
-func writeLayerToWorkdir(
+func WriteLayerToWorkdir(
 	ctx context.Context,
 	definitionsBackend layerdefinitions.Backend,
 	layerWorkdir string,
@@ -86,7 +86,7 @@ func writeLayerToWorkdir(
 	return path.Join(layerWorkdir, pathutils.FindCommonParentPath(paths)), nil
 }
 
-func getTFState(ctx context.Context, statePath string, tfpath string) (*tfjson.State, error) {
+func GetTFState(ctx context.Context, statePath string, tfpath string) (*tfjson.State, error) {
 	hclog.FromContext(ctx).Debug("Getting terraform state", "path", statePath)
 	dir := filepath.Dir(statePath)
 	tf, err := tfclient.New(dir, tfpath)
@@ -97,20 +97,20 @@ func getTFState(ctx context.Context, statePath string, tfpath string) (*tfjson.S
 	return tf.ShowStateFile(ctx, statePath)
 }
 
-func getStateModuleAddresses(module *tfjson.StateModule) []string {
+func GetStateModuleAddresses(module *tfjson.StateModule) []string {
 	addresses := make([]string, 0)
 	for _, res := range module.Resources {
 		addresses = append(addresses, res.Address)
 	}
 
 	for _, child := range module.ChildModules {
-		addresses = append(addresses, getStateModuleAddresses(child)...)
+		addresses = append(addresses, GetStateModuleAddresses(child)...)
 	}
 
 	return addresses
 }
 
-func findTFVarFiles() ([]string, error) {
+func FindTFVarFiles() ([]string, error) {
 	var matchingFiles []string
 
 	cwd, err := os.Getwd()

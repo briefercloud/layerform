@@ -9,8 +9,9 @@ import (
 type LayerInstanceStatus string
 
 const (
-	LayerInstanceStatusAlive  LayerInstanceStatus = LayerInstanceStatus("alive")
-	LayerInstanceStatusFaulty LayerInstanceStatus = LayerInstanceStatus("faulty")
+	LayerInstanceStatusSpawning LayerInstanceStatus = LayerInstanceStatus("spawning")
+	LayerInstanceStatusAlive    LayerInstanceStatus = LayerInstanceStatus("alive")
+	LayerInstanceStatusFaulty   LayerInstanceStatus = LayerInstanceStatus("faulty")
 )
 
 const DEFAULT_LAYER_INSTANCE_NAME = "default"
