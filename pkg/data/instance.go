@@ -12,6 +12,7 @@ const (
 	LayerInstanceStatusSpawning LayerInstanceStatus = LayerInstanceStatus("spawning")
 	LayerInstanceStatusAlive    LayerInstanceStatus = LayerInstanceStatus("alive")
 	LayerInstanceStatusFaulty   LayerInstanceStatus = LayerInstanceStatus("faulty")
+	LayerInstanceStatusKilling  LayerInstanceStatus = LayerInstanceStatus("killing")
 )
 
 const DEFAULT_LAYER_INSTANCE_NAME = "default"

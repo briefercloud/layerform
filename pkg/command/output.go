@@ -69,7 +69,7 @@ func (c *outputCommand) Run(ctx context.Context, layerName, instanceName, templa
 
 	layerDir := path.Join(workdir, layerName)
 
-	instanceByLayer, err := computeInstanceByLayer(ctx, c.definitionsBackend, c.instancesBackend, layer, instance)
+	instanceByLayer, err := ComputeInstanceByLayer(ctx, c.definitionsBackend, c.instancesBackend, layer, instance)
 	if err != nil {
 		return errors.Wrap(err, "fail to compute instance by layer instance")
 	}

@@ -11,7 +11,6 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/ergomake/layerform/internal/lfconfig"
-	"github.com/ergomake/layerform/pkg/command"
 )
 
 func init() {
@@ -49,27 +48,16 @@ Please notice that the kill command cannot destroy a layer instance which has de
 			os.Exit(1)
 			return
 		}
-
-		layersBackend, err := cfg.GetDefinitionsBackend(ctx)
+		kill, err := cfg.GetKillCommand(ctx)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "%s\n", errors.Wrap(err, "fail to get layers backend"))
+			fmt.Fprintf(os.Stderr, "%s\n", errors.Wrap(err, "fail to get kill command"))
 			os.Exit(1)
-			return
-		}
-
-		instancesBackend, err := cfg.GetInstancesBackend(ctx)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "%s\n", errors.Wrap(err, "fail to get instance backend"))
-			os.Exit(1)
-			return
 		}
 
 		layerName := args[0]
 		instanceName := args[1]
 
-		kill := command.NewKill(layersBackend, instancesBackend)
-
-		err = kill.Run(ctx, layerName, instanceName, vars)
+		err = kill.Run(ctx, layerName, instanceName, false, vars)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "%s\n", err)
 			os.Exit(1)

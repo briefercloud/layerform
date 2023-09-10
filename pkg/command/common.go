@@ -16,6 +16,7 @@ import (
 	"github.com/ergomake/layerform/internal/tfclient"
 	"github.com/ergomake/layerform/pkg/data"
 	"github.com/ergomake/layerform/pkg/layerdefinitions"
+	"github.com/ergomake/layerform/pkg/layerinstances"
 )
 
 func WriteLayerToWorkdir(
@@ -139,4 +140,41 @@ func FindTFVarFiles() ([]string, error) {
 	})
 
 	return matchingFiles, nil
+}
+
+func ComputeInstanceByLayer(
+	ctx context.Context,
+	definitionsBackend layerdefinitions.Backend,
+	instancesBackend layerinstances.Backend,
+	layer *data.LayerDefinition,
+	instance *data.LayerInstance,
+) (map[string]string, error) {
+	instanceByLayer := map[string]string{}
+	instanceByLayer[layer.Name] = instance.InstanceName
+	for _, dep := range layer.Dependencies {
+		depLayer, err := definitionsBackend.GetLayer(ctx, dep)
+		if err != nil {
+			return nil, errors.Wrap(err, "fail to get layer")
+		}
+
+		depInstanceName := instance.GetDependencyInstanceName(dep)
+
+		depInstance, err := instancesBackend.GetInstance(ctx, dep, depInstanceName)
+		if err != nil {
+			return nil, errors.Wrap(err, "fail to get instance")
+		}
+
+		depDepInstances, err := ComputeInstanceByLayer(ctx, definitionsBackend, instancesBackend, depLayer, depInstance)
+		if err != nil {
+			return nil, errors.Wrap(err, "fail to compute instance by layer")
+		}
+
+		for k, v := range depDepInstances {
+			instanceByLayer[k] = v
+		}
+
+		instanceByLayer[dep] = depInstanceName
+	}
+
+	return instanceByLayer, nil
 }

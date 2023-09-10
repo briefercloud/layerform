@@ -1,4 +1,4 @@
-package command
+package kill
 
 import (
 	"context"
@@ -16,24 +16,32 @@ import (
 
 	"github.com/ergomake/layerform/internal/terraform"
 	"github.com/ergomake/layerform/internal/tfclient"
+	"github.com/ergomake/layerform/pkg/command"
 	"github.com/ergomake/layerform/pkg/data"
 	"github.com/ergomake/layerform/pkg/layerdefinitions"
 	"github.com/ergomake/layerform/pkg/layerinstances"
 )
 
-type killCommand struct {
-	layersBackend    layerdefinitions.Backend
-	instancesBackend layerinstances.Backend
+type localKillCommand struct {
+	definitionsBackend layerdefinitions.Backend
+	instancesBackend   layerinstances.Backend
 }
 
-func NewKill(definitionsBackend layerdefinitions.Backend, instancesBackend layerinstances.Backend) *killCommand {
-	return &killCommand{definitionsBackend, instancesBackend}
+var _ Kill = &localKillCommand{}
+
+func NewLocal(definitionsBackend layerdefinitions.Backend, instancesBackend layerinstances.Backend) *localKillCommand {
+	return &localKillCommand{definitionsBackend, instancesBackend}
 }
 
-func (c *killCommand) Run(ctx context.Context, layerName, instanceName string, vars []string) error {
+func (c *localKillCommand) Run(
+	ctx context.Context,
+	layerName, instanceName string,
+	autoApprove bool,
+	vars []string,
+) error {
 	logger := hclog.FromContext(ctx)
 
-	layer, err := c.layersBackend.GetLayer(ctx, layerName)
+	layer, err := c.definitionsBackend.GetLayer(ctx, layerName)
 	if err != nil {
 		return errors.Wrap(err, "fail to get layer")
 	}
@@ -68,7 +76,7 @@ func (c *killCommand) Run(ctx context.Context, layerName, instanceName string, v
 		),
 	)
 
-	hasDependants, err := c.hasDependants(ctx, layerName, instanceName)
+	hasDependants, err := HasDependants(ctx, c.instancesBackend, c.definitionsBackend, layerName, instanceName)
 	if err != nil {
 		s.Error()
 		sm.Stop()
@@ -113,7 +121,7 @@ func (c *killCommand) Run(ctx context.Context, layerName, instanceName string, v
 	}
 
 	for _, dep := range layer.Dependencies {
-		depLayer, err := c.layersBackend.GetLayer(ctx, dep)
+		depLayer, err := c.definitionsBackend.GetLayer(ctx, dep)
 		if err != nil {
 			s.Error()
 			sm.Stop()
@@ -154,9 +162,8 @@ func (c *killCommand) Run(ctx context.Context, layerName, instanceName string, v
 	}
 
 	logger.Debug("Looking for variable definitions in .tfvars files")
-	varFiles, err := FindTFVarFiles()
+	varFiles, err := command.FindTFVarFiles()
 	if err != nil {
-
 		s.Error()
 		sm.Stop()
 		return errors.Wrap(err, "fail to find .tfvars files")
@@ -182,15 +189,17 @@ func (c *killCommand) Run(ctx context.Context, layerName, instanceName string, v
 	s.Complete()
 	sm.Stop()
 
-	var answer string
-	fmt.Print("Are you sure? This can't be undone. [yes/no]: ")
-	_, err = fmt.Scan(&answer)
-	if err != nil {
-		return errors.Wrap(err, "fail to read asnwer")
-	}
+	if !autoApprove {
+		var answer string
+		fmt.Print("Are you sure? This can't be undone. [yes/no]: ")
+		_, err = fmt.Scan(&answer)
+		if err != nil {
+			return errors.Wrap(err, "fail to read asnwer")
+		}
 
-	if strings.ToLower(strings.TrimSpace(answer)) != "yes" {
-		return nil
+		if strings.ToLower(strings.TrimSpace(answer)) != "yes" {
+			return nil
+		}
 	}
 
 	sm = ysmrr.NewSpinnerManager(
@@ -227,7 +236,7 @@ func (c *killCommand) Run(ctx context.Context, layerName, instanceName string, v
 	return nil
 }
 
-func (c *killCommand) getLayerAddresses(
+func (c *localKillCommand) getLayerAddresses(
 	ctx context.Context,
 	layer *data.LayerDefinition,
 	instance *data.LayerInstance,
@@ -236,12 +245,12 @@ func (c *killCommand) getLayerAddresses(
 	logger := hclog.FromContext(ctx)
 	logger.Debug("Getting layer addresses", "layer", layer.Name, "instance", instance.InstanceName)
 
-	instanceByLayer, err := computeInstanceByLayer(ctx, c.layersBackend, c.instancesBackend, layer, instance)
+	instanceByLayer, err := command.ComputeInstanceByLayer(ctx, c.definitionsBackend, c.instancesBackend, layer, instance)
 	if err != nil {
 		return nil, "", errors.Wrap(err, "fail to compute instance by layer instance")
 	}
 
-	layerWorkdir, err := WriteLayerToWorkdir(ctx, c.layersBackend, layerDir, layer, instanceByLayer)
+	layerWorkdir, err := command.WriteLayerToWorkdir(ctx, c.definitionsBackend, layerDir, layer, instanceByLayer)
 	if err != nil {
 		return nil, "", errors.Wrap(err, "fail to write layer to work directory")
 	}
@@ -262,84 +271,12 @@ func (c *killCommand) getLayerAddresses(
 		return nil, "", errors.Wrap(err, "fail to terraform init")
 	}
 
-	tfState, err := GetTFState(ctx, statePath, tfpath)
+	tfState, err := command.GetTFState(ctx, statePath, tfpath)
 	if err != nil {
 		return nil, "", errors.Wrap(err, "fail to get terraform state")
 	}
 
-	addresses := GetStateModuleAddresses(tfState.Values.RootModule)
+	addresses := command.GetStateModuleAddresses(tfState.Values.RootModule)
 
 	return addresses, layerWorkdir, nil
-}
-
-func (c *killCommand) hasDependants(ctx context.Context, layerName, instanceName string) (bool, error) {
-	hclog.FromContext(ctx).Debug("Checking if layer has dependants", "layer", layerName, "instance", instanceName)
-
-	layers, err := c.layersBackend.ListLayers(ctx)
-	if err != nil {
-		return false, errors.Wrap(err, "fail to list layers")
-	}
-
-	for _, layer := range layers {
-		isChild := false
-		for _, d := range layer.Dependencies {
-			if d == layerName {
-				isChild = true
-				break
-			}
-		}
-
-		if isChild {
-			instances, err := c.instancesBackend.ListInstancesByLayer(ctx, layer.Name)
-			if err != nil {
-				return false, errors.Wrap(err, "fail to list layer instances")
-			}
-
-			for _, instance := range instances {
-				parentInstanceName := instance.GetDependencyInstanceName(layerName)
-				if parentInstanceName == instanceName {
-					return true, nil
-				}
-			}
-		}
-	}
-
-	return false, nil
-}
-
-func computeInstanceByLayer(
-	ctx context.Context,
-	definitionsBackend layerdefinitions.Backend,
-	instancesBackend layerinstances.Backend,
-	layer *data.LayerDefinition,
-	instance *data.LayerInstance,
-) (map[string]string, error) {
-	instanceByLayer := map[string]string{}
-	instanceByLayer[layer.Name] = instance.InstanceName
-	for _, dep := range layer.Dependencies {
-		depLayer, err := definitionsBackend.GetLayer(ctx, dep)
-		if err != nil {
-			return nil, errors.Wrap(err, "fail to get layer")
-		}
-
-		depInstanceName := instance.GetDependencyInstanceName(dep)
-
-		depInstance, err := instancesBackend.GetInstance(ctx, dep, depInstanceName)
-		if err != nil {
-			return nil, errors.Wrap(err, "fail to get instance")
-		}
-
-		depDepInstances, err := computeInstanceByLayer(ctx, definitionsBackend, instancesBackend, depLayer, depInstance)
-		if err != nil {
-			return nil, errors.Wrap(err, "fail to compute instance by layer")
-		}
-
-		for k, v := range depDepInstances {
-			instanceByLayer[k] = v
-		}
-
-		instanceByLayer[dep] = depInstanceName
-	}
-
-	return instanceByLayer, nil
 }

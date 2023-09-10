@@ -9,6 +9,7 @@ import (
 	"gopkg.in/yaml.v3"
 
 	"github.com/ergomake/layerform/internal/storage"
+	"github.com/ergomake/layerform/pkg/command/kill"
 	"github.com/ergomake/layerform/pkg/command/spawn"
 	"github.com/ergomake/layerform/pkg/layerdefinitions"
 	"github.com/ergomake/layerform/pkg/layerinstances"
@@ -187,4 +188,34 @@ func (c *config) GetSpawnCommand(ctx context.Context) (spawn.Spawn, error) {
 	}
 
 	return nil, errors.Errorf("fail to get spawn command unexpected context type %s", t)
+}
+
+func (c *config) GetKillCommand(ctx context.Context) (kill.Kill, error) {
+	t := c.getCurrent().Type
+
+	switch t {
+	case "ergomake":
+		// TODO: hardcode production ergomake url here
+		baseURL := os.Getenv("LF_ERGOMAKE_URL")
+		if baseURL == "" {
+			return nil, errors.New("attempt to use ergomake backend but no LF_ERGOMAKE_URL in env")
+		}
+
+		return kill.NewErgomake(baseURL), nil
+	case "s3":
+	case "local":
+		layersBackend, err := c.GetDefinitionsBackend(ctx)
+		if err != nil {
+			return nil, errors.Wrap(err, "fail to get layers backend")
+		}
+
+		instancesBackend, err := c.GetInstancesBackend(ctx)
+		if err != nil {
+			return nil, errors.Wrap(err, "fail to get instance backend")
+		}
+
+		return kill.NewLocal(layersBackend, instancesBackend), nil
+	}
+
+	return nil, errors.Errorf("fail to get kill command unexpected context type %s", t)
 }
