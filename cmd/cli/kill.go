@@ -15,6 +15,7 @@ import (
 
 func init() {
 	killCmd.Flags().StringArray("var", []string{}, "a map of variables for the layer's Terraform files. I.e. 'foo=bar,baz=qux'")
+	killCmd.Flags().Bool("auto-approve", false, "skip interactive approval before killing layer instance")
 
 	rootCmd.AddCommand(killCmd)
 }
