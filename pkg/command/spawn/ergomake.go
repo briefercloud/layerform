@@ -49,7 +49,12 @@ func (e *ergomakeSpawnCommand) Run(
 	}
 
 	url := fmt.Sprintf("%s/v1/definitions/%s/instances/%s/spawn", e.baseURL, definitionName, instanceName)
-	dataBytes, err := json.Marshal(nil)
+	dataBytes, err := json.Marshal(
+		map[string]interface{}{
+			"vars":                 vars,
+			"dependenciesInstance": dependenciesInstance,
+		},
+	)
 	if err != nil {
 		return errors.Wrap(err, "fail to marshal instance to json")
 	}
