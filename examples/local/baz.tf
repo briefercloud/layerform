@@ -8,3 +8,7 @@ resource "random_string" "baz_suffix" {
   upper   = false
   special = false
 }
+
+output "baz_file" {
+  value = local_file.baz.filename
+}

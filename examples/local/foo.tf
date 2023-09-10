@@ -12,3 +12,7 @@ resource "random_string" "foo_suffix" {
   upper   = false
   special = false
 }
+
+output "foo_file" {
+  value = local_file.foo.filename
+}

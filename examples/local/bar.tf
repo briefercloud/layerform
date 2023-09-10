@@ -8,3 +8,7 @@ resource "random_string" "bar_suffix" {
   upper   = false
   special = false
 }
+
+output "bar_file" {
+  value = local_file.bar.filename
+}

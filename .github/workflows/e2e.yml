@@ -1,0 +1,85 @@
+name: E2E Test
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.4.6
+          terraform_wrapper: false
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: stable
+
+      - run: go install .
+
+      - name: Create Layerform config file
+        run: |
+          mkdir -p ~/.layerform
+          echo "currentContext: test" > ~/.layerform/config
+          echo "contexts:" >> ~/.layerform/config
+          echo "  test:" >> ~/.layerform/config
+          echo "    type: local" >> ~/.layerform/config
+          echo "    dir: test" >> ~/.layerform/config
+
+      - name: Configure
+        run: |
+          layerform configure --file examples/local/layerform.json
+
+      - name: List definitions
+        run: |
+          layerform list definitions | tee definitions
+          grep -E 'foo' definitions
+          grep -E 'bar\s+foo' definitions
+          grep -E 'baz\s+foo' definitions
+
+      - name: List instances
+        run: |
+          layerform list instances | tee instances
+          grep 'No layer instances spawned' instances
+
+      - name: Spawn instances
+        run: |
+          layerform spawn bar test_bar
+          layerform spawn baz test_baz
+          layerform spawn bar test_custom_foo --base foo=custom
+          layerform list instances | tee instances
+          grep -E 'default\s+foo\s+alive' instances
+          grep -E 'test_bar\s+bar\s+foo=default\s+alive' instances
+          grep -E 'test_baz\s+baz\s+foo=default\s+alive' instances
+          grep -E 'custom\s+foo\s+alive' instances
+          grep -E 'test_custom_foo\s+bar\s+foo=custom\s+alive' instances
+
+      - name: Output
+        run: |
+          layerform output bar test_bar | jq .bar_file.value | tee output
+          grep -E '\.layerform\/examples\/local\/foo-.{4}\/bar-.{4}\.txt' output
+
+          layerform output bar test_bar | jq .foo_file.value | tee output
+          grep -E '\.layerform\/examples\/local\/foo-.{4}\/\.keep' output
+
+      - name: Can't kill instance that has dependants
+        run: |
+          # fails if kill succeeds
+          ! layerform kill foo default
+
+      - name: Kill instance
+        run: |
+          yes yes | layerform kill bar test_bar
+          layerform list instances | tee instances
+          # fails if instance is still there
+          ! grep -E 'test_bar\s+bar\s+foo=default\s+alive' instances
