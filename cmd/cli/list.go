@@ -16,5 +16,8 @@ var listCmd = &cobra.Command{
 Prints a table of the most important information about the specified resource.`,
 
 	Example: `# List all layer definitions
-layerform list definitions`,
+layerform list definitions
+
+# List all layer instances
+layerform list instances`,
 }

@@ -9,10 +9,11 @@ import (
 type LayerInstanceStatus string
 
 const (
-	LayerInstanceStatusSpawning LayerInstanceStatus = LayerInstanceStatus("spawning")
-	LayerInstanceStatusAlive    LayerInstanceStatus = LayerInstanceStatus("alive")
-	LayerInstanceStatusFaulty   LayerInstanceStatus = LayerInstanceStatus("faulty")
-	LayerInstanceStatusKilling  LayerInstanceStatus = LayerInstanceStatus("killing")
+	LayerInstanceStatusSpawning   LayerInstanceStatus = LayerInstanceStatus("spawning")
+	LayerInstanceStatusAlive      LayerInstanceStatus = LayerInstanceStatus("alive")
+	LayerInstanceStatusFaulty     LayerInstanceStatus = LayerInstanceStatus("faulty")
+	LayerInstanceStatusKilling    LayerInstanceStatus = LayerInstanceStatus("killing")
+	LayerInstanceStatusRefreshing LayerInstanceStatus = LayerInstanceStatus("refreshing")
 )
 
 const DEFAULT_LAYER_INSTANCE_NAME = "default"

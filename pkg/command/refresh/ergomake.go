@@ -1,4 +1,4 @@
-package kill
+package refresh
 
 import (
 	"bytes"
@@ -19,29 +19,28 @@ import (
 	"github.com/ergomake/layerform/pkg/layerinstances"
 )
 
-type ergomakeKillCommand struct {
+type ergomakeRefreshCommand struct {
 	baseURL            string
-	definitionsBackend layerdefinitions.Backend
 	instancesBackend   layerinstances.Backend
+	definitionsBackend layerdefinitions.Backend
 }
 
-var _ Kill = &ergomakeKillCommand{}
+var _ Refresh = &ergomakeRefreshCommand{}
 
-func NewErgomake(baseURL string) *ergomakeKillCommand {
-	definitionsBackend := layerdefinitions.NewErgomake(baseURL)
+func NewErgomake(baseURL string) *ergomakeRefreshCommand {
 	instancesBackend := layerinstances.NewErgomake(baseURL)
+	definitionsBackend := layerdefinitions.NewErgomake(baseURL)
 
-	return &ergomakeKillCommand{baseURL, definitionsBackend, instancesBackend}
+	return &ergomakeRefreshCommand{baseURL, instancesBackend, definitionsBackend}
 }
 
-func (e *ergomakeKillCommand) Run(
+func (e *ergomakeRefreshCommand) Run(
 	ctx context.Context,
 	definitionName, instanceName string,
-	autoApprove bool,
 	vars []string,
 ) error {
 	logger := hclog.FromContext(ctx)
-	logger.Debug("Killing instance remotely")
+	logger.Debug("Refreshing instance remotely")
 
 	sm := ysmrr.NewSpinnerManager(
 		ysmrr.WithAnimation(animations.Dots),
@@ -50,7 +49,7 @@ func (e *ergomakeKillCommand) Run(
 	sm.Start()
 	s := sm.AddSpinner(
 		fmt.Sprintf(
-			"Preparing to kill instance \"%s\" of layer \"%s\"",
+			"Preparing to refresh instance \"%s\" of layer \"%s\"",
 			instanceName,
 			definitionName,
 		),
@@ -58,15 +57,16 @@ func (e *ergomakeKillCommand) Run(
 
 	definition, err := e.definitionsBackend.GetLayer(ctx, definitionName)
 	if err != nil {
-		return errors.Wrap(err, "fail to get layer")
-	}
-
-	if definition == nil {
-		return errors.New("layer not found")
+		s.Error()
+		sm.Stop()
+		return errors.Wrap(err, "fail to get layer definition")
 	}
 
 	_, err = e.instancesBackend.GetInstance(ctx, definition.Name, instanceName)
 	if err != nil {
+		s.Error()
+		sm.Stop()
+
 		if errors.Is(err, layerinstances.ErrInstanceNotFound) {
 			return errors.Errorf(
 				"instance %s not found for layer %s",
@@ -78,26 +78,10 @@ func (e *ergomakeKillCommand) Run(
 		return errors.Wrap(err, "fail to get layer instance")
 	}
 
-	hasDependants, err := HasDependants(
-		ctx,
-		e.instancesBackend,
-		e.definitionsBackend,
-		definitionName,
-		instanceName,
-	)
-	if err != nil {
-		s.Error()
-		sm.Stop()
-		return errors.Wrap(err, "fail to check if layer has dependants")
-	}
+	s.Complete()
+	s = sm.AddSpinner(fmt.Sprintf("Refreshing instance \"%s\" of layer \"%s\" remotely", instanceName, definitionName))
 
-	if hasDependants {
-		s.Error()
-		sm.Stop()
-		return errors.New("can't kill this layer because other layers depend on it")
-	}
-
-	url := fmt.Sprintf("%s/v1/definitions/%s/instances/%s/kill", e.baseURL, definitionName, instanceName)
+	url := fmt.Sprintf("%s/v1/definitions/%s/instances/%s/refresh", e.baseURL, definitionName, instanceName)
 	dataBytes, err := json.Marshal(
 		map[string]interface{}{
 			"vars": vars,
@@ -132,36 +116,27 @@ func (e *ergomakeKillCommand) Run(
 		return errors.Errorf("HTTP request to %s failed with status code %d", url, resp.StatusCode)
 	}
 
-	s.Complete()
-
-	// TODO: improve the loading experience, make it similar to the
-	// localKillCommand to accomplish that we need to communicate with
-	// layerformcloud to get spawn logs or something like that
-	s = sm.AddSpinner(fmt.Sprintf("Killing instance \"%s\" of layer \"%s\" remotely", instanceName, definitionName))
-
 	time.Sleep(time.Second * 2)
 	for {
 		instance, err := e.instancesBackend.GetInstance(ctx, definitionName, instanceName)
-		if errors.Is(err, layerinstances.ErrInstanceNotFound) {
-			s.Complete()
-			sm.Stop()
-			return nil
-		}
-
 		if err != nil {
 			s.Error()
 			sm.Stop()
-			return errors.Wrap(err, "fail to get instance to check killing status")
+			return errors.Wrap(err, "fail to get instance to check spawning status")
 		}
 
 		switch instance.Status {
-		case data.LayerInstanceStatusKilling:
+		case data.LayerInstanceStatusRefreshing:
 			time.Sleep(time.Second * 2)
 			continue
 		case data.LayerInstanceStatusFaulty:
 			s.Error()
 			sm.Stop()
-			return errors.Errorf("fail to kill instance %s of definition %s", instanceName, definitionName)
+			return errors.Errorf("fail to spawn instance %s of definition %s", instanceName, definitionName)
+		case data.LayerInstanceStatusAlive:
+			s.Complete()
+			sm.Stop()
+			return nil
 		default:
 			s.Error()
 			sm.Stop()

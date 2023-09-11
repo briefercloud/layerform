@@ -51,8 +51,7 @@ Here's an example layer definition configurations:
       ]
     }
   ]
-}
-`,
+}`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		logger := hclog.Default()
 		logLevel := hclog.LevelFromString(os.Getenv("LF_LOG"))

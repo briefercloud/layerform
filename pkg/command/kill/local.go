@@ -76,7 +76,13 @@ func (c *localKillCommand) Run(
 		),
 	)
 
-	hasDependants, err := HasDependants(ctx, c.instancesBackend, c.definitionsBackend, layerName, instanceName)
+	hasDependants, err := HasDependants(
+		ctx,
+		c.instancesBackend,
+		c.definitionsBackend,
+		layerName,
+		instanceName,
+	)
 	if err != nil {
 		s.Error()
 		sm.Stop()

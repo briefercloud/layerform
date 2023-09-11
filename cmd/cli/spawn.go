@@ -29,8 +29,7 @@ var spawnCmd = &cobra.Command{
 
 Whenever a desired ID is not provided, Layerform will generate a random UUID for the layer instance.
 
-If an instance with the same ID already exists for the layer definition, Layerform will return an error.
-    `,
+If an instance with the same ID already exists for the layer definition, Layerform will return an error.`,
 	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		logger := hclog.Default()

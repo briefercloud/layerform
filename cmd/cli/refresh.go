@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/hashicorp/go-hclog"
+	"github.com/lithammer/shortuuid/v3"
 	"github.com/spf13/cobra"
 
 	"github.com/pkg/errors"
@@ -14,18 +15,17 @@ import (
 )
 
 func init() {
-	killCmd.Flags().StringArray("var", []string{}, "a map of variables for the layer's Terraform files. I.e. 'foo=bar,baz=qux'")
-
-	rootCmd.AddCommand(killCmd)
+	refreshCmd.Flags().StringArray("var", []string{}, "a map of variables for the layer's Terraform files. I.e. 'foo=bar,baz=qux'")
+	rootCmd.AddCommand(refreshCmd)
 }
 
-var killCmd = &cobra.Command{
-	Use:   "kill <layer> <instance>",
-	Args:  cobra.MinimumNArgs(2),
-	Short: "destroys a layer instance",
-	Long: `The kill command destroys a layer instance.
+var refreshCmd = &cobra.Command{
+	Use:   "refresh <layer> <instance>",
+	Short: "refreshes a layer instance",
+	Long: `The refresh command updates a layer instance.
 
-Please notice that the kill command cannot destroy a layer instance which has dependants. To delete a layer instance with dependants, you must first delete all of its dependants.`,
+This command updates the layer instance resources to comply with the current version of the layer definition it belongs to, it also can be used to update values for the layer instance variables.`,
+	Args: cobra.MinimumNArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
 		logger := hclog.Default()
 		logLevel := hclog.LevelFromString(os.Getenv("LF_LOG"))
@@ -47,16 +47,20 @@ Please notice that the kill command cannot destroy a layer instance which has de
 			os.Exit(1)
 			return
 		}
-		kill, err := cfg.GetKillCommand(ctx)
+
+		refresh, err := cfg.GetRefreshCommand(ctx)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "%s\n", errors.Wrap(err, "fail to get kill command"))
+			fmt.Fprintf(os.Stderr, "%s\n", errors.Wrap(err, "fail to get refresh command"))
 			os.Exit(1)
 		}
 
 		layerName := args[0]
-		instanceName := args[1]
+		instanceName := shortuuid.New()
+		if len(args) > 1 {
+			instanceName = args[1]
+		}
 
-		err = kill.Run(ctx, layerName, instanceName, false, vars)
+		err = refresh.Run(ctx, layerName, instanceName, vars)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "%s\n", err)
 			os.Exit(1)
