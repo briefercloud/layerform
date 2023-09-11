@@ -174,6 +174,7 @@ func (c *config) GetSpawnCommand(ctx context.Context) (spawn.Spawn, error) {
 
 		return spawn.NewErgomake(baseURL), nil
 	case "s3":
+		fallthrough
 	case "local":
 		layersBackend, err := c.GetDefinitionsBackend(ctx)
 		if err != nil {
@@ -204,6 +205,7 @@ func (c *config) GetKillCommand(ctx context.Context) (kill.Kill, error) {
 
 		return kill.NewErgomake(baseURL), nil
 	case "s3":
+		fallthrough
 	case "local":
 		layersBackend, err := c.GetDefinitionsBackend(ctx)
 		if err != nil {
@@ -234,6 +236,7 @@ func (c *config) GetRefreshCommand(ctx context.Context) (refresh.Refresh, error)
 
 		return refresh.NewErgomake(baseURL), nil
 	case "s3":
+		fallthrough
 	case "local":
 		layersBackend, err := c.GetDefinitionsBackend(ctx)
 		if err != nil {
