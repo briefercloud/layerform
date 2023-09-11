@@ -75,7 +75,7 @@ If an instance with the same ID already exists for the layer definition, Layerfo
 
 		if !alphanumericRegex.MatchString(instanceName) {
 			fmt.Fprintf(os.Stderr, "Invalid name: %s\n", instanceName)
-			fmt.Fprintln(os.Stderr, "Name must must start and end with an alphanumeric character and can include dashes and underscores in between.")
+			fmt.Fprintln(os.Stderr, "Name must start and end with an alphanumeric character and can include dashes and underscores in between.")
 			os.Exit(1)
 		}
 
