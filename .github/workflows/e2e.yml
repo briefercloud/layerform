@@ -72,6 +72,13 @@ jobs:
           layerform output bar test_bar | jq .foo_file.value | tee output
           grep -E '\.layerform\/examples\/local\/foo-.{4}\/\.keep' output
 
+      - name: Refresh
+        run: |
+          layerform refresh bar test_bar --var prefix=test-prefix-
+          layerform output bar test_bar | jq .bar_file.value | tee output
+          grep -E '\.layerform\/examples\/local\/test-prefix-foo-.{4}\/bar-.{4}\.txt' output
+          layerform refresh bar test_bar
+
       - name: Can't kill instance that has dependants
         run: |
           # fails if kill succeeds
