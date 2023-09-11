@@ -78,7 +78,13 @@ func (e *ergomakeKillCommand) Run(
 		return errors.Wrap(err, "fail to get layer instance")
 	}
 
-	hasDependants, err := HasDependants(ctx, e.instancesBackend, e.definitionsBackend, definitionName, instanceName)
+	hasDependants, err := HasDependants(
+		ctx,
+		e.instancesBackend,
+		e.definitionsBackend,
+		definitionName,
+		instanceName,
+	)
 	if err != nil {
 		s.Error()
 		sm.Stop()

@@ -25,7 +25,6 @@ var listInstancesCmd = &cobra.Command{
 	Long: `List layers instances.
 
 Prints a table of the most important information about layer instances.`,
-
 	Run: func(_ *cobra.Command, _ []string) {
 		logger := hclog.Default()
 		logLevel := hclog.LevelFromString(os.Getenv("LF_LOG"))

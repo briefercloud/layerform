@@ -26,7 +26,6 @@ var listDefinitionsCmd = &cobra.Command{
 	Long: `List layers definitions.
 
 Prints a table of the most important information about layer definitions.`,
-
 	Run: func(_ *cobra.Command, _ []string) {
 		logger := hclog.Default()
 		logLevel := hclog.LevelFromString(os.Getenv("LF_LOG"))
