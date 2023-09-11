@@ -83,3 +83,13 @@ jobs:
           layerform list instances | tee instances
           # fails if instance is still there
           ! grep -E 'test_bar\s+bar\s+foo=default\s+alive' instances
+
+      - name: Can't spawn instance with invalid name
+        run: |
+          # fails if spawn succeeds
+          ! layerform spawn foo 'this has spaces'
+          ! layerform spawn foo 'this#has%special&chars'
+          ! layerform spawn foo '_cant-start-with-underscore'
+          ! layerform spawn foo '-cant-start-with-dash'
+          ! layerform spawn foo 'cant-end-with-underscore_'
+          ! layerform spawn foo 'cant-end-with-dash-'
