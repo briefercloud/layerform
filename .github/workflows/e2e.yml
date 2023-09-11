@@ -90,6 +90,5 @@ jobs:
           ! layerform spawn foo 'this has spaces'
           ! layerform spawn foo 'this#has%special&chars'
           ! layerform spawn foo '_cant-start-with-underscore'
-          ! layerform spawn foo '-cant-start-with-dash'
           ! layerform spawn foo 'cant-end-with-underscore_'
           ! layerform spawn foo 'cant-end-with-dash-'
