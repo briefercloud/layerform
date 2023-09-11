@@ -6,11 +6,12 @@ import (
 	"os"
 	"regexp"
 
-	"github.com/ergomake/layerform/internal/lfconfig"
 	"github.com/hashicorp/go-hclog"
 	"github.com/lithammer/shortuuid/v3"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+
+	"github.com/ergomake/layerform/internal/lfconfig"
 )
 
 func init() {
