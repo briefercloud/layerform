@@ -217,7 +217,7 @@ type Backend_ResolveDependencies_Call struct {
 
 // ResolveDependencies is a helper method to define mock.On call
 //   - ctx context.Context
-//   - layer *data.Layer
+//   - layer *data.LayerDefinition
 func (_e *Backend_Expecter) ResolveDependencies(ctx interface{}, layer interface{}) *Backend_ResolveDependencies_Call {
 	return &Backend_ResolveDependencies_Call{Call: _e.mock.On("ResolveDependencies", ctx, layer)}
 }
@@ -239,13 +239,13 @@ func (_c *Backend_ResolveDependencies_Call) RunAndReturn(run func(context.Contex
 	return _c
 }
 
-// UpdateLayers provides a mock function with given fields: ctx, _a1
-func (_m *Backend) UpdateLayers(ctx context.Context, _a1 []*data.LayerDefinition) error {
-	ret := _m.Called(ctx, _a1)
+// UpdateLayers provides a mock function with given fields: ctx, layers
+func (_m *Backend) UpdateLayers(ctx context.Context, layers []*data.LayerDefinition) error {
+	ret := _m.Called(ctx, layers)
 
 	var r0 error
 	if rf, ok := ret.Get(0).(func(context.Context, []*data.LayerDefinition) error); ok {
-		r0 = rf(ctx, _a1)
+		r0 = rf(ctx, layers)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -260,12 +260,12 @@ type Backend_UpdateLayers_Call struct {
 
 // UpdateLayers is a helper method to define mock.On call
 //   - ctx context.Context
-//   - _a1 []*data.Layer
-func (_e *Backend_Expecter) UpdateLayers(ctx interface{}, _a1 interface{}) *Backend_UpdateLayers_Call {
-	return &Backend_UpdateLayers_Call{Call: _e.mock.On("UpdateLayers", ctx, _a1)}
+//   - layers []*data.LayerDefinition
+func (_e *Backend_Expecter) UpdateLayers(ctx interface{}, layers interface{}) *Backend_UpdateLayers_Call {
+	return &Backend_UpdateLayers_Call{Call: _e.mock.On("UpdateLayers", ctx, layers)}
 }
 
-func (_c *Backend_UpdateLayers_Call) Run(run func(ctx context.Context, _a1 []*data.LayerDefinition)) *Backend_UpdateLayers_Call {
+func (_c *Backend_UpdateLayers_Call) Run(run func(ctx context.Context, layers []*data.LayerDefinition)) *Backend_UpdateLayers_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		run(args[0].(context.Context), args[1].([]*data.LayerDefinition))
 	})
