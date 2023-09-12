@@ -27,7 +27,9 @@ func init() {
 var configSetContextCmd = &cobra.Command{
 	Use:   "set-context <name>",
 	Short: "Set a context entry in layerform config file",
-	Long:  "Set a context entry in layerform config file.",
+	Long: `Set a context entry in layerform config file.
+
+  Specifying a name that already exists will update that context values unless the type is different.`,
 	Example: `# Set a context of type local named local-example
 layerform config set-context local-example -t local --dir example-dir
 
@@ -113,5 +115,4 @@ layerform config set-context cloud-example -t cloud --url https://example.layerf
 		fmt.Fprintf(os.Stdout, "Context \"%s\" %s.\n", name, action)
 	},
 	SilenceErrors: true,
-	SilenceUsage:  true,
 }

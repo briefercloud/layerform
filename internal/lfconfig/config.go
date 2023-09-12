@@ -154,14 +154,8 @@ func (c *config) GetInstancesBackend(ctx context.Context) (layerinstances.Backen
 	switch current.Type {
 	case "local":
 		blob = storage.NewFileStorage(path.Join(c.getDir(), stateFileName))
-	case "ergomake":
-		// TODO: hardcode production ergomake url here
-		baseURL := os.Getenv("LF_ERGOMAKE_URL")
-		if baseURL == "" {
-			return nil, errors.New("attempt to use ergomake backend but no LF_ERGOMAKE_URL in env")
-		}
-
-		return layerinstances.NewErgomake(baseURL), nil
+	case "cloud":
+		return layerinstances.NewCloud(current.URL), nil
 	case "s3":
 		b, err := storage.NewS3Backend(current.Bucket, stateFileName, current.Region)
 		if err != nil {
@@ -179,14 +173,8 @@ func (c *config) GetDefinitionsBackend(ctx context.Context) (layerdefinitions.Ba
 	current := c.GetCurrent()
 	var blob storage.FileLike
 	switch current.Type {
-	case "ergomake":
-		// TODO: hardcode production ergomake url here
-		baseURL := os.Getenv("LF_ERGOMAKE_URL")
-		if baseURL == "" {
-			return nil, errors.New("attempt to use ergomake backend but no LF_ERGOMAKE_URL in env")
-		}
-
-		return layerdefinitions.NewErgomake(baseURL), nil
+	case "cloud":
+		return layerdefinitions.NewCloud(current.URL), nil
 	case "local":
 		blob = storage.NewFileStorage(path.Join(c.getDir(), definitionsFileName))
 	case "s3":
@@ -201,17 +189,11 @@ func (c *config) GetDefinitionsBackend(ctx context.Context) (layerdefinitions.Ba
 }
 
 func (c *config) GetSpawnCommand(ctx context.Context) (spawn.Spawn, error) {
-	t := c.GetCurrent().Type
+	current := c.GetCurrent()
 
-	switch t {
-	case "ergomake":
-		// TODO: hardcode production ergomake url here
-		baseURL := os.Getenv("LF_ERGOMAKE_URL")
-		if baseURL == "" {
-			return nil, errors.New("attempt to use ergomake backend but no LF_ERGOMAKE_URL in env")
-		}
-
-		return spawn.NewErgomake(baseURL), nil
+	switch current.Type {
+	case "cloud":
+		return spawn.NewCloud(current.URL), nil
 	case "s3":
 		fallthrough
 	case "local":
@@ -228,21 +210,15 @@ func (c *config) GetSpawnCommand(ctx context.Context) (spawn.Spawn, error) {
 		return spawn.NewLocal(layersBackend, instancesBackend), nil
 	}
 
-	return nil, errors.Errorf("fail to get spawn command unexpected context type %s", t)
+	return nil, errors.Errorf("fail to get spawn command unexpected context type %s", current.Type)
 }
 
 func (c *config) GetKillCommand(ctx context.Context) (kill.Kill, error) {
-	t := c.GetCurrent().Type
+	current := c.GetCurrent()
 
-	switch t {
-	case "ergomake":
-		// TODO: hardcode production ergomake url here
-		baseURL := os.Getenv("LF_ERGOMAKE_URL")
-		if baseURL == "" {
-			return nil, errors.New("attempt to use ergomake backend but no LF_ERGOMAKE_URL in env")
-		}
-
-		return kill.NewErgomake(baseURL), nil
+	switch current.Type {
+	case "cloud":
+		return kill.NewCloud(current.URL), nil
 	case "s3":
 		fallthrough
 	case "local":
@@ -259,21 +235,15 @@ func (c *config) GetKillCommand(ctx context.Context) (kill.Kill, error) {
 		return kill.NewLocal(layersBackend, instancesBackend), nil
 	}
 
-	return nil, errors.Errorf("fail to get kill command unexpected context type %s", t)
+	return nil, errors.Errorf("fail to get kill command unexpected context type %s", current.Type)
 }
 
 func (c *config) GetRefreshCommand(ctx context.Context) (refresh.Refresh, error) {
-	t := c.GetCurrent().Type
+	current := c.GetCurrent()
 
-	switch t {
-	case "ergomake":
-		// TODO: hardcode production ergomake url here
-		baseURL := os.Getenv("LF_ERGOMAKE_URL")
-		if baseURL == "" {
-			return nil, errors.New("attempt to use ergomake backend but no LF_ERGOMAKE_URL in env")
-		}
-
-		return refresh.NewErgomake(baseURL), nil
+	switch current.Type {
+	case "cloud":
+		return refresh.NewCloud(current.URL), nil
 	case "s3":
 		fallthrough
 	case "local":
@@ -290,5 +260,5 @@ func (c *config) GetRefreshCommand(ctx context.Context) (refresh.Refresh, error)
 		return refresh.NewLocal(layersBackend, instancesBackend), nil
 	}
 
-	return nil, errors.Errorf("fail to get spawn command unexpected context type %s", t)
+	return nil, errors.Errorf("fail to get spawn command unexpected context type %s", current.Type)
 }

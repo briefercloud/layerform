@@ -12,32 +12,32 @@ import (
 	"github.com/ergomake/layerform/pkg/data"
 )
 
-type ergomake struct {
+type cloud struct {
 	baseURL string
 }
 
-var _ Backend = &ergomake{}
+var _ Backend = &cloud{}
 
-func NewErgomake(baseURL string) *ergomake {
-	return &ergomake{baseURL}
+func NewCloud(baseURL string) *cloud {
+	return &cloud{baseURL}
 }
 
-func (e *ergomake) Location(ctx context.Context) (string, error) {
+func (e *cloud) Location(ctx context.Context) (string, error) {
 	return e.baseURL, nil
 }
 
-func (e *ergomake) GetLayer(ctx context.Context, name string) (*data.LayerDefinition, error) {
+func (e *cloud) GetLayer(ctx context.Context, name string) (*data.LayerDefinition, error) {
 	url := fmt.Sprintf("%s/v1/definitions/%s", e.baseURL, name)
 
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return nil, errors.Wrap(err, "fail to create http request to ergomake backend")
+		return nil, errors.Wrap(err, "fail to create http request to cloud backend")
 	}
 
 	resp, err := client.Do(req.WithContext(ctx))
 	if err != nil {
-		return nil, errors.Wrap(err, "fail to perform http request to ergomake backend")
+		return nil, errors.Wrap(err, "fail to perform http request to cloud backend")
 	}
 	defer resp.Body.Close()
 
@@ -54,18 +54,18 @@ func (e *ergomake) GetLayer(ctx context.Context, name string) (*data.LayerDefini
 	return &layer, nil
 }
 
-func (e *ergomake) ListLayers(ctx context.Context) ([]*data.LayerDefinition, error) {
+func (e *cloud) ListLayers(ctx context.Context) ([]*data.LayerDefinition, error) {
 	url := fmt.Sprintf("%s/v1/definitions", e.baseURL)
 
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return nil, errors.Wrap(err, "fail to create http request to ergomake backend")
+		return nil, errors.Wrap(err, "fail to create http request to cloud backend")
 	}
 
 	resp, err := client.Do(req.WithContext(ctx))
 	if err != nil {
-		return nil, errors.Wrap(err, "fail to perform http request to ergomake backend")
+		return nil, errors.Wrap(err, "fail to perform http request to cloud backend")
 	}
 	defer resp.Body.Close()
 
@@ -82,7 +82,7 @@ func (e *ergomake) ListLayers(ctx context.Context) ([]*data.LayerDefinition, err
 	return layers, nil
 }
 
-func (e *ergomake) ResolveDependencies(ctx context.Context, layer *data.LayerDefinition) ([]*data.LayerDefinition, error) {
+func (e *cloud) ResolveDependencies(ctx context.Context, layer *data.LayerDefinition) ([]*data.LayerDefinition, error) {
 	var resolvedLayers []*data.LayerDefinition
 
 	for _, dependencyName := range layer.Dependencies {
@@ -97,7 +97,7 @@ func (e *ergomake) ResolveDependencies(ctx context.Context, layer *data.LayerDef
 	return resolvedLayers, nil
 }
 
-func (e *ergomake) UpdateLayers(ctx context.Context, layers []*data.LayerDefinition) error {
+func (e *cloud) UpdateLayers(ctx context.Context, layers []*data.LayerDefinition) error {
 	dataBytes, err := json.Marshal(layers)
 	if err != nil {
 		return errors.Wrap(err, "fail to marshal layers to json")
@@ -108,13 +108,13 @@ func (e *ergomake) UpdateLayers(ctx context.Context, layers []*data.LayerDefinit
 
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(dataBytes))
 	if err != nil {
-		return errors.Wrap(err, "fail to create http request to ergomake backend")
+		return errors.Wrap(err, "fail to create http request to cloud backend")
 	}
 
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := client.Do(req)
 	if err != nil {
-		return errors.Wrap(err, "fail to perform http request to ergomake backend")
+		return errors.Wrap(err, "fail to perform http request to cloud backend")
 	}
 	defer resp.Body.Close()
 
