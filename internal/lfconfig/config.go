@@ -18,14 +18,17 @@ import (
 
 type configFile struct {
 	CurrentContext string                   `yaml:"currentContext"`
-	Contexts       map[string]configContext `yaml:"contexts"`
+	Contexts       map[string]ConfigContext `yaml:"contexts"`
 }
 
-type configContext struct {
-	Type   string `yaml:"type"`
-	Dir    string `yaml:"dir,omitempty"`
-	Bucket string `yaml:"bucket,omitempty"`
-	Region string `yaml:"region,omitempty"`
+type ConfigContext struct {
+	Type     string `yaml:"type"`
+	Dir      string `yaml:"dir,omitempty"`
+	Bucket   string `yaml:"bucket,omitempty"`
+	Region   string `yaml:"region,omitempty"`
+	URL      string `yaml:"url,omitempty"`
+	Email    string `yaml:"email,omitempty"`
+	Password string `yaml:"password,omitempty"`
 }
 
 func getDefaultPaths() ([]string, error) {
@@ -35,19 +38,40 @@ func getDefaultPaths() ([]string, error) {
 	}
 
 	return []string{
+		path.Join(homedir, ".layerform", "config"),
 		path.Join(homedir, ".layerform", "configurations.yaml"),
 		path.Join(homedir, ".layerform", "configurations.yml"),
 		path.Join(homedir, ".layerform", "configuration.yaml"),
 		path.Join(homedir, ".layerform", "configuration.yml"),
 		path.Join(homedir, ".layerform", "config.yaml"),
 		path.Join(homedir, ".layerform", "config.yml"),
-		path.Join(homedir, ".layerform", "config"),
 	}, nil
 }
 
 type config struct {
 	*configFile
 	path string
+}
+
+func Init(name string, ctx ConfigContext, path string) (*config, error) {
+	ctxs := map[string]ConfigContext{}
+	ctxs[name] = ctx
+	cfgFile := &configFile{
+		CurrentContext: name,
+		Contexts:       ctxs,
+	}
+	if path == "" {
+		paths, err := getDefaultPaths()
+		if err != nil {
+			return nil, err
+		}
+		path = paths[0]
+	}
+
+	return &config{
+		cfgFile,
+		path,
+	}, nil
 }
 
 func Load(path string) (*config, error) {
@@ -94,12 +118,27 @@ func Load(path string) (*config, error) {
 	return nil, err
 }
 
-func (c *config) getCurrent() configContext {
+func (cfg *config) Save() error {
+	data, err := yaml.Marshal(cfg.configFile)
+	if err != nil {
+		return errors.Wrap(err, "fail to encode config file to yaml")
+	}
+
+	err = os.MkdirAll(path.Dir(cfg.path), 0755)
+	if err != nil {
+		return errors.Wrap(err, "fail to create config file dir")
+	}
+
+	err = os.WriteFile(cfg.path, data, 0644)
+	return errors.Wrap(err, "fail to write config file")
+}
+
+func (c *config) GetCurrent() ConfigContext {
 	return c.Contexts[c.CurrentContext]
 }
 
 func (c *config) getDir() string {
-	dir := c.getCurrent().Dir
+	dir := c.GetCurrent().Dir
 	if !path.IsAbs(dir) {
 		dir = path.Join(path.Dir(c.path), dir)
 	}
@@ -110,7 +149,7 @@ func (c *config) getDir() string {
 const stateFileName = "layerform.lfstate"
 
 func (c *config) GetInstancesBackend(ctx context.Context) (layerinstances.Backend, error) {
-	current := c.getCurrent()
+	current := c.GetCurrent()
 	var blob storage.FileLike
 	switch current.Type {
 	case "local":
@@ -137,7 +176,7 @@ func (c *config) GetInstancesBackend(ctx context.Context) (layerinstances.Backen
 const definitionsFileName = "layerform.definitions.json"
 
 func (c *config) GetDefinitionsBackend(ctx context.Context) (layerdefinitions.Backend, error) {
-	current := c.getCurrent()
+	current := c.GetCurrent()
 	var blob storage.FileLike
 	switch current.Type {
 	case "ergomake":
@@ -162,7 +201,7 @@ func (c *config) GetDefinitionsBackend(ctx context.Context) (layerdefinitions.Ba
 }
 
 func (c *config) GetSpawnCommand(ctx context.Context) (spawn.Spawn, error) {
-	t := c.getCurrent().Type
+	t := c.GetCurrent().Type
 
 	switch t {
 	case "ergomake":
@@ -193,7 +232,7 @@ func (c *config) GetSpawnCommand(ctx context.Context) (spawn.Spawn, error) {
 }
 
 func (c *config) GetKillCommand(ctx context.Context) (kill.Kill, error) {
-	t := c.getCurrent().Type
+	t := c.GetCurrent().Type
 
 	switch t {
 	case "ergomake":
@@ -224,7 +263,7 @@ func (c *config) GetKillCommand(ctx context.Context) (kill.Kill, error) {
 }
 
 func (c *config) GetRefreshCommand(ctx context.Context) (refresh.Refresh, error) {
-	t := c.getCurrent().Type
+	t := c.GetCurrent().Type
 
 	switch t {
 	case "ergomake":
