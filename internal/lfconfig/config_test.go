@@ -52,6 +52,6 @@ contexts:
 		require.NoError(t, err)
 
 		assert.Equal(t, "context", cfg.CurrentContext)
-		assert.Equal(t, map[string]configContext{"context": {Type: "local", Dir: "test-dir"}}, cfg.Contexts)
+		assert.Equal(t, map[string]ConfigContext{"context": {Type: "local", Dir: "test-dir"}}, cfg.Contexts)
 	})
 }
