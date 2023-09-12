@@ -24,7 +24,7 @@ var alphanumericRegex = regexp.MustCompile("^[A-Za-z0-9][A-Za-z0-9_-]*[A-Za-z0-9
 
 var spawnCmd = &cobra.Command{
 	Use:   "spawn <layer> [desired_id]",
-	Short: "creates a layer instance",
+	Short: "Creates a layer instance",
 	Long: `The spawn command creates a layer instance.
 
 Whenever a desired ID is not provided, Layerform will generate a random UUID for the layer instance.

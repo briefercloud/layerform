@@ -21,7 +21,7 @@ func init() {
 
 var configureCmd = &cobra.Command{
 	Use:   "configure",
-	Short: "transforms layer definition configurations in an actual layer definition file",
+	Short: "Transforms layer definition configurations in an actual layer definition file",
 	Long: `Transforms layer definition configurations in an actual layer definition file.
 
 This command is temporary. It will eventually be replaced by a Terraform provider.

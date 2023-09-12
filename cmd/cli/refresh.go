@@ -21,7 +21,7 @@ func init() {
 
 var refreshCmd = &cobra.Command{
 	Use:   "refresh <layer> <instance>",
-	Short: "refreshes a layer instance",
+	Short: "Refreshes a layer instance",
 	Long: `The refresh command updates a layer instance.
 
 This command updates the layer instance resources to comply with the current version of the layer definition it belongs to, it also can be used to update values for the layer instance variables.`,

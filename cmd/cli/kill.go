@@ -22,7 +22,7 @@ func init() {
 var killCmd = &cobra.Command{
 	Use:   "kill <layer> <instance>",
 	Args:  cobra.MinimumNArgs(2),
-	Short: "destroys a layer instance",
+	Short: "Destroys a layer instance",
 	Long: `The kill command destroys a layer instance.
 
 Please notice that the kill command cannot destroy a layer instance which has dependants. To delete a layer instance with dependants, you must first delete all of its dependants.`,
