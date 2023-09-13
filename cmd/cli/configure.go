@@ -10,6 +10,7 @@ import (
 
 	"github.com/pkg/errors"
 
+	"github.com/ergomake/layerform/internal/layerfile"
 	"github.com/ergomake/layerform/internal/lfconfig"
 	"github.com/ergomake/layerform/pkg/command"
 )
@@ -92,6 +93,13 @@ Here's an example layer definition configurations:
 
 		err = configure.Run(ctx, fpath)
 		if err != nil {
+			if errors.Is(err, layerfile.ErrInvalidDefinitionName) {
+				fmt.Fprintln(
+					os.Stderr,
+					"Name must start and end with an alphanumeric character and can include dashes and underscores in between.",
+				)
+			}
+
 			fmt.Fprintf(os.Stderr, "%s\n", err)
 			os.Exit(1)
 		}

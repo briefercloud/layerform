@@ -12,27 +12,27 @@ import (
 	"github.com/ergomake/layerform/pkg/data"
 )
 
-type ergomake struct {
+type cloud struct {
 	baseURL string
 }
 
-var _ Backend = &ergomake{}
+var _ Backend = &cloud{}
 
-func NewErgomake(baseURL string) *ergomake {
-	return &ergomake{baseURL}
+func NewCloud(baseURL string) *cloud {
+	return &cloud{baseURL}
 }
 
-func (e *ergomake) DeleteInstance(ctx context.Context, layerName string, instanceName string) error {
+func (e *cloud) DeleteInstance(ctx context.Context, layerName string, instanceName string) error {
 	url := fmt.Sprintf("%s/v1/definitions/%s/instances/%s", e.baseURL, layerName, instanceName)
 	client := &http.Client{}
 	req, err := http.NewRequest("DELETE", url, nil)
 	if err != nil {
-		return errors.Wrap(err, "fail to create http request to ergomake backend")
+		return errors.Wrap(err, "fail to create http request to cloud backend")
 	}
 
 	resp, err := client.Do(req.WithContext(ctx))
 	if err != nil {
-		return errors.Wrap(err, "fail to perform http request to ergomake backend")
+		return errors.Wrap(err, "fail to perform http request to cloud backend")
 	}
 	defer resp.Body.Close()
 
@@ -43,17 +43,17 @@ func (e *ergomake) DeleteInstance(ctx context.Context, layerName string, instanc
 	return nil
 }
 
-func (e *ergomake) GetInstance(ctx context.Context, definitionName string, instanceName string) (*data.LayerInstance, error) {
+func (e *cloud) GetInstance(ctx context.Context, definitionName string, instanceName string) (*data.LayerInstance, error) {
 	url := fmt.Sprintf("%s/v1/definitions/%s/instances/%s", e.baseURL, definitionName, instanceName)
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return nil, errors.Wrap(err, "fail to create http request to ergomake backend")
+		return nil, errors.Wrap(err, "fail to create http request to cloud backend")
 	}
 
 	resp, err := client.Do(req.WithContext(ctx))
 	if err != nil {
-		return nil, errors.Wrap(err, "fail to perform http request to ergomake backend")
+		return nil, errors.Wrap(err, "fail to perform http request to cloud backend")
 	}
 	defer resp.Body.Close()
 
@@ -75,17 +75,17 @@ func (e *ergomake) GetInstance(ctx context.Context, definitionName string, insta
 	return &instance, nil
 }
 
-func (e *ergomake) ListInstances(ctx context.Context) ([]*data.LayerInstance, error) {
+func (e *cloud) ListInstances(ctx context.Context) ([]*data.LayerInstance, error) {
 	url := fmt.Sprintf("%s/v1/instances", e.baseURL)
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return nil, errors.Wrap(err, "fail to create http request to ergomake backend")
+		return nil, errors.Wrap(err, "fail to create http request to cloud backend")
 	}
 
 	resp, err := client.Do(req.WithContext(ctx))
 	if err != nil {
-		return nil, errors.Wrap(err, "fail to perform http request to ergomake backend")
+		return nil, errors.Wrap(err, "fail to perform http request to cloud backend")
 	}
 	defer resp.Body.Close()
 
@@ -102,17 +102,17 @@ func (e *ergomake) ListInstances(ctx context.Context) ([]*data.LayerInstance, er
 	return instances, nil
 }
 
-func (e *ergomake) ListInstancesByLayer(ctx context.Context, layerName string) ([]*data.LayerInstance, error) {
+func (e *cloud) ListInstancesByLayer(ctx context.Context, layerName string) ([]*data.LayerInstance, error) {
 	url := fmt.Sprintf("%s/v1/definitions/%s/instances", e.baseURL, layerName)
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return nil, errors.Wrap(err, "fail to create http request to ergomake backend")
+		return nil, errors.Wrap(err, "fail to create http request to cloud backend")
 	}
 
 	resp, err := client.Do(req.WithContext(ctx))
 	if err != nil {
-		return nil, errors.Wrap(err, "fail to perform http request to ergomake backend")
+		return nil, errors.Wrap(err, "fail to perform http request to cloud backend")
 	}
 	defer resp.Body.Close()
 
@@ -129,7 +129,7 @@ func (e *ergomake) ListInstancesByLayer(ctx context.Context, layerName string) (
 	return instances, nil
 }
 
-func (e *ergomake) SaveInstance(ctx context.Context, instance *data.LayerInstance) error {
+func (e *cloud) SaveInstance(ctx context.Context, instance *data.LayerInstance) error {
 	url := fmt.Sprintf("%s/v1/instances", e.baseURL)
 	dataBytes, err := json.Marshal(instance)
 	if err != nil {
@@ -139,13 +139,13 @@ func (e *ergomake) SaveInstance(ctx context.Context, instance *data.LayerInstanc
 	client := &http.Client{}
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(dataBytes))
 	if err != nil {
-		return errors.Wrap(err, "fail to create http request to ergomake backend")
+		return errors.Wrap(err, "fail to create http request to cloud backend")
 	}
 
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := client.Do(req.WithContext(ctx))
 	if err != nil {
-		return errors.Wrap(err, "fail to perform http request to ergomake backend")
+		return errors.Wrap(err, "fail to perform http request to cloud backend")
 	}
 	defer resp.Body.Close()
 

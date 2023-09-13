@@ -19,22 +19,22 @@ import (
 	"github.com/ergomake/layerform/pkg/layerinstances"
 )
 
-type ergomakeRefreshCommand struct {
+type cloudRefreshCommand struct {
 	baseURL            string
 	instancesBackend   layerinstances.Backend
 	definitionsBackend layerdefinitions.Backend
 }
 
-var _ Refresh = &ergomakeRefreshCommand{}
+var _ Refresh = &cloudRefreshCommand{}
 
-func NewErgomake(baseURL string) *ergomakeRefreshCommand {
-	instancesBackend := layerinstances.NewErgomake(baseURL)
-	definitionsBackend := layerdefinitions.NewErgomake(baseURL)
+func NewCloud(baseURL string) *cloudRefreshCommand {
+	instancesBackend := layerinstances.NewCloud(baseURL)
+	definitionsBackend := layerdefinitions.NewCloud(baseURL)
 
-	return &ergomakeRefreshCommand{baseURL, instancesBackend, definitionsBackend}
+	return &cloudRefreshCommand{baseURL, instancesBackend, definitionsBackend}
 }
 
-func (e *ergomakeRefreshCommand) Run(
+func (e *cloudRefreshCommand) Run(
 	ctx context.Context,
 	definitionName, instanceName string,
 	vars []string,
@@ -98,7 +98,7 @@ func (e *ergomakeRefreshCommand) Run(
 	if err != nil {
 		s.Error()
 		sm.Stop()
-		return errors.Wrap(err, "fail to create http request to ergomake backend")
+		return errors.Wrap(err, "fail to create http request to cloud backend")
 	}
 
 	req.Header.Set("Content-Type", "application/json")
@@ -106,7 +106,7 @@ func (e *ergomakeRefreshCommand) Run(
 	if err != nil {
 		s.Error()
 		sm.Stop()
-		return errors.Wrap(err, "fail to perform http request to ergomake backend")
+		return errors.Wrap(err, "fail to perform http request to cloud backend")
 	}
 	defer resp.Body.Close()
 

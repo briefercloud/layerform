@@ -19,22 +19,22 @@ import (
 	"github.com/ergomake/layerform/pkg/layerinstances"
 )
 
-type ergomakeKillCommand struct {
+type cloudKillCommand struct {
 	baseURL            string
 	definitionsBackend layerdefinitions.Backend
 	instancesBackend   layerinstances.Backend
 }
 
-var _ Kill = &ergomakeKillCommand{}
+var _ Kill = &cloudKillCommand{}
 
-func NewErgomake(baseURL string) *ergomakeKillCommand {
-	definitionsBackend := layerdefinitions.NewErgomake(baseURL)
-	instancesBackend := layerinstances.NewErgomake(baseURL)
+func NewCloud(baseURL string) *cloudKillCommand {
+	definitionsBackend := layerdefinitions.NewCloud(baseURL)
+	instancesBackend := layerinstances.NewCloud(baseURL)
 
-	return &ergomakeKillCommand{baseURL, definitionsBackend, instancesBackend}
+	return &cloudKillCommand{baseURL, definitionsBackend, instancesBackend}
 }
 
-func (e *ergomakeKillCommand) Run(
+func (e *cloudKillCommand) Run(
 	ctx context.Context,
 	definitionName, instanceName string,
 	autoApprove bool,
@@ -114,7 +114,7 @@ func (e *ergomakeKillCommand) Run(
 	if err != nil {
 		s.Error()
 		sm.Stop()
-		return errors.Wrap(err, "fail to create http request to ergomake backend")
+		return errors.Wrap(err, "fail to create http request to cloud backend")
 	}
 
 	req.Header.Set("Content-Type", "application/json")
@@ -122,7 +122,7 @@ func (e *ergomakeKillCommand) Run(
 	if err != nil {
 		s.Error()
 		sm.Stop()
-		return errors.Wrap(err, "fail to perform http request to ergomake backend")
+		return errors.Wrap(err, "fail to perform http request to cloud backend")
 	}
 	defer resp.Body.Close()
 

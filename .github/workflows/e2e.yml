@@ -11,6 +11,9 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
+    env:
+      LF_TELEMETRY_DISABLED: "1"
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v2
@@ -27,14 +30,24 @@ jobs:
 
       - run: go install .
 
-      - name: Create Layerform config file
+      - name: layerform config set-context
         run: |
-          mkdir -p ~/.layerform
-          echo "currentContext: test" > ~/.layerform/config
-          echo "contexts:" >> ~/.layerform/config
-          echo "  test:" >> ~/.layerform/config
-          echo "    type: local" >> ~/.layerform/config
-          echo "    dir: test" >> ~/.layerform/config
+          # validations, fails if command succeeds
+          ! layerform config set-context test -t local # missing --dir
+
+          ! layerform config set-context test -t s3 --bucket bucket # missing region
+          ! layerform config set-context test -t s3 --region region # missing bucket
+
+          ! layerform config set-context test -t cloud --url "invalid url" --email e@mail.com --password strongpass
+          ! layerform config set-context test -t cloud --url https://a.b.com --email invalid --password strongpass
+          ! layerform config set-context test -t cloud --email invalid --password strongpass # missing url
+          ! layerform config set-context test -t cloud --url https://a.b.com --password strongpass # missing email
+          ! layerform config set-context test -t cloud --url https://a.b.com --email e@mail.com # missing password
+
+          # set valid contexts
+          layerform config set-context test-s3 -t s3 --bucket bucket --region us-east-1
+          layerform config set-context test-cloud -t cloud --url https://demo.layerform.dev --email foo@bar.com --password strongpass
+          layerform config set-context test-local -t local --dir test
 
       - name: Configure
         run: |
