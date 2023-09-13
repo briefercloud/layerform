@@ -9,33 +9,33 @@ import (
 
 	"github.com/pkg/errors"
 
+	"github.com/ergomake/layerform/internal/cloud"
 	"github.com/ergomake/layerform/pkg/data"
 )
 
-type cloud struct {
-	baseURL string
+type cloudBackend struct {
+	client *cloud.HTTPClient
 }
 
-var _ Backend = &cloud{}
+var _ Backend = &cloudBackend{}
 
-func NewCloud(baseURL string) *cloud {
-	return &cloud{baseURL}
+func NewCloud(client *cloud.HTTPClient) *cloudBackend {
+	return &cloudBackend{client}
 }
 
-func (e *cloud) Location(ctx context.Context) (string, error) {
-	return e.baseURL, nil
+func (e *cloudBackend) Location(ctx context.Context) (string, error) {
+	return e.client.BaseURL, nil
 }
 
-func (e *cloud) GetLayer(ctx context.Context, name string) (*data.LayerDefinition, error) {
-	url := fmt.Sprintf("%s/v1/definitions/%s", e.baseURL, name)
+func (e *cloudBackend) GetLayer(ctx context.Context, name string) (*data.LayerDefinition, error) {
+	url := fmt.Sprintf("/v1/definitions/%s", name)
 
-	client := &http.Client{}
-	req, err := http.NewRequest("GET", url, nil)
+	req, err := e.client.NewRequest(ctx, "GET", url, nil)
 	if err != nil {
 		return nil, errors.Wrap(err, "fail to create http request to cloud backend")
 	}
 
-	resp, err := client.Do(req.WithContext(ctx))
+	resp, err := e.client.Do(req)
 	if err != nil {
 		return nil, errors.Wrap(err, "fail to perform http request to cloud backend")
 	}
@@ -54,16 +54,15 @@ func (e *cloud) GetLayer(ctx context.Context, name string) (*data.LayerDefinitio
 	return &layer, nil
 }
 
-func (e *cloud) ListLayers(ctx context.Context) ([]*data.LayerDefinition, error) {
-	url := fmt.Sprintf("%s/v1/definitions", e.baseURL)
+func (e *cloudBackend) ListLayers(ctx context.Context) ([]*data.LayerDefinition, error) {
+	url := "/v1/definitions"
 
-	client := &http.Client{}
-	req, err := http.NewRequest("GET", url, nil)
+	req, err := e.client.NewRequest(ctx, "GET", url, nil)
 	if err != nil {
 		return nil, errors.Wrap(err, "fail to create http request to cloud backend")
 	}
 
-	resp, err := client.Do(req.WithContext(ctx))
+	resp, err := e.client.Do(req)
 	if err != nil {
 		return nil, errors.Wrap(err, "fail to perform http request to cloud backend")
 	}
@@ -82,7 +81,7 @@ func (e *cloud) ListLayers(ctx context.Context) ([]*data.LayerDefinition, error)
 	return layers, nil
 }
 
-func (e *cloud) ResolveDependencies(ctx context.Context, layer *data.LayerDefinition) ([]*data.LayerDefinition, error) {
+func (e *cloudBackend) ResolveDependencies(ctx context.Context, layer *data.LayerDefinition) ([]*data.LayerDefinition, error) {
 	var resolvedLayers []*data.LayerDefinition
 
 	for _, dependencyName := range layer.Dependencies {
@@ -97,22 +96,21 @@ func (e *cloud) ResolveDependencies(ctx context.Context, layer *data.LayerDefini
 	return resolvedLayers, nil
 }
 
-func (e *cloud) UpdateLayers(ctx context.Context, layers []*data.LayerDefinition) error {
+func (e *cloudBackend) UpdateLayers(ctx context.Context, layers []*data.LayerDefinition) error {
 	dataBytes, err := json.Marshal(layers)
 	if err != nil {
 		return errors.Wrap(err, "fail to marshal layers to json")
 	}
 
-	client := &http.Client{}
-	url := fmt.Sprintf("%s/v1/configure", e.baseURL)
+	url := "/v1/configure"
 
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(dataBytes))
+	req, err := e.client.NewRequest(ctx, "POST", url, bytes.NewBuffer(dataBytes))
 	if err != nil {
 		return errors.Wrap(err, "fail to create http request to cloud backend")
 	}
 
-	req.Header.Set("Content-Type", "application/json")
-	resp, err := client.Do(req)
+	req.SetHeader("Content-Type", "application/json")
+	resp, err := e.client.Do(req)
 	if err != nil {
 		return errors.Wrap(err, "fail to perform http request to cloud backend")
 	}

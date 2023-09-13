@@ -9,6 +9,7 @@ import (
 	"github.com/pkg/errors"
 	"gopkg.in/yaml.v3"
 
+	"github.com/ergomake/layerform/internal/cloud"
 	"github.com/ergomake/layerform/internal/storage"
 	"github.com/ergomake/layerform/pkg/command/kill"
 	"github.com/ergomake/layerform/pkg/command/refresh"
@@ -169,7 +170,12 @@ func (c *config) GetInstancesBackend(ctx context.Context) (layerinstances.Backen
 	case "local":
 		blob = storage.NewFileStorage(path.Join(c.getDir(), stateFileName))
 	case "cloud":
-		return layerinstances.NewCloud(current.URL), nil
+		cloudClient, err := c.getCloudClient(ctx)
+		if err != nil {
+			return nil, errors.Wrap(err, "fail to get cloud client")
+		}
+
+		return layerinstances.NewCloud(cloudClient), nil
 	case "s3":
 		b, err := storage.NewS3Backend(current.Bucket, stateFileName, current.Region)
 		if err != nil {
@@ -181,6 +187,11 @@ func (c *config) GetInstancesBackend(ctx context.Context) (layerinstances.Backen
 	return layerinstances.NewFileLikeBackend(ctx, blob)
 }
 
+func (c *config) getCloudClient(ctx context.Context) (*cloud.HTTPClient, error) {
+	current := c.GetCurrent()
+	return cloud.NewHTTPClient(ctx, current.URL, current.Email, current.Password)
+}
+
 const definitionsFileName = "layerform.definitions.json"
 
 func (c *config) GetDefinitionsBackend(ctx context.Context) (layerdefinitions.Backend, error) {
@@ -188,7 +199,12 @@ func (c *config) GetDefinitionsBackend(ctx context.Context) (layerdefinitions.Ba
 	var blob storage.FileLike
 	switch current.Type {
 	case "cloud":
-		return layerdefinitions.NewCloud(current.URL), nil
+		cloudClient, err := c.getCloudClient(ctx)
+		if err != nil {
+			return nil, errors.Wrap(err, "fail to get cloud client")
+		}
+
+		return layerdefinitions.NewCloud(cloudClient), nil
 	case "local":
 		blob = storage.NewFileStorage(path.Join(c.getDir(), definitionsFileName))
 	case "s3":
@@ -207,7 +223,12 @@ func (c *config) GetSpawnCommand(ctx context.Context) (spawn.Spawn, error) {
 
 	switch current.Type {
 	case "cloud":
-		return spawn.NewCloud(current.URL), nil
+		cloudClient, err := c.getCloudClient(ctx)
+		if err != nil {
+			return nil, errors.Wrap(err, "fail to get cloud client")
+		}
+
+		return spawn.NewCloud(cloudClient), nil
 	case "s3":
 		fallthrough
 	case "local":
@@ -232,7 +253,12 @@ func (c *config) GetKillCommand(ctx context.Context) (kill.Kill, error) {
 
 	switch current.Type {
 	case "cloud":
-		return kill.NewCloud(current.URL), nil
+		cloudClient, err := c.getCloudClient(ctx)
+		if err != nil {
+			return nil, errors.Wrap(err, "fail to get cloud client")
+		}
+
+		return kill.NewCloud(cloudClient), nil
 	case "s3":
 		fallthrough
 	case "local":
@@ -257,7 +283,12 @@ func (c *config) GetRefreshCommand(ctx context.Context) (refresh.Refresh, error)
 
 	switch current.Type {
 	case "cloud":
-		return refresh.NewCloud(current.URL), nil
+		cloudClient, err := c.getCloudClient(ctx)
+		if err != nil {
+			return nil, errors.Wrap(err, "fail to get cloud client")
+		}
+
+		return refresh.NewCloud(cloudClient), nil
 	case "s3":
 		fallthrough
 	case "local":

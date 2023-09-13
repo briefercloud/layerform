@@ -14,24 +14,25 @@ import (
 	"github.com/hashicorp/go-hclog"
 	"github.com/pkg/errors"
 
+	"github.com/ergomake/layerform/internal/cloud"
 	"github.com/ergomake/layerform/pkg/data"
 	"github.com/ergomake/layerform/pkg/layerdefinitions"
 	"github.com/ergomake/layerform/pkg/layerinstances"
 )
 
 type cloudKillCommand struct {
-	baseURL            string
+	client             *cloud.HTTPClient
 	definitionsBackend layerdefinitions.Backend
 	instancesBackend   layerinstances.Backend
 }
 
 var _ Kill = &cloudKillCommand{}
 
-func NewCloud(baseURL string) *cloudKillCommand {
-	definitionsBackend := layerdefinitions.NewCloud(baseURL)
-	instancesBackend := layerinstances.NewCloud(baseURL)
+func NewCloud(client *cloud.HTTPClient) *cloudKillCommand {
+	definitionsBackend := layerdefinitions.NewCloud(client)
+	instancesBackend := layerinstances.NewCloud(client)
 
-	return &cloudKillCommand{baseURL, definitionsBackend, instancesBackend}
+	return &cloudKillCommand{client, definitionsBackend, instancesBackend}
 }
 
 func (e *cloudKillCommand) Run(
@@ -97,7 +98,7 @@ func (e *cloudKillCommand) Run(
 		return errors.New("can't kill this layer because other layers depend on it")
 	}
 
-	url := fmt.Sprintf("%s/v1/definitions/%s/instances/%s/kill", e.baseURL, definitionName, instanceName)
+	url := fmt.Sprintf("/v1/definitions/%s/instances/%s/kill", definitionName, instanceName)
 	dataBytes, err := json.Marshal(
 		map[string]interface{}{
 			"vars": vars,
@@ -109,16 +110,15 @@ func (e *cloudKillCommand) Run(
 		return errors.Wrap(err, "fail to marshal instance to json")
 	}
 
-	client := &http.Client{}
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(dataBytes))
+	req, err := e.client.NewRequest(ctx, "POST", url, bytes.NewBuffer(dataBytes))
 	if err != nil {
 		s.Error()
 		sm.Stop()
 		return errors.Wrap(err, "fail to create http request to cloud backend")
 	}
 
-	req.Header.Set("Content-Type", "application/json")
-	resp, err := client.Do(req.WithContext(ctx))
+	req.SetHeader("Content-Type", "application/json")
+	resp, err := e.client.Do(req)
 	if err != nil {
 		s.Error()
 		sm.Stop()
