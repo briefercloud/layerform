@@ -100,7 +100,7 @@ func TestToLayers_ValidateNameOfLayerDefinitions(t *testing.T) {
 					},
 				},
 			},
-			err: errors.New("invalid name: invalid name for a layer definition"),
+			err: errors.Wrap(ErrInvalidDefinitionName, "invalid name for a layer definition"),
 		},
 		{
 			name: "Name has special character",
@@ -111,7 +111,7 @@ func TestToLayers_ValidateNameOfLayerDefinitions(t *testing.T) {
 					},
 				},
 			},
-			err: errors.New("invalid name: invalid!"),
+			err: errors.Wrap(ErrInvalidDefinitionName, "invalid!"),
 		},
 		{
 			name: "Valid name",
