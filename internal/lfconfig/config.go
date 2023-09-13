@@ -2,6 +2,7 @@ package lfconfig
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path"
 
@@ -29,6 +30,19 @@ type ConfigContext struct {
 	URL      string `yaml:"url,omitempty"`
 	Email    string `yaml:"email,omitempty"`
 	Password string `yaml:"password,omitempty"`
+}
+
+func (cfg *ConfigContext) Location() string {
+	switch cfg.Type {
+	case "local":
+		return fmt.Sprintf("dir://%s", cfg.Dir)
+	case "s3":
+		return fmt.Sprintf("s3://%s", cfg.Bucket)
+	case "cloud":
+		return cfg.URL
+	}
+
+	panic("unreachable")
 }
 
 func getDefaultPaths() ([]string, error) {
