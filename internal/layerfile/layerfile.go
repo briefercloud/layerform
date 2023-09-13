@@ -5,11 +5,16 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"regexp"
 
 	"github.com/pkg/errors"
 
 	"github.com/ergomake/layerform/pkg/data"
 )
+
+var ErrInvalidDefinitionName = errors.New("invalid layer definition name")
+
+var alphanumericRegex = regexp.MustCompile("^[A-Za-z0-9][A-Za-z0-9_-]*[A-Za-z0-9]$")
 
 type layerfile struct {
 	sourceFilepath string           `json:"-"`
@@ -39,6 +44,10 @@ func (lf *layerfile) ToLayers() ([]*data.LayerDefinition, error) {
 
 	dataLayers := make([]*data.LayerDefinition, len(lf.Layers))
 	for i, l := range lf.Layers {
+		if !alphanumericRegex.MatchString(l.Name) {
+			return nil, errors.Wrap(ErrInvalidDefinitionName, l.Name)
+		}
+
 		files := []data.LayerDefinitionFile{}
 		for _, f := range l.Files {
 			matches, err := filepath.Glob(path.Join(dir, f))
