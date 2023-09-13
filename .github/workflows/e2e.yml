@@ -11,6 +11,9 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
+    env:
+      LF_TELEMETRY_DISABLED: "1"
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v2
