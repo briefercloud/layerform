@@ -5,7 +5,6 @@ import (
 	"path"
 	"testing"
 
-	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -100,7 +99,7 @@ func TestToLayers_ValidateNameOfLayerDefinitions(t *testing.T) {
 					},
 				},
 			},
-			err: errors.Wrap(ErrInvalidDefinitionName, "invalid name for a layer definition"),
+			err: ErrInvalidDefinitionName,
 		},
 		{
 			name: "Name has special character",
@@ -111,7 +110,7 @@ func TestToLayers_ValidateNameOfLayerDefinitions(t *testing.T) {
 					},
 				},
 			},
-			err: errors.Wrap(ErrInvalidDefinitionName, "invalid!"),
+			err: ErrInvalidDefinitionName,
 		},
 		{
 			name: "Valid name",
@@ -128,10 +127,10 @@ func TestToLayers_ValidateNameOfLayerDefinitions(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			_, err := tt.lf.ToLayers()
-			if err != nil {
-				assert.EqualError(t, tt.err, err.Error())
+			if tt.err == nil {
+				assert.NoError(t, err)
 			} else {
-				assert.NoError(t, tt.err)
+				assert.ErrorIs(t, err, tt.err)
 			}
 		})
 	}
