@@ -169,8 +169,6 @@ func (c *localSpawnCommand) spawnLayer(
 		logger = logger.With("layer", layerName, "instance", instanceName, "layerWorkdir", layerWorkdir)
 		logger.Debug("Spawning layer")
 
-		thisLayerDepInstances := map[string]string{}
-
 		if st, ok := visited[layerName]; ok {
 			logger.Debug("Layer already spawned before")
 			return st, nil
@@ -188,6 +186,14 @@ func (c *localSpawnCommand) spawnLayer(
 
 		if layer == nil {
 			return "", errors.New("layer not found")
+		}
+
+		thisLayerDepInstances := map[string]string{}
+		for _, dep := range layer.Dependencies {
+			thisLayerDepInstances[dep] = dependenciesInstance[dep]
+			if thisLayerDepInstances[dep] == "" {
+				thisLayerDepInstances[dep] = "default"
+			}
 		}
 
 		instanceByLayer := map[string]string{}
