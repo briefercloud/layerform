@@ -4,18 +4,12 @@ variable "prefix" {
 }
 
 locals {
-  dir = pathexpand("~/.layerform/examples/local/${var.prefix}foo-${random_string.foo_suffix.result}")
+  dir = pathexpand("~/.layerform/examples/local/${var.prefix}foo-${var.lf_names.foo}")
 }
 
 resource "local_file" "foo" {
   content  = ""
   filename = "${local.dir}/.keep"
-}
-
-resource "random_string" "foo_suffix" {
-  length  = 4
-  upper   = false
-  special = false
 }
 
 output "foo_file" {
