@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"strings"
 
 	"github.com/pkg/errors"
 	"gopkg.in/yaml.v3"
@@ -149,6 +150,19 @@ func (cfg *config) Save() error {
 }
 
 func (c *config) GetCurrent() ConfigContext {
+	url := strings.TrimSpace(os.Getenv("LF_CLOUD_URL"))
+	email := strings.TrimSpace(os.Getenv("LF_CLOUD_EMAIL"))
+	password := strings.TrimSpace(os.Getenv("LF_CLOUD_PASSWORD"))
+
+	if url != "" && email != "" && password != "" {
+		return ConfigContext{
+			Type:     "cloud",
+			URL:      url,
+			Email:    email,
+			Password: password,
+		}
+	}
+
 	return c.Contexts[c.CurrentContext]
 }
 
