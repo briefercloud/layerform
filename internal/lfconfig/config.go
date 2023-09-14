@@ -170,7 +170,7 @@ func (c *config) GetInstancesBackend(ctx context.Context) (layerinstances.Backen
 	case "local":
 		blob = storage.NewFileStorage(path.Join(c.getDir(), stateFileName))
 	case "cloud":
-		cloudClient, err := c.getCloudClient(ctx)
+		cloudClient, err := c.GetCloudClient(ctx)
 		if err != nil {
 			return nil, errors.Wrap(err, "fail to get cloud client")
 		}
@@ -187,7 +187,7 @@ func (c *config) GetInstancesBackend(ctx context.Context) (layerinstances.Backen
 	return layerinstances.NewFileLikeBackend(ctx, blob)
 }
 
-func (c *config) getCloudClient(ctx context.Context) (*cloud.HTTPClient, error) {
+func (c *config) GetCloudClient(ctx context.Context) (*cloud.HTTPClient, error) {
 	current := c.GetCurrent()
 	return cloud.NewHTTPClient(ctx, current.URL, current.Email, current.Password)
 }
@@ -199,7 +199,7 @@ func (c *config) GetDefinitionsBackend(ctx context.Context) (layerdefinitions.Ba
 	var blob storage.FileLike
 	switch current.Type {
 	case "cloud":
-		cloudClient, err := c.getCloudClient(ctx)
+		cloudClient, err := c.GetCloudClient(ctx)
 		if err != nil {
 			return nil, errors.Wrap(err, "fail to get cloud client")
 		}
@@ -223,7 +223,7 @@ func (c *config) GetSpawnCommand(ctx context.Context) (spawn.Spawn, error) {
 
 	switch current.Type {
 	case "cloud":
-		cloudClient, err := c.getCloudClient(ctx)
+		cloudClient, err := c.GetCloudClient(ctx)
 		if err != nil {
 			return nil, errors.Wrap(err, "fail to get cloud client")
 		}
@@ -253,7 +253,7 @@ func (c *config) GetKillCommand(ctx context.Context) (kill.Kill, error) {
 
 	switch current.Type {
 	case "cloud":
-		cloudClient, err := c.getCloudClient(ctx)
+		cloudClient, err := c.GetCloudClient(ctx)
 		if err != nil {
 			return nil, errors.Wrap(err, "fail to get cloud client")
 		}
@@ -283,7 +283,7 @@ func (c *config) GetRefreshCommand(ctx context.Context) (refresh.Refresh, error)
 
 	switch current.Type {
 	case "cloud":
-		cloudClient, err := c.getCloudClient(ctx)
+		cloudClient, err := c.GetCloudClient(ctx)
 		if err != nil {
 			return nil, errors.Wrap(err, "fail to get cloud client")
 		}
