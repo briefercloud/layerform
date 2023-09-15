@@ -76,12 +76,52 @@ func (c *localKillCommand) Run(
 		),
 	)
 
-	hasDependants, err := HasDependants(
+	// hasDependants, err := HasDependants(
+	// 	ctx,
+	// 	c.instancesBackend,
+	// 	c.definitionsBackend,
+	// 	layerName,
+	// 	instanceName,
+	// )
+	// if err != nil {
+	// 	s.Error()
+	// 	sm.Stop()
+	// 	return errors.Wrap(err, "fail to check if layer has dependants")
+	// }
+
+	// if hasDependants {
+	// 	dependants, err := Dependants(
+	// 		ctx,
+	// 		c.instancesBackend,
+	// 		c.definitionsBackend,
+	// 		layerName,
+	// 		instanceName,
+	// 		make(map[string]bool),
+	// 	)
+	// 	if err != nil {
+	// 		s.Error()
+	// 		sm.Stop()
+	// 		return errors.Wrap(err, "fail to check dependants")
+	// 	}
+
+	// 	if len(dependants) > 0 {
+	// 		for _, d := range dependants {
+	// 			fmt.Print(strings.Split(d, "\n")[0])
+	// 		}
+	// 	}
+
+	// 	s.Error()
+	// 	sm.Stop()
+	// 	return errors.New("can't kill this layer because other layers depend on it")
+	// }
+
+	dependants, err := GetDependants(
 		ctx,
 		c.instancesBackend,
 		c.definitionsBackend,
 		layerName,
 		instanceName,
+		make(map[string]bool),
 	)
 	if err != nil {
 		s.Error()
@@ -89,10 +129,20 @@ func (c *localKillCommand) Run(
 		return errors.Wrap(err, "fail to check if layer has dependants")
 	}
 
-	if hasDependants {
+	force := true
+
+	if len(dependants) > 0 && !force {
 		s.Error()
 		sm.Stop()
 		return errors.New("can't kill this layer because other layers depend on it")
+	}
+
+	if force {
+		for _, d := range dependants {
+			fmt.Print(d.DefinitionName+" = ", d.InstanceName+"\n")
+			//c.Run(ctx, d.DefinitionName, d.InstanceName, autoApprove, vars)
+			c.Run(ctx, d.DefinitionName, d.InstanceName, autoApprove, vars)
+		}
 	}
 
 	tfpath, err := terraform.GetTFPath(ctx)
