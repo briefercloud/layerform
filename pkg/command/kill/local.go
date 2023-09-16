@@ -18,6 +18,7 @@ import (
 	"github.com/ergomake/layerform/internal/tfclient"
 	"github.com/ergomake/layerform/pkg/command"
 	"github.com/ergomake/layerform/pkg/data"
+	"github.com/ergomake/layerform/pkg/envvars"
 	"github.com/ergomake/layerform/pkg/layerdefinitions"
 	"github.com/ergomake/layerform/pkg/layerinstances"
 )
@@ -25,12 +26,17 @@ import (
 type localKillCommand struct {
 	definitionsBackend layerdefinitions.Backend
 	instancesBackend   layerinstances.Backend
+	envVarsBackend     envvars.Backend
 }
 
 var _ Kill = &localKillCommand{}
 
-func NewLocal(definitionsBackend layerdefinitions.Backend, instancesBackend layerinstances.Backend) *localKillCommand {
-	return &localKillCommand{definitionsBackend, instancesBackend}
+func NewLocal(
+	definitionsBackend layerdefinitions.Backend,
+	instancesBackend layerinstances.Backend,
+	envVarsBackend envvars.Backend,
+) *localKillCommand {
+	return &localKillCommand{definitionsBackend, instancesBackend, envVarsBackend}
 }
 
 func (c *localKillCommand) Run(
@@ -93,6 +99,22 @@ func (c *localKillCommand) Run(
 		s.Error()
 		sm.Stop()
 		return errors.New("can't kill this layer because other layers depend on it")
+	}
+
+	envVars, err := c.envVarsBackend.ListVariables(ctx)
+	if err != nil {
+		s.Error()
+		sm.Stop()
+		return errors.Wrap(err, "fail to list environment variables")
+	}
+
+	for _, envVar := range envVars {
+		err := os.Setenv(envVar.Name, envVar.Value)
+		if err != nil {
+			s.Error()
+			sm.Stop()
+			return errors.Wrapf(err, "fail to set %s environment variable", envVar.Name)
+		}
 	}
 
 	tfpath, err := terraform.GetTFPath(ctx)
