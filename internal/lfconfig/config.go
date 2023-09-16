@@ -15,6 +15,7 @@ import (
 	"github.com/ergomake/layerform/pkg/command/kill"
 	"github.com/ergomake/layerform/pkg/command/refresh"
 	"github.com/ergomake/layerform/pkg/command/spawn"
+	"github.com/ergomake/layerform/pkg/envvars"
 	"github.com/ergomake/layerform/pkg/layerdefinitions"
 	"github.com/ergomake/layerform/pkg/layerinstances"
 )
@@ -256,7 +257,12 @@ func (c *config) GetSpawnCommand(ctx context.Context) (spawn.Spawn, error) {
 			return nil, errors.Wrap(err, "fail to get instance backend")
 		}
 
-		return spawn.NewLocal(layersBackend, instancesBackend), nil
+		envVarsBackend, err := c.GetEnvVarsBackend(ctx)
+		if err != nil {
+			return nil, errors.Wrap(err, "fail to get env vars backend")
+		}
+
+		return spawn.NewLocal(layersBackend, instancesBackend, envVarsBackend), nil
 	}
 
 	return nil, errors.Errorf("fail to get spawn command unexpected context type %s", current.Type)
@@ -286,7 +292,12 @@ func (c *config) GetKillCommand(ctx context.Context) (kill.Kill, error) {
 			return nil, errors.Wrap(err, "fail to get instance backend")
 		}
 
-		return kill.NewLocal(layersBackend, instancesBackend), nil
+		envVarsBackend, err := c.GetEnvVarsBackend(ctx)
+		if err != nil {
+			return nil, errors.Wrap(err, "fail to get env vars backend")
+		}
+
+		return kill.NewLocal(layersBackend, instancesBackend, envVarsBackend), nil
 	}
 
 	return nil, errors.Errorf("fail to get kill command unexpected context type %s", current.Type)
@@ -316,8 +327,41 @@ func (c *config) GetRefreshCommand(ctx context.Context) (refresh.Refresh, error)
 			return nil, errors.Wrap(err, "fail to get instance backend")
 		}
 
-		return refresh.NewLocal(layersBackend, instancesBackend), nil
+		envVarsBackend, err := c.GetEnvVarsBackend(ctx)
+		if err != nil {
+			return nil, errors.Wrap(err, "fail to get env vars backend")
+		}
+
+		return refresh.NewLocal(layersBackend, instancesBackend, envVarsBackend), nil
 	}
 
 	return nil, errors.Errorf("fail to get spawn command unexpected context type %s", current.Type)
+}
+
+const envVarsFileName = "layerform.env"
+
+func (c *config) GetEnvVarsBackend(ctx context.Context) (envvars.Backend, error) {
+	current := c.GetCurrent()
+
+	switch current.Type {
+	case "cloud":
+		cloudClient, err := c.GetCloudClient(ctx)
+		if err != nil {
+			return nil, errors.Wrap(err, "fail to get cloud client")
+		}
+
+		return envvars.NewCloud(cloudClient), nil
+	case "s3":
+		s3, err := storage.NewS3Backend(current.Bucket, envVarsFileName, current.Region)
+		if err != nil {
+			return nil, errors.Wrap(err, "fail to initialize s3 backend")
+		}
+
+		return envvars.NewFileLikeBackend(ctx, s3)
+	case "local":
+		fileStorage := storage.NewFileStorage(path.Join(c.getDir(), envVarsFileName))
+		return envvars.NewFileLikeBackend(ctx, fileStorage)
+	}
+
+	return nil, errors.Errorf("fail to get set-env command unexpected context type %s", current.Type)
 }
