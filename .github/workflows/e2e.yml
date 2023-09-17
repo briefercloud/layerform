@@ -49,6 +49,13 @@ jobs:
           layerform config set-context test-cloud -t cloud --url https://demo.layerform.dev --email foo@bar.com --password strongpass
           layerform config set-context test-local -t local --dir test
 
+      - name: layerform config set-context
+        run: |
+          # fails if command succeeds
+          ! layerform config select-context test-does-not-exist # context does not exist
+
+          layerform config set-context test-local -t local --dir test && layerform config select-context test-local
+
       - name: Configure
         run: |
           layerform configure --file examples/local/layerform.json
