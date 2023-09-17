@@ -96,7 +96,7 @@ func (e *cloudKillCommand) Run(
 	if hasDependants {
 		s.Error()
 		sm.Stop()
-		return errors.New("can't kill this layer because other layers depend on it\nuse the --force flag to kill it anyway")
+		return errors.New("can't kill this layer because other layers depend on it")
 	}
 
 	url := fmt.Sprintf("/v1/definitions/%s/instances/%s/kill", definitionName, instanceName)
