@@ -38,6 +38,7 @@ func (c *localKillCommand) Run(
 	layerName, instanceName string,
 	autoApprove bool,
 	vars []string,
+	force bool,
 ) error {
 	logger := hclog.FromContext(ctx)
 
@@ -129,8 +130,6 @@ func (c *localKillCommand) Run(
 		return errors.Wrap(err, "fail to check if layer has dependants")
 	}
 
-	force := true
-
 	if len(dependants) > 0 && !force {
 		s.Error()
 		sm.Stop()
@@ -138,10 +137,9 @@ func (c *localKillCommand) Run(
 	}
 
 	if force {
+		autoApprove = true
 		for _, d := range dependants {
-			fmt.Print(d.DefinitionName+" = ", d.InstanceName+"\n")
-			//c.Run(ctx, d.DefinitionName, d.InstanceName, autoApprove, vars)
-			c.Run(ctx, d.DefinitionName, d.InstanceName, autoApprove, vars)
+			c.Run(ctx, d.DefinitionName, d.InstanceName, autoApprove, vars, force)
 		}
 	}
 
