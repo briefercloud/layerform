@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/ergomake/layerform/internal/lfconfig"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+
+	"github.com/ergomake/layerform/internal/lfconfig"
 )
 
 func init() {
