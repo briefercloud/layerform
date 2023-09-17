@@ -77,45 +77,6 @@ func (c *localKillCommand) Run(
 		),
 	)
 
-	// hasDependants, err := HasDependants(
-	// 	ctx,
-	// 	c.instancesBackend,
-	// 	c.definitionsBackend,
-	// 	layerName,
-	// 	instanceName,
-	// )
-	// if err != nil {
-	// 	s.Error()
-	// 	sm.Stop()
-	// 	return errors.Wrap(err, "fail to check if layer has dependants")
-	// }
-
-	// if hasDependants {
-	// 	dependants, err := Dependants(
-	// 		ctx,
-	// 		c.instancesBackend,
-	// 		c.definitionsBackend,
-	// 		layerName,
-	// 		instanceName,
-	// 		make(map[string]bool),
-	// 	)
-	// 	if err != nil {
-	// 		s.Error()
-	// 		sm.Stop()
-	// 		return errors.Wrap(err, "fail to check dependants")
-	// 	}
-
-	// 	if len(dependants) > 0 {
-	// 		for _, d := range dependants {
-	// 			fmt.Print(strings.Split(d, "\n")[0])
-	// 		}
-	// 	}
-
-	// 	s.Error()
-	// 	sm.Stop()
-	// 	return errors.New("can't kill this layer because other layers depend on it")
-	// }
-
 	dependants, err := GetDependants(
 		ctx,
 		c.instancesBackend,
@@ -133,7 +94,7 @@ func (c *localKillCommand) Run(
 	if len(dependants) > 0 && !force {
 		s.Error()
 		sm.Stop()
-		return errors.New("can't kill this layer because other layers depend on it")
+		return errors.New("can't kill this layer because other layers depend on it\nuse the --force flag to kill it anyway")
 	}
 
 	if force {
