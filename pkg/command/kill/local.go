@@ -44,6 +44,7 @@ func (c *localKillCommand) Run(
 	layerName, instanceName string,
 	autoApprove bool,
 	vars []string,
+	force bool,
 ) error {
 	logger := hclog.FromContext(ctx)
 
@@ -82,12 +83,13 @@ func (c *localKillCommand) Run(
 		),
 	)
 
-	hasDependants, err := HasDependants(
+	dependants, err := GetDependants(
 		ctx,
 		c.instancesBackend,
 		c.definitionsBackend,
 		layerName,
 		instanceName,
+		make(map[string]bool),
 	)
 	if err != nil {
 		s.Error()
@@ -95,10 +97,20 @@ func (c *localKillCommand) Run(
 		return errors.Wrap(err, "fail to check if layer has dependants")
 	}
 
-	if hasDependants {
+	if len(dependants) > 0 && !force {
 		s.Error()
 		sm.Stop()
-		return errors.New("can't kill this layer because other layers depend on it")
+		return errors.New("can't kill this layer because other layers depend on it\nuse the --force flag to kill it anyway")
+	}
+
+	if force {
+		autoApprove = true
+		for _, d := range dependants {
+			err = c.Run(ctx, d.DefinitionName, d.InstanceName, autoApprove, vars, force)
+			if err != nil {
+				return errors.Wrapf(err, "fail to kill dependant %s=%s", d.DefinitionName, d.InstanceName)
+			}
+		}
 	}
 
 	envVars, err := c.envVarsBackend.ListVariables(ctx)

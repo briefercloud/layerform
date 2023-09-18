@@ -40,6 +40,7 @@ func (e *cloudKillCommand) Run(
 	definitionName, instanceName string,
 	autoApprove bool,
 	vars []string,
+	force bool,
 ) error {
 	logger := hclog.FromContext(ctx)
 	logger.Debug("Killing instance remotely")
