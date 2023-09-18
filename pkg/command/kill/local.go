@@ -100,7 +100,10 @@ func (c *localKillCommand) Run(
 	if force {
 		autoApprove = true
 		for _, d := range dependants {
-			c.Run(ctx, d.DefinitionName, d.InstanceName, autoApprove, vars, force)
+			err = c.Run(ctx, d.DefinitionName, d.InstanceName, autoApprove, vars, force)
+			if err != nil {
+				return errors.Wrapf(err, "fail to kill dependant %s=%s", d.DefinitionName, d.InstanceName)
+			}
 		}
 	}
 
