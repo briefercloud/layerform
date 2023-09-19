@@ -58,12 +58,12 @@ jobs:
           layerform config use-context test-local
           layerform config get-contexts | tee usecontext
           grep -E '^\*\s+test-local' usecontext
-          !grep -E '^\*\s+test-s3' usecontext
+          ! grep -E '^\*\s+test-s3' usecontext
 
           # switch context to test-s3
           layerform config use-context test-s3
           layerform config get-contexts | tee usecontext
-          !grep -E '^\*\s+test-local' usecontext
+          ! grep -E '^\*\s+test-local' usecontext
           grep -E '^\*\s+test-s3' usecontext
 
       - name: Configure
