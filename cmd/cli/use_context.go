@@ -11,17 +11,17 @@ import (
 )
 
 func init() {
-	configCmd.AddCommand(configSelectContextCmd)
+	configCmd.AddCommand(configUseContextCmd)
 }
 
-var configSelectContextCmd = &cobra.Command{
-	Use:   "select-context <name>",
-	Short: "Select a context entry from layerform config file",
-	Long: `Select a context entry from layerform config file.
+var configUseContextCmd = &cobra.Command{
+	Use:   "use-context <name>",
+	Short: "Use a context entry from layerform config file",
+	Long: `Use a context entry from layerform config file.
 	
-  Selecting a name that does not exist will return error.`,
-	Example: `# Select a context
-layerform config select-context local-example`,
+  Using a name that does not exist will return error.`,
+	Example: `# Use a context
+layerform config use-context local-example`,
 	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		name := args[0]
@@ -36,7 +36,7 @@ layerform config select-context local-example`,
 		if !ok {
 			fmt.Fprintf(
 				os.Stderr,
-				"context %s does not exist\n",
+				"no context exists with the name \"%s\".\n",
 				name,
 			)
 			os.Exit(1)
@@ -50,7 +50,7 @@ layerform config select-context local-example`,
 			os.Exit(1)
 		}
 
-		fmt.Fprintf(os.Stdout, "Context \"%s\" selected.\n", name)
+		fmt.Fprintf(os.Stdout, "Switched to context \"%s\".\n", name)
 	},
 	SilenceErrors: true,
 }
