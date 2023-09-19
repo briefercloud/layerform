@@ -14,21 +14,22 @@ import (
 	"github.com/hashicorp/go-hclog"
 	"github.com/pkg/errors"
 
+	"github.com/ergomake/layerform/internal/cloud"
 	"github.com/ergomake/layerform/pkg/data"
 	"github.com/ergomake/layerform/pkg/layerinstances"
 )
 
 type cloudSpawnCommand struct {
-	baseURL          string
+	client           *cloud.HTTPClient
 	instancesBackend layerinstances.Backend
 }
 
 var _ Spawn = &cloudSpawnCommand{}
 
-func NewCloud(baseURL string) *cloudSpawnCommand {
-	instancesBackend := layerinstances.NewCloud(baseURL)
+func NewCloud(client *cloud.HTTPClient) *cloudSpawnCommand {
+	instancesBackend := layerinstances.NewCloud(client)
 
-	return &cloudSpawnCommand{baseURL, instancesBackend}
+	return &cloudSpawnCommand{client, instancesBackend}
 }
 
 func (e *cloudSpawnCommand) Run(
@@ -48,7 +49,7 @@ func (e *cloudSpawnCommand) Run(
 		return errors.Wrap(err, "fail to get instance")
 	}
 
-	url := fmt.Sprintf("%s/v1/definitions/%s/instances/%s/spawn", e.baseURL, definitionName, instanceName)
+	url := fmt.Sprintf("/v1/definitions/%s/instances/%s/spawn", definitionName, instanceName)
 	dataBytes, err := json.Marshal(
 		map[string]interface{}{
 			"vars":                 vars,
@@ -59,14 +60,13 @@ func (e *cloudSpawnCommand) Run(
 		return errors.Wrap(err, "fail to marshal instance to json")
 	}
 
-	client := &http.Client{}
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(dataBytes))
+	req, err := e.client.NewRequest(ctx, "POST", url, bytes.NewBuffer(dataBytes))
 	if err != nil {
 		return errors.Wrap(err, "fail to create http request to cloud backend")
 	}
 
-	req.Header.Set("Content-Type", "application/json")
-	resp, err := client.Do(req.WithContext(ctx))
+	req.SetHeader("Content-Type", "application/json")
+	resp, err := e.client.Do(req)
 	if err != nil {
 		return errors.Wrap(err, "fail to perform http request to cloud backend")
 	}

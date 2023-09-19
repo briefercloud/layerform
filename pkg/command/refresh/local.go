@@ -17,6 +17,7 @@ import (
 	"github.com/ergomake/layerform/internal/tfclient"
 	"github.com/ergomake/layerform/pkg/command"
 	"github.com/ergomake/layerform/pkg/data"
+	"github.com/ergomake/layerform/pkg/envvars"
 	"github.com/ergomake/layerform/pkg/layerdefinitions"
 	"github.com/ergomake/layerform/pkg/layerinstances"
 )
@@ -24,6 +25,7 @@ import (
 type localRefreshCommand struct {
 	definitionsBackend layerdefinitions.Backend
 	instancesBackend   layerinstances.Backend
+	envVarsBackend     envvars.Backend
 }
 
 var _ Refresh = &localRefreshCommand{}
@@ -31,8 +33,9 @@ var _ Refresh = &localRefreshCommand{}
 func NewLocal(
 	definitionsBackend layerdefinitions.Backend,
 	instancesBackend layerinstances.Backend,
+	envVarsBackend envvars.Backend,
 ) *localRefreshCommand {
-	return &localRefreshCommand{definitionsBackend, instancesBackend}
+	return &localRefreshCommand{definitionsBackend, instancesBackend, envVarsBackend}
 }
 
 func (c *localRefreshCommand) Run(
@@ -76,6 +79,22 @@ func (c *localRefreshCommand) Run(
 		}
 
 		return errors.Wrap(err, "fail to get layer instance")
+	}
+
+	envVars, err := c.envVarsBackend.ListVariables(ctx)
+	if err != nil {
+		s.Error()
+		sm.Stop()
+		return errors.Wrap(err, "fail to list environment variables")
+	}
+
+	for _, envVar := range envVars {
+		err := os.Setenv(envVar.Name, envVar.Value)
+		if err != nil {
+			s.Error()
+			sm.Stop()
+			return errors.Wrapf(err, "fail to set %s environment variable", envVar.Name)
+		}
 	}
 
 	tfpath, err := terraform.GetTFPath(ctx)

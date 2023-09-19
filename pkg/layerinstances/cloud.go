@@ -9,28 +9,28 @@ import (
 
 	"github.com/pkg/errors"
 
+	"github.com/ergomake/layerform/internal/cloud"
 	"github.com/ergomake/layerform/pkg/data"
 )
 
-type cloud struct {
-	baseURL string
+type cloudBackend struct {
+	client *cloud.HTTPClient
 }
 
-var _ Backend = &cloud{}
+var _ Backend = &cloudBackend{}
 
-func NewCloud(baseURL string) *cloud {
-	return &cloud{baseURL}
+func NewCloud(client *cloud.HTTPClient) *cloudBackend {
+	return &cloudBackend{client}
 }
 
-func (e *cloud) DeleteInstance(ctx context.Context, layerName string, instanceName string) error {
-	url := fmt.Sprintf("%s/v1/definitions/%s/instances/%s", e.baseURL, layerName, instanceName)
-	client := &http.Client{}
-	req, err := http.NewRequest("DELETE", url, nil)
+func (e *cloudBackend) DeleteInstance(ctx context.Context, layerName string, instanceName string) error {
+	url := fmt.Sprintf("/v1/definitions/%s/instances/%s", layerName, instanceName)
+	req, err := e.client.NewRequest(ctx, "DELETE", url, nil)
 	if err != nil {
 		return errors.Wrap(err, "fail to create http request to cloud backend")
 	}
 
-	resp, err := client.Do(req.WithContext(ctx))
+	resp, err := e.client.Do(req)
 	if err != nil {
 		return errors.Wrap(err, "fail to perform http request to cloud backend")
 	}
@@ -43,15 +43,14 @@ func (e *cloud) DeleteInstance(ctx context.Context, layerName string, instanceNa
 	return nil
 }
 
-func (e *cloud) GetInstance(ctx context.Context, definitionName string, instanceName string) (*data.LayerInstance, error) {
-	url := fmt.Sprintf("%s/v1/definitions/%s/instances/%s", e.baseURL, definitionName, instanceName)
-	client := &http.Client{}
-	req, err := http.NewRequest("GET", url, nil)
+func (e *cloudBackend) GetInstance(ctx context.Context, definitionName string, instanceName string) (*data.LayerInstance, error) {
+	url := fmt.Sprintf("/v1/definitions/%s/instances/%s", definitionName, instanceName)
+	req, err := e.client.NewRequest(ctx, "GET", url, nil)
 	if err != nil {
 		return nil, errors.Wrap(err, "fail to create http request to cloud backend")
 	}
 
-	resp, err := client.Do(req.WithContext(ctx))
+	resp, err := e.client.Do(req)
 	if err != nil {
 		return nil, errors.Wrap(err, "fail to perform http request to cloud backend")
 	}
@@ -75,15 +74,14 @@ func (e *cloud) GetInstance(ctx context.Context, definitionName string, instance
 	return &instance, nil
 }
 
-func (e *cloud) ListInstances(ctx context.Context) ([]*data.LayerInstance, error) {
-	url := fmt.Sprintf("%s/v1/instances", e.baseURL)
-	client := &http.Client{}
-	req, err := http.NewRequest("GET", url, nil)
+func (e *cloudBackend) ListInstances(ctx context.Context) ([]*data.LayerInstance, error) {
+	url := "/v1/instances"
+	req, err := e.client.NewRequest(ctx, "GET", url, nil)
 	if err != nil {
 		return nil, errors.Wrap(err, "fail to create http request to cloud backend")
 	}
 
-	resp, err := client.Do(req.WithContext(ctx))
+	resp, err := e.client.Do(req)
 	if err != nil {
 		return nil, errors.Wrap(err, "fail to perform http request to cloud backend")
 	}
@@ -102,15 +100,14 @@ func (e *cloud) ListInstances(ctx context.Context) ([]*data.LayerInstance, error
 	return instances, nil
 }
 
-func (e *cloud) ListInstancesByLayer(ctx context.Context, layerName string) ([]*data.LayerInstance, error) {
-	url := fmt.Sprintf("%s/v1/definitions/%s/instances", e.baseURL, layerName)
-	client := &http.Client{}
-	req, err := http.NewRequest("GET", url, nil)
+func (e *cloudBackend) ListInstancesByLayer(ctx context.Context, layerName string) ([]*data.LayerInstance, error) {
+	url := fmt.Sprintf("/v1/definitions/%s/instances", layerName)
+	req, err := e.client.NewRequest(ctx, "GET", url, nil)
 	if err != nil {
 		return nil, errors.Wrap(err, "fail to create http request to cloud backend")
 	}
 
-	resp, err := client.Do(req.WithContext(ctx))
+	resp, err := e.client.Do(req)
 	if err != nil {
 		return nil, errors.Wrap(err, "fail to perform http request to cloud backend")
 	}
@@ -129,21 +126,20 @@ func (e *cloud) ListInstancesByLayer(ctx context.Context, layerName string) ([]*
 	return instances, nil
 }
 
-func (e *cloud) SaveInstance(ctx context.Context, instance *data.LayerInstance) error {
-	url := fmt.Sprintf("%s/v1/instances", e.baseURL)
+func (e *cloudBackend) SaveInstance(ctx context.Context, instance *data.LayerInstance) error {
+	url := "/v1/instances"
 	dataBytes, err := json.Marshal(instance)
 	if err != nil {
 		return errors.Wrap(err, "fail to marshal instance to json")
 	}
 
-	client := &http.Client{}
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(dataBytes))
+	req, err := e.client.NewRequest(ctx, "POST", url, bytes.NewBuffer(dataBytes))
 	if err != nil {
 		return errors.Wrap(err, "fail to create http request to cloud backend")
 	}
 
-	req.Header.Set("Content-Type", "application/json")
-	resp, err := client.Do(req.WithContext(ctx))
+	req.SetHeader("Content-Type", "application/json")
+	resp, err := e.client.Do(req)
 	if err != nil {
 		return errors.Wrap(err, "fail to perform http request to cloud backend")
 	}

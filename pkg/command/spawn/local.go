@@ -20,6 +20,7 @@ import (
 	"github.com/ergomake/layerform/internal/tfclient"
 	"github.com/ergomake/layerform/pkg/command"
 	"github.com/ergomake/layerform/pkg/data"
+	"github.com/ergomake/layerform/pkg/envvars"
 	"github.com/ergomake/layerform/pkg/layerdefinitions"
 	"github.com/ergomake/layerform/pkg/layerinstances"
 )
@@ -27,12 +28,17 @@ import (
 type localSpawnCommand struct {
 	definitionsBackend layerdefinitions.Backend
 	instancesBackend   layerinstances.Backend
+	envVarsBackend     envvars.Backend
 }
 
 var _ Spawn = &localSpawnCommand{}
 
-func NewLocal(definitionsBackend layerdefinitions.Backend, instancesBackend layerinstances.Backend) *localSpawnCommand {
-	return &localSpawnCommand{definitionsBackend, instancesBackend}
+func NewLocal(
+	definitionsBackend layerdefinitions.Backend,
+	instancesBackend layerinstances.Backend,
+	envVarsBackend envvars.Backend,
+) *localSpawnCommand {
+	return &localSpawnCommand{definitionsBackend, instancesBackend, envVarsBackend}
 }
 
 func (c *localSpawnCommand) Run(
@@ -62,6 +68,18 @@ func (c *localSpawnCommand) Run(
 	}
 	if !errors.Is(err, layerinstances.ErrInstanceNotFound) {
 		return errors.Wrap(err, "fail to get instance")
+	}
+
+	envVars, err := c.envVarsBackend.ListVariables(ctx)
+	if err != nil {
+		return errors.Wrap(err, "fail to list environment variables")
+	}
+
+	for _, envVar := range envVars {
+		err := os.Setenv(envVar.Name, envVar.Value)
+		if err != nil {
+			return errors.Wrapf(err, "fail to set %s environment variable", envVar.Name)
+		}
 	}
 
 	err = c.spawnLayer(ctx, layerName, instanceName, workdir, tfpath, dependenciesInstance, vars)
@@ -169,8 +187,6 @@ func (c *localSpawnCommand) spawnLayer(
 		logger = logger.With("layer", layerName, "instance", instanceName, "layerWorkdir", layerWorkdir)
 		logger.Debug("Spawning layer")
 
-		thisLayerDepInstances := map[string]string{}
-
 		if st, ok := visited[layerName]; ok {
 			logger.Debug("Layer already spawned before")
 			return st, nil
@@ -188,6 +204,14 @@ func (c *localSpawnCommand) spawnLayer(
 
 		if layer == nil {
 			return "", errors.New("layer not found")
+		}
+
+		thisLayerDepInstances := map[string]string{}
+		for _, dep := range layer.Dependencies {
+			thisLayerDepInstances[dep] = dependenciesInstance[dep]
+			if thisLayerDepInstances[dep] == "" {
+				thisLayerDepInstances[dep] = "default"
+			}
 		}
 
 		instanceByLayer := map[string]string{}

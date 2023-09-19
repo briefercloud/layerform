@@ -14,24 +14,25 @@ import (
 	"github.com/hashicorp/go-hclog"
 	"github.com/pkg/errors"
 
+	"github.com/ergomake/layerform/internal/cloud"
 	"github.com/ergomake/layerform/pkg/data"
 	"github.com/ergomake/layerform/pkg/layerdefinitions"
 	"github.com/ergomake/layerform/pkg/layerinstances"
 )
 
 type cloudRefreshCommand struct {
-	baseURL            string
+	client             *cloud.HTTPClient
 	instancesBackend   layerinstances.Backend
 	definitionsBackend layerdefinitions.Backend
 }
 
 var _ Refresh = &cloudRefreshCommand{}
 
-func NewCloud(baseURL string) *cloudRefreshCommand {
-	instancesBackend := layerinstances.NewCloud(baseURL)
-	definitionsBackend := layerdefinitions.NewCloud(baseURL)
+func NewCloud(client *cloud.HTTPClient) *cloudRefreshCommand {
+	instancesBackend := layerinstances.NewCloud(client)
+	definitionsBackend := layerdefinitions.NewCloud(client)
 
-	return &cloudRefreshCommand{baseURL, instancesBackend, definitionsBackend}
+	return &cloudRefreshCommand{client, instancesBackend, definitionsBackend}
 }
 
 func (e *cloudRefreshCommand) Run(
@@ -81,7 +82,7 @@ func (e *cloudRefreshCommand) Run(
 	s.Complete()
 	s = sm.AddSpinner(fmt.Sprintf("Refreshing instance \"%s\" of layer \"%s\" remotely", instanceName, definitionName))
 
-	url := fmt.Sprintf("%s/v1/definitions/%s/instances/%s/refresh", e.baseURL, definitionName, instanceName)
+	url := fmt.Sprintf("/v1/definitions/%s/instances/%s/refresh", definitionName, instanceName)
 	dataBytes, err := json.Marshal(
 		map[string]interface{}{
 			"vars": vars,
@@ -93,16 +94,15 @@ func (e *cloudRefreshCommand) Run(
 		return errors.Wrap(err, "fail to marshal instance to json")
 	}
 
-	client := &http.Client{}
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(dataBytes))
+	req, err := e.client.NewRequest(ctx, "POST", url, bytes.NewBuffer(dataBytes))
 	if err != nil {
 		s.Error()
 		sm.Stop()
 		return errors.Wrap(err, "fail to create http request to cloud backend")
 	}
 
-	req.Header.Set("Content-Type", "application/json")
-	resp, err := client.Do(req.WithContext(ctx))
+	req.SetHeader("Content-Type", "application/json")
+	resp, err := e.client.Do(req)
 	if err != nil {
 		s.Error()
 		sm.Stop()
