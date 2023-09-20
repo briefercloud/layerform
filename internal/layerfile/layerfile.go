@@ -12,7 +12,10 @@ import (
 	"github.com/ergomake/layerform/pkg/data"
 )
 
-var ErrInvalidDefinitionName = errors.New("invalid layer definition name")
+var (
+	ErrInvalidDefinitionName  = errors.New("invalid layer definition name")
+	ErrDependencyDoesNotExist = errors.New("dependency does not exist")
+)
 
 var alphanumericRegex = regexp.MustCompile("^[A-Za-z0-9][A-Za-z0-9_-]*[A-Za-z0-9]$")
 
@@ -40,6 +43,10 @@ func FromFile(sourceFilepath string) (*layerfile, error) {
 }
 
 func (lf *layerfile) ToLayers() ([]*data.LayerDefinition, error) {
+	if err := lf.validateLayersDependencies(); err != nil {
+		return nil, errors.Wrap(err, "fail to validate layers dependencies")
+	}
+
 	dir := path.Dir(lf.sourceFilepath)
 
 	dataLayers := make([]*data.LayerDefinition, len(lf.Layers))
@@ -88,4 +95,22 @@ func (lf *layerfile) ToLayers() ([]*data.LayerDefinition, error) {
 	}
 
 	return dataLayers, nil
+}
+
+func (lf *layerfile) validateLayersDependencies() error {
+	names := make(map[string]struct{})
+
+	for _, l := range lf.Layers {
+		names[l.Name] = struct{}{}
+	}
+
+	for _, l := range lf.Layers {
+		for _, d := range l.Dependencies {
+			if _, ok := names[d]; !ok {
+				return errors.Wrap(ErrDependencyDoesNotExist, d)
+			}
+		}
+	}
+
+	return nil
 }
