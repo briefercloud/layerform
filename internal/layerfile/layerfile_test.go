@@ -148,7 +148,10 @@ func TestToLayers_ValidateAllDependenciesExist(t *testing.T) {
 				Layers: []layerfileLayer{
 					{
 						Name:         "foo",
-						Dependencies: []string{"bar"},
+						Dependencies: []string{"bar", "baz"},
+					},
+					{
+						Name: "bar",
 					},
 				},
 			},
@@ -166,6 +169,25 @@ func TestToLayers_ValidateAllDependenciesExist(t *testing.T) {
 						Name: "bar",
 					},
 				},
+			},
+		},
+		{
+			name: "Layers have no dependencies",
+			lf: layerfile{
+				Layers: []layerfileLayer{
+					{
+						Name: "foo",
+					},
+					{
+						Name: "bar",
+					},
+				},
+			},
+		},
+		{
+			name: "No layers",
+			lf: layerfile{
+				Layers: []layerfileLayer{},
 			},
 		},
 	}
