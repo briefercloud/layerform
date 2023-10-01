@@ -4,12 +4,12 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"regexp"
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/lithammer/shortuuid/v3"
-	"github.com/spf13/cobra"
-
 	"github.com/pkg/errors"
+	"github.com/spf13/cobra"
 
 	"github.com/ergomake/layerform/internal/lfconfig"
 )
@@ -20,6 +20,8 @@ func init() {
 	rootCmd.AddCommand(spawnCmd)
 }
 
+var alphanumericRegex = regexp.MustCompile("^[A-Za-z0-9][A-Za-z0-9_-]*[A-Za-z0-9]$")
+
 var spawnCmd = &cobra.Command{
 	Use:   "spawn <layer> [desired_id]",
 	Short: "creates a layer instance",
@@ -27,8 +29,7 @@ var spawnCmd = &cobra.Command{
 
 Whenever a desired ID is not provided, Layerform will generate a random UUID for the layer instance.
 
-If an instance with the same ID already exists for the layer definition, Layerform will return an error.
-    `,
+If an instance with the same ID already exists for the layer definition, Layerform will return an error.`,
 	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		logger := hclog.Default()
@@ -69,6 +70,12 @@ If an instance with the same ID already exists for the layer definition, Layerfo
 		instanceName := shortuuid.New()
 		if len(args) > 1 {
 			instanceName = args[1]
+		}
+
+		if !alphanumericRegex.MatchString(instanceName) {
+			fmt.Fprintf(os.Stderr, "Invalid name: %s\n", instanceName)
+			fmt.Fprintln(os.Stderr, "Name must start and end with an alphanumeric character and can include dashes and underscores in between.")
+			os.Exit(1)
 		}
 
 		err = spawn.Run(ctx, layerName, instanceName, dependenciesInstance, vars)

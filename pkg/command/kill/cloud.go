@@ -14,31 +14,33 @@ import (
 	"github.com/hashicorp/go-hclog"
 	"github.com/pkg/errors"
 
+	"github.com/ergomake/layerform/internal/cloud"
 	"github.com/ergomake/layerform/pkg/data"
 	"github.com/ergomake/layerform/pkg/layerdefinitions"
 	"github.com/ergomake/layerform/pkg/layerinstances"
 )
 
-type ergomakeKillCommand struct {
-	baseURL            string
+type cloudKillCommand struct {
+	client             *cloud.HTTPClient
 	definitionsBackend layerdefinitions.Backend
 	instancesBackend   layerinstances.Backend
 }
 
-var _ Kill = &ergomakeKillCommand{}
+var _ Kill = &cloudKillCommand{}
 
-func NewErgomake(baseURL string) *ergomakeKillCommand {
-	definitionsBackend := layerdefinitions.NewErgomake(baseURL)
-	instancesBackend := layerinstances.NewErgomake(baseURL)
+func NewCloud(client *cloud.HTTPClient) *cloudKillCommand {
+	definitionsBackend := layerdefinitions.NewCloud(client)
+	instancesBackend := layerinstances.NewCloud(client)
 
-	return &ergomakeKillCommand{baseURL, definitionsBackend, instancesBackend}
+	return &cloudKillCommand{client, definitionsBackend, instancesBackend}
 }
 
-func (e *ergomakeKillCommand) Run(
+func (e *cloudKillCommand) Run(
 	ctx context.Context,
 	definitionName, instanceName string,
 	autoApprove bool,
 	vars []string,
+	force bool,
 ) error {
 	logger := hclog.FromContext(ctx)
 	logger.Debug("Killing instance remotely")
@@ -78,7 +80,13 @@ func (e *ergomakeKillCommand) Run(
 		return errors.Wrap(err, "fail to get layer instance")
 	}
 
-	hasDependants, err := HasDependants(ctx, e.instancesBackend, e.definitionsBackend, definitionName, instanceName)
+	hasDependants, err := HasDependants(
+		ctx,
+		e.instancesBackend,
+		e.definitionsBackend,
+		definitionName,
+		instanceName,
+	)
 	if err != nil {
 		s.Error()
 		sm.Stop()
@@ -91,7 +99,7 @@ func (e *ergomakeKillCommand) Run(
 		return errors.New("can't kill this layer because other layers depend on it")
 	}
 
-	url := fmt.Sprintf("%s/v1/definitions/%s/instances/%s/kill", e.baseURL, definitionName, instanceName)
+	url := fmt.Sprintf("/v1/definitions/%s/instances/%s/kill", definitionName, instanceName)
 	dataBytes, err := json.Marshal(
 		map[string]interface{}{
 			"vars": vars,
@@ -103,20 +111,19 @@ func (e *ergomakeKillCommand) Run(
 		return errors.Wrap(err, "fail to marshal instance to json")
 	}
 
-	client := &http.Client{}
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(dataBytes))
+	req, err := e.client.NewRequest(ctx, "POST", url, bytes.NewBuffer(dataBytes))
 	if err != nil {
 		s.Error()
 		sm.Stop()
-		return errors.Wrap(err, "fail to create http request to ergomake backend")
+		return errors.Wrap(err, "fail to create http request to cloud backend")
 	}
 
-	req.Header.Set("Content-Type", "application/json")
-	resp, err := client.Do(req.WithContext(ctx))
+	req.SetHeader("Content-Type", "application/json")
+	resp, err := e.client.Do(req)
 	if err != nil {
 		s.Error()
 		sm.Stop()
-		return errors.Wrap(err, "fail to perform http request to ergomake backend")
+		return errors.Wrap(err, "fail to perform http request to cloud backend")
 	}
 	defer resp.Body.Close()
 

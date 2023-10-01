@@ -18,6 +18,7 @@ import (
 	"github.com/ergomake/layerform/internal/tfclient"
 	"github.com/ergomake/layerform/pkg/command"
 	"github.com/ergomake/layerform/pkg/data"
+	"github.com/ergomake/layerform/pkg/envvars"
 	"github.com/ergomake/layerform/pkg/layerdefinitions"
 	"github.com/ergomake/layerform/pkg/layerinstances"
 )
@@ -25,12 +26,17 @@ import (
 type localKillCommand struct {
 	definitionsBackend layerdefinitions.Backend
 	instancesBackend   layerinstances.Backend
+	envVarsBackend     envvars.Backend
 }
 
 var _ Kill = &localKillCommand{}
 
-func NewLocal(definitionsBackend layerdefinitions.Backend, instancesBackend layerinstances.Backend) *localKillCommand {
-	return &localKillCommand{definitionsBackend, instancesBackend}
+func NewLocal(
+	definitionsBackend layerdefinitions.Backend,
+	instancesBackend layerinstances.Backend,
+	envVarsBackend envvars.Backend,
+) *localKillCommand {
+	return &localKillCommand{definitionsBackend, instancesBackend, envVarsBackend}
 }
 
 func (c *localKillCommand) Run(
@@ -38,6 +44,7 @@ func (c *localKillCommand) Run(
 	layerName, instanceName string,
 	autoApprove bool,
 	vars []string,
+	force bool,
 ) error {
 	logger := hclog.FromContext(ctx)
 
@@ -76,17 +83,50 @@ func (c *localKillCommand) Run(
 		),
 	)
 
-	hasDependants, err := HasDependants(ctx, c.instancesBackend, c.definitionsBackend, layerName, instanceName)
+	dependants, err := GetDependants(
+		ctx,
+		c.instancesBackend,
+		c.definitionsBackend,
+		layerName,
+		instanceName,
+		make(map[string]bool),
+	)
 	if err != nil {
 		s.Error()
 		sm.Stop()
 		return errors.Wrap(err, "fail to check if layer has dependants")
 	}
 
-	if hasDependants {
+	if len(dependants) > 0 && !force {
 		s.Error()
 		sm.Stop()
-		return errors.New("can't kill this layer because other layers depend on it")
+		return errors.New("can't kill this layer because other layers depend on it\nuse the --force flag to kill it anyway")
+	}
+
+	if force {
+		autoApprove = true
+		for _, d := range dependants {
+			err = c.Run(ctx, d.DefinitionName, d.InstanceName, autoApprove, vars, force)
+			if err != nil {
+				return errors.Wrapf(err, "fail to kill dependant %s=%s", d.DefinitionName, d.InstanceName)
+			}
+		}
+	}
+
+	envVars, err := c.envVarsBackend.ListVariables(ctx)
+	if err != nil {
+		s.Error()
+		sm.Stop()
+		return errors.Wrap(err, "fail to list environment variables")
+	}
+
+	for _, envVar := range envVars {
+		err := os.Setenv(envVar.Name, envVar.Value)
+		if err != nil {
+			s.Error()
+			sm.Stop()
+			return errors.Wrapf(err, "fail to set %s environment variable", envVar.Name)
+		}
 	}
 
 	tfpath, err := terraform.GetTFPath(ctx)

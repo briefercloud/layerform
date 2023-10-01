@@ -87,6 +87,11 @@ func (c *configureCommand) Run(ctx context.Context, fpath string) error {
 	}
 	defer os.RemoveAll(workdir)
 
+	instanceByLayer := map[string]string{}
+	for _, l := range ls {
+		instanceByLayer[l.Name] = "default"
+	}
+
 	inMemoryDefinitionsBackend := layerdefinitions.NewInMemoryBackend(ls)
 	var wg sync.WaitGroup
 	type validationErr struct {
@@ -103,7 +108,7 @@ func (c *configureCommand) Run(ctx context.Context, fpath string) error {
 
 			layerWorkdir := path.Join(workdir, l.Name)
 
-			tfWorkdir, err := WriteLayerToWorkdir(ctx, inMemoryDefinitionsBackend, layerWorkdir, l, map[string]string{})
+			tfWorkdir, err := WriteLayerToWorkdir(ctx, inMemoryDefinitionsBackend, layerWorkdir, l, instanceByLayer)
 			if err != nil {
 				s.Error()
 				errs[i] = validationErr{

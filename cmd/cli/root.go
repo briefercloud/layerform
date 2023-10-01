@@ -14,8 +14,7 @@ var rootCmd = &cobra.Command{
 	Short: "Layerform helps engineers create their own staging environments using plain Terraform files.",
 	Long: `Layerform helps engineers create their own staging environments using plain Terraform files.
 
-Please read our documentation at https://docs.layerform.dev for more information.
-`,
+Please read our documentation at https://docs.layerform.dev for more information.`,
 }
 
 func SetVersionInfo(version, commit, date string) {

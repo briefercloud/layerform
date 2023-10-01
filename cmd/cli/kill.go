@@ -16,6 +16,7 @@ import (
 func init() {
 	killCmd.Flags().StringArray("var", []string{}, "a map of variables for the layer's Terraform files. I.e. 'foo=bar,baz=qux'")
 	killCmd.Flags().Bool("auto-approve", false, "skip interactive approval before killing layer instance")
+	killCmd.Flags().Bool("force", false, "force the destruction of the layer instance even if it has dependants")
 
 	rootCmd.AddCommand(killCmd)
 }
@@ -26,8 +27,7 @@ var killCmd = &cobra.Command{
 	Short: "destroys a layer instance",
 	Long: `The kill command destroys a layer instance.
 
-Please notice that the kill command cannot destroy a layer instance which has dependants. To delete a layer instance with dependants, you must first delete all of its dependants.
-    `,
+Please notice that the kill command cannot destroy a layer instance which has dependants. To delete a layer instance with dependants, you must first delete all of its dependants.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		logger := hclog.Default()
 		logLevel := hclog.LevelFromString(os.Getenv("LF_LOG"))
@@ -49,6 +49,12 @@ Please notice that the kill command cannot destroy a layer instance which has de
 			os.Exit(1)
 			return
 		}
+		force, err := cmd.Flags().GetBool("force")
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "%s\n", errors.Wrap(err, "fail to get --force flag, this is a bug in layerform"))
+			os.Exit(1)
+			return
+		}
 		kill, err := cfg.GetKillCommand(ctx)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "%s\n", errors.Wrap(err, "fail to get kill command"))
@@ -58,7 +64,7 @@ Please notice that the kill command cannot destroy a layer instance which has de
 		layerName := args[0]
 		instanceName := args[1]
 
-		err = kill.Run(ctx, layerName, instanceName, false, vars)
+		err = kill.Run(ctx, layerName, instanceName, false, vars, force)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "%s\n", err)
 			os.Exit(1)

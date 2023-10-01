@@ -11,6 +11,9 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
+    env:
+      LF_TELEMETRY_DISABLED: "1"
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v2
@@ -27,14 +30,41 @@ jobs:
 
       - run: go install .
 
-      - name: Create Layerform config file
+      - name: layerform config set-context
         run: |
-          mkdir -p ~/.layerform
-          echo "currentContext: test" > ~/.layerform/config
-          echo "contexts:" >> ~/.layerform/config
-          echo "  test:" >> ~/.layerform/config
-          echo "    type: local" >> ~/.layerform/config
-          echo "    dir: test" >> ~/.layerform/config
+          # validations, fails if command succeeds
+          ! layerform config set-context test -t local # missing --dir
+
+          ! layerform config set-context test -t s3 --bucket bucket # missing region
+          ! layerform config set-context test -t s3 --region region # missing bucket
+
+          ! layerform config set-context test -t cloud --url "invalid url" --email e@mail.com --password strongpass
+          ! layerform config set-context test -t cloud --url https://a.b.com --email invalid --password strongpass
+          ! layerform config set-context test -t cloud --email invalid --password strongpass # missing url
+          ! layerform config set-context test -t cloud --url https://a.b.com --password strongpass # missing email
+          ! layerform config set-context test -t cloud --url https://a.b.com --email e@mail.com # missing password
+
+          # set valid contexts
+          layerform config set-context test-s3 -t s3 --bucket bucket --region us-east-1
+          layerform config set-context test-cloud -t cloud --url https://demo.layerform.dev --email foo@bar.com --password strongpass
+          layerform config set-context test-local -t local --dir test
+
+      - name: layerform config use-context
+        run: |
+          # fails if command succeeds
+          ! layerform config use-context test-does-not-exist # context does not exist
+
+          # switch context to test-s3
+          layerform config use-context test-s3
+          layerform config get-contexts | tee usecontext
+          ! grep -E '^\*\s+test-local' usecontext
+          grep -E '^\*\s+test-s3' usecontext
+
+          # switch context to test-local
+          layerform config use-context test-local
+          layerform config get-contexts | tee usecontext
+          grep -E '^\*\s+test-local' usecontext
+          ! grep -E '^\*\s+test-s3' usecontext
 
       - name: Configure
         run: |
@@ -67,10 +97,17 @@ jobs:
       - name: Output
         run: |
           layerform output bar test_bar | jq .bar_file.value | tee output
-          grep -E '\.layerform\/examples\/local\/foo-.{4}\/bar-.{4}\.txt' output
+          grep -E '\.layerform\/examples\/local\/foo-default\/bar-test_bar\.txt' output
 
           layerform output bar test_bar | jq .foo_file.value | tee output
-          grep -E '\.layerform\/examples\/local\/foo-.{4}\/\.keep' output
+          grep -E '\.layerform\/examples\/local\/foo-default\/\.keep' output
+
+      - name: Refresh
+        run: |
+          layerform refresh bar test_bar --var prefix=test-prefix-
+          layerform output bar test_bar | jq .bar_file.value | tee output
+          grep -E '\.layerform\/examples\/local\/test-prefix-foo-default\/bar-test_bar\.txt' output
+          layerform refresh bar test_bar
 
       - name: Can't kill instance that has dependants
         run: |
@@ -83,3 +120,12 @@ jobs:
           layerform list instances | tee instances
           # fails if instance is still there
           ! grep -E 'test_bar\s+bar\s+foo=default\s+alive' instances
+
+      - name: Can't spawn instance with invalid name
+        run: |
+          # fails if spawn succeeds
+          ! layerform spawn foo 'this has spaces'
+          ! layerform spawn foo 'this#has%special&chars'
+          ! layerform spawn foo '_cant-start-with-underscore'
+          ! layerform spawn foo 'cant-end-with-underscore_'
+          ! layerform spawn foo 'cant-end-with-dash-'

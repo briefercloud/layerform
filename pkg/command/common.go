@@ -2,10 +2,12 @@ package command
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/hashicorp/go-hclog"
 	tfjson "github.com/hashicorp/terraform-json"
@@ -84,7 +86,40 @@ func WriteLayerToWorkdir(
 		return "", errors.Wrap(err, "fail to write layer to workdir")
 	}
 
-	return path.Join(layerWorkdir, pathutils.FindCommonParentPath(paths)), nil
+	commonParentPath := pathutils.FindCommonParentPath(paths)
+	dir := path.Join(layerWorkdir, commonParentPath)
+
+	err = writeLFVars(dir, instanceByLayer)
+	if err != nil {
+		return "", errors.Wrap(err, "fail to write layerform specific variable definitions")
+	}
+
+	return dir, nil
+}
+
+func writeLFVars(dir string, instanceByDefinition map[string]string) error {
+	definitions := ""
+	for def := range instanceByDefinition {
+		definitions += def + "= string\n"
+	}
+
+	defaults := ""
+	for def, inst := range instanceByDefinition {
+		defaults += fmt.Sprintf("%s=\"%s\"\n", def, inst)
+	}
+
+	lfVars := fmt.Sprintf(`variable "lf_names" {
+  type = object({
+    %s
+  })
+  default = {
+    %s
+  }
+}`, definitions, defaults)
+
+	suffix := time.Now().Unix()
+	fname := fmt.Sprintf("lf_names-%d.tf", suffix)
+	return os.WriteFile(path.Join(dir, fname), []byte(lfVars), 0644)
 }
 
 func GetTFState(ctx context.Context, statePath string, tfpath string) (*tfjson.State, error) {

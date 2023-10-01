@@ -83,3 +83,55 @@ func TestToLayers(t *testing.T) {
 	assert.Equal(t, mainTfContent, modelLayers[0].Files[0].Content)
 	assert.Equal(t, 0, len(modelLayers[0].Dependencies))
 }
+
+func TestToLayers_ValidateNameOfLayerDefinitions(t *testing.T) {
+	tests := []struct {
+		name string
+		lf   layerfile
+		err  error
+	}{
+		{
+			name: "Name has spaces",
+			lf: layerfile{
+				Layers: []layerfileLayer{
+					{
+						Name: "invalid name for a layer definition",
+					},
+				},
+			},
+			err: ErrInvalidDefinitionName,
+		},
+		{
+			name: "Name has special character",
+			lf: layerfile{
+				Layers: []layerfileLayer{
+					{
+						Name: "invalid!",
+					},
+				},
+			},
+			err: ErrInvalidDefinitionName,
+		},
+		{
+			name: "Valid name",
+			lf: layerfile{
+				Layers: []layerfileLayer{
+					{
+						Name: "validname",
+					},
+				},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := tt.lf.ToLayers()
+			if tt.err == nil {
+				assert.NoError(t, err)
+			} else {
+				assert.ErrorIs(t, err, tt.err)
+			}
+		})
+	}
+}
