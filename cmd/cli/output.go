@@ -22,7 +22,7 @@ func init() {
 var outputCmd = &cobra.Command{
 	Use:   "output <layer> <instance>",
 	Args:  cobra.MinimumNArgs(2),
-	Short: "reads all output variables from the provided layer instance",
+	Short: "Reads all output variables from the provided layer instance",
 	Long:  `The output command reads all output variables from the given layer instance and prints them as json to standard output.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		logger := hclog.Default()
