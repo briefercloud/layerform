@@ -135,3 +135,71 @@ func TestToLayers_ValidateNameOfLayerDefinitions(t *testing.T) {
 		})
 	}
 }
+
+func TestToLayers_ValidateAllDependenciesExist(t *testing.T) {
+	tests := []struct {
+		name string
+		lf   layerfile
+		err  error
+	}{
+		{
+			name: "Dependencies don't exist",
+			lf: layerfile{
+				Layers: []layerfileLayer{
+					{
+						Name:         "foo",
+						Dependencies: []string{"bar", "baz"},
+					},
+					{
+						Name: "bar",
+					},
+				},
+			},
+			err: ErrDependencyDoesNotExist,
+		},
+		{
+			name: "Dependencies exist",
+			lf: layerfile{
+				Layers: []layerfileLayer{
+					{
+						Name:         "foo",
+						Dependencies: []string{"bar"},
+					},
+					{
+						Name: "bar",
+					},
+				},
+			},
+		},
+		{
+			name: "Layers have no dependencies",
+			lf: layerfile{
+				Layers: []layerfileLayer{
+					{
+						Name: "foo",
+					},
+					{
+						Name: "bar",
+					},
+				},
+			},
+		},
+		{
+			name: "No layers",
+			lf: layerfile{
+				Layers: []layerfileLayer{},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := tt.lf.ToLayers()
+			if tt.err == nil {
+				assert.NoError(t, err)
+			} else {
+				assert.ErrorIs(t, err, tt.err)
+			}
+		})
+	}
+}
