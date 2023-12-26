@@ -1,3 +1,5 @@
+<p><strong>Layerform is not actively maintained anymore. Ergomake is now <a href="https://briefer.cloud">Briefer</a>.</strong></p>
+
 <p align="center">
   <a href="https://layerform.dev">
     <picture>
