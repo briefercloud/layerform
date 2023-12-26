@@ -44,7 +44,7 @@
 
 <br>
 
-**After HashiCorp's announcement that they're not using the MPL license anymore, we'll be building on top of OpenTF.**
+**After HashiCorp's announcement that they're not using the MPL license anymore, we'll be building on top of [OpenTofu](https://opentofu.org/).**
 
 <br>
 
